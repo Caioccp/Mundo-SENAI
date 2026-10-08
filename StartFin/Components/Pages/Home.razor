@@ -1,8 +1,314 @@
-﻿@page "/"
+﻿
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>StartFin | Início</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="inicio">
+    <header class="cabecalho">
+        <div class="logo">Start<span>Fin.</span></div>
+        <span class="perfil">Minha conta</span>
+    </header>
 
-Welcome to your new app.
+    <section class="boas-vindas">
+        <p class="subtitulo">SEU FUTURO COMEÇA AQUI</p>
+        <h1>Cuide do seu dinheiro.<br />Realize seus planos.</h1>
+        <p>Aprenda a organizar suas finanças de um jeito simples.</p>
+    </section>
 
+    <section class="saldo">
+        <p>Seu saldo fictício</p>
+        <h2>R$ 1.250,00</h2>
+        <span>Saldo demonstrativo para aprendizado</span>
+    </section>
+
+    <section class="secao">
+        <div class="titulo-secao">
+            <h2>Seus objetivos</h2>
+            <span>Comece a planejar</span>
+        </div>
+
+        <div class="cartoes">
+            <article class="cartao">
+                <div class="icone">🎧</div>
+                <h3>Comprar um fone</h3>
+                <p class="valor">R$ 150,00 <span>/ R$ 300,00</span></p>
+                <div class="barra">
+                    <div class="progresso" style="width: 50%"></div>
+                </div>
+                <p class="porcentagem">50% concluído</p>
+            </article>
+
+            <article class="cartao">
+                <div class="icone">✈️</div>
+                <h3>Viagem dos sonhos</h3>
+                <p class="valor">R$ 400,00 <span>/ R$ 2.000,00</span></p>
+                <div class="barra">
+                    <div class="progresso" style="width: 20%"></div>
+                </div>
+                <p class="porcentagem">20% concluído</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="secao">
+        <h2>Explore o StartFin</h2>
+
+        <div class="atalhos">
+            <article class="atalho">
+                <span>🎯</span>
+                <div>
+                    <h3>Metas financeiras</h3>
+                    <p>Organize seus objetivos.</p>
+                </div>
+            </article>
+
+            <article class="atalho">
+                <span>📚</span>
+                <div>
+                    <h3>Educação financeira</h3>
+                    <p>Aprenda a cuidar do seu dinheiro.</p>
+                </div>
+            </article>
+
+            <article class="atalho">
+                <span>🏆</span>
+                <div>
+                    <h3>Desafios</h3>
+                    <p>Aprenda enquanto acumula pontos.</p>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <footer>
+        StartFin © 2026 · Educação financeira para jovens
+        <p>Todos os valores são fictícios. Este projeto não realiza operações bancárias.</p>
+    </footer>
+</div>
+
+<style>
+    .inicio {
+        --azul: #142d70;
+        --verde: #28c99a;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 28px;
+        color: #17233f;
+        font-family: Arial, sans-serif;
+    }
+
+    .cabecalho {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 45px;
+    }
+
+    .logo {
+        font-size: 30px;
+        font-weight: 800;
+        color: var(--azul);
+    }
+
+    .logo span {
+        color: var(--verde);
+    }
+
+    .perfil {
+        background: #edf2ff;
+        color: var(--azul);
+        padding: 10px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+    }
+
+    .boas-vindas {
+        margin-bottom: 28px;
+    }
+
+    .subtitulo {
+        color: #159b77;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 2px;
+    }
+
+    .boas-vindas h1 {
+        font-size: clamp(30px, 5vw, 43px);
+        line-height: 1.15;
+        margin: 12px 0;
+        color: var(--azul);
+    }
+
+    .boas-vindas > p:last-child {
+        color: #68748b;
+        line-height: 1.6;
+    }
+
+    .saldo {
+        background: linear-gradient(120deg, #142d70, #2455a4);
+        color: white;
+        border-radius: 22px;
+        padding: 28px;
+        margin-bottom: 38px;
+        box-shadow: 0 12px 28px #142d7020;
+    }
+
+    .saldo p {
+        margin: 0;
+        opacity: 0.85;
+    }
+
+    .saldo h2 {
+        font-size: clamp(30px, 5vw, 40px);
+        margin: 12px 0;
+    }
+
+    .saldo span {
+        font-size: 12px;
+        opacity: 0.8;
+    }
+
+    .secao {
+        margin-bottom: 38px;
+    }
+
+    .secao h2 {
+        color: var(--azul);
+        font-size: 22px;
+    }
+
+    .titulo-secao {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .titulo-secao h2 {
+        margin: 0;
+    }
+
+    .titulo-secao > span {
+        color: #7b8498;
+        font-size: 13px;
+    }
+
+    .cartoes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .cartao {
+        border: 1px solid #e5eaf3;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 5px 18px #17233f08;
+    }
+
+    .icone {
+        font-size: 28px;
+        margin-bottom: 12px;
+    }
+
+    .cartao h3,
+    .atalho h3 {
+        margin: 0 0 12px;
+        font-size: 16px;
+    }
+
+    .valor {
+        font-weight: bold;
+        font-size: 17px;
+    }
+
+    .valor span {
+        font-weight: normal;
+        color: #7b8498;
+        font-size: 13px;
+    }
+
+    .barra {
+        height: 8px;
+        background: #e9eef7;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 18px;
+    }
+
+    .progresso {
+        height: 100%;
+        background: var(--verde);
+        border-radius: 10px;
+    }
+
+    .porcentagem {
+        color: #159b77;
+        font-size: 12px;
+    }
+
+    .atalhos {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .atalho {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 20px 15px;
+        border-radius: 16px;
+        background: #f4f7fc;
+    }
+
+    .atalho > span {
+        font-size: 24px;
+    }
+
+    .atalho h3 {
+        line-height: 1.4;
+    }
+
+    .atalho p {
+        color: #68748b;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 0;
+    }
+
+    footer {
+        text-align: center;
+        border-top: 1px solid #e5eaf3;
+        padding-top: 22px;
+        color: #68748b;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    @@media (max-width: 650px) {
+        .inicio {
+            padding: 18px;
+        }
+
+        .cabecalho {
+            margin-bottom: 32px;
+        }
+
+        .cartoes,
+        .atalhos {
+            grid-template-columns: 1fr;
+        }
+
+        .titulo-secao {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .saldo {
+            padding: 23px;
+        }
+    }
+</style>
