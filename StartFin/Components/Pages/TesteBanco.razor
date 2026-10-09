@@ -1,0 +1,37 @@
+
+@page "/teste-banco"
+@using StartFin.Dados
+@inject ConexaoBanco Banco
+
+<PageTitle>Teste do banco</PageTitle>
+
+<h1>Teste de conexão</h1>
+
+@if (mensagem is null)
+{
+    <p>Testando conexão com o banco...</p>
+}
+else
+{
+    <p>@mensagem</p>
+}
+
+@code {
+    private string? mensagem;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            bool conectado = await Banco.TestarConexaoAsync();
+
+            mensagem = conectado
+                ? "Conexão com o PostgreSQL estabelecida!"
+                : "Não foi possível conectar ao banco.";
+        }
+        catch (Exception ex)
+        {
+            mensagem = $"Erro: {ex.GetType().Name} - {ex.Message}";
+        }
+    }
+}
