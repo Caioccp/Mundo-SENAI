@@ -1,0 +1,151 @@
+@page "/metas"
+@using Npgsql
+@using Microsoft.AspNetCore.Components.Forms
+@inject IConfiguration Configuration
+<PageTitle>Minhas metas | StartFin</PageTitle>
+<h1>Minhas metas 🎯</h1>
+<p>Planeje hoje as conquistas de amanhã.</p>
+<section class="card p-4 mb-4">
+    <h2>Nova meta</h2>
+    <EditForm Model="novaMeta" OnValidSubmit="CadastrarMeta" FormName="NovaMetaForm" Enhance="false">
+        <div class="mb-3">
+            <label class="form-label">Nome da meta</label>
+            <InputText class="form-control"
+                       @bind-Value="novaMeta.Nome"
+                       placeholder="Ex.: Comprar um fone" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Quanto você quer juntar? (R$)</label>
+            <input class="form-control"
+       type="number"
+       step="0.01"
+       min="0.01"
+       @bind="novaMeta.ValorObjetivo"
+       @bind:event="oninput" />
+              
+
+        </div>
+        <button class="btn btn-success" type="submit">
+            Criar meta
+        </button>
+    </EditForm>
+    @if (!string.IsNullOrWhiteSpace(mensagem))
+    {
+        <p class="mt-3">@mensagem</p>
+    }
+</section>
+<h2>Suas metas</h2>
+@if (metas.Count == 0)
+{
+    <p>Você ainda não tem metas cadastradas.</p>
+}
+else
+{
+    @foreach (var meta in metas)
+    {
+        <section class="card p-3 mb-3" @key="meta.Id">
+            <h3>@meta.Nome</h3>
+            <p>
+                Guardado: @meta.ValorGuardado.ToString("C2", cultura)
+                de @meta.ValorObjetivo.ToString("C2", cultura)
+            </p>
+            <progress value="@meta.ValorGuardado"
+                      max="@meta.ValorObjetivo"
+                      style="width: 100%">
+            </progress>
+        </section>
+    }
+}
+@code {
+    private readonly System.Globalization.CultureInfo cultura =
+        System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+    private List<MetaEconomia> metas = new();
+    private MetaEconomia novaMeta = new();
+    private string? mensagem;
+    private string ConnectionString =>
+        Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException(
+            "A conexão com o banco não foi configurada.");
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await using var conexao = new NpgsqlConnection(ConnectionString);
+            await conexao.OpenAsync();
+            var criarTabela = new NpgsqlCommand(
+                @"CREATE TABLE IF NOT EXISTS metas_economia (
+                    id SERIAL PRIMARY KEY,
+                    nome VARCHAR(100) NOT NULL,
+                    valor_objetivo NUMERIC(12,2) NOT NULL
+                        CHECK (valor_objetivo > 0),
+                    valor_guardado NUMERIC(12,2) NOT NULL DEFAULT 0
+                );",
+                 conexao);
+            await criarTabela.ExecuteNonQueryAsync();
+            await CarregarMetas(conexao);
+        }
+        catch (Exception)
+        {
+            mensagem = "Não foi possível carregar as metas. Verifique a conexão com o banco.";
+        }
+    }
+    private async Task CadastrarMeta()
+    {
+        Console.WriteLine($"CADASTRO CHAMADO: nome={novaMeta.Nome}, valor={novaMeta.ValorObjetivo}");
+        mensagem = $"Teste: nome={novaMeta.Nome}, valor={novaMeta.ValorObjetivo}";
+        Console.WriteLine($"NOME=[{novaMeta.Nome}] VALOR=[{novaMeta.ValorObjetivo}]");
+
+        if (string.IsNullOrWhiteSpace(novaMeta.Nome) ||
+            novaMeta.ValorObjetivo <= 0)
+        {
+            mensagem = "Informe um nome e um valor maior que zero.";
+            return;
+        }
+        try
+        {
+            await using var conexao = new NpgsqlConnection(ConnectionString);
+            await conexao.OpenAsync();
+            var comando = new NpgsqlCommand(
+                @"INSERT INTO metas_economia (nome, valor_objetivo)
+                VALUES (@nome, @valor);",
+             conexao);
+            comando.Parameters.AddWithValue("@nome", novaMeta.Nome.Trim());
+            comando.Parameters.AddWithValue("@valor", novaMeta.ValorObjetivo);
+            await comando.ExecuteNonQueryAsync();
+            novaMeta = new MetaEconomia();
+            await CarregarMetas(conexao);
+            mensagem = "Meta cadastrada com sucesso!";
+        }
+        catch (Exception Ex)
+        {
+            mensagem = $"Erro ao salvar ou carregar a meta: {Ex.Message}";
+        }
+    }
+    private async Task CarregarMetas(NpgsqlConnection conexao)
+    {
+        metas.Clear();
+        var consulta = new NpgsqlCommand(
+            @"SELECT id, nome, valor_objetivo, valor_guardado
+            FROM metas_economia
+            ORDER BY id DESC;",
+             conexao);
+        await using var leitor = await consulta.ExecuteReaderAsync();
+        while (await leitor.ReadAsync())
+        {
+            metas.Add(new MetaEconomia
+            {
+                Id = leitor.GetInt32(0),
+                Nome = leitor.GetString(1),
+                ValorObjetivo = leitor.GetDecimal(2),
+                ValorGuardado = leitor.GetDecimal(3)
+            });
+        }
+    }
+    private class MetaEconomia
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; } = "";
+        public decimal ValorObjetivo { get; set; }
+        public decimal ValorGuardado { get; set; }
+    }
+}
