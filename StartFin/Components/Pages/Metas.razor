@@ -53,6 +53,11 @@ else
                       max="@meta.ValorObjetivo"
                       style="width: 100%">
             </progress>
+            <button class="btn btn-danger mt-3"
+                    @onclick="() => ExcluirMeta(meta.Id)">
+                Excluir
+        </button>
+
         </section>
     }
 }
@@ -141,9 +146,40 @@ else
             });
         }
     }
+
+private async Task ExcluirMeta(int id)
+{
+    try
+    {
+        await using var conexao = new NpgsqlConnection(ConnectionString);
+        await conexao.OpenAsync();
+
+
+        var comando = new NpgsqlCommand(
+            "DELETE FROM metas_economia WHERE id = @id;",
+            conexao);
+
+
+        comando.Parameters.AddWithValue("@id", id);
+
+
+        await comando.ExecuteNonQueryAsync();
+
+
+        await CarregarMetas(conexao);
+
+
+        mensagem = "Meta excluída com sucesso!";
+    }
+    catch (Exception ex)
+        {
+        mensagem = $"Erro ao excluir: {ex.Message}";
+        }
+}
+
     private class MetaEconomia
     {
-        public int Id { get; set; }
+        public int Id { get; set; } 
         public string Nome { get; set; } = "";
         public decimal ValorObjetivo { get; set; }
         public decimal ValorGuardado { get; set; }
