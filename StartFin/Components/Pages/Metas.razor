@@ -4,6 +4,8 @@
 @inject IConfiguration Configuration
 <PageTitle>Minhas metas | StartFin</PageTitle>
 <h1>Minhas metas 🎯</h1>
+
+<a href="/" class="botao-voltar">← Voltar ao Menu</a>
 <p>Planeje hoje as conquistas de amanhã.</p>
 <section class="card p-4 mb-4">
     <h2>Nova meta</h2>
@@ -185,3 +187,23 @@ private async Task ExcluirMeta(int id)
         public decimal ValorGuardado { get; set; }
     }
 }
+
+<style>
+    .botao-voltar {
+    display: block;
+    width: fit-content;
+    margin: 0 0 16px auto;
+    padding: 6px 10px;
+    background: #142d70;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.botao-voltar:hover {
+    background: #2455a4;
+}
+</style>
