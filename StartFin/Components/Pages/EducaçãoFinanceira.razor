@@ -1,0 +1,292 @@
+
+
+@page "/educacao-financeira"
+
+
+<PageTitle>Educação Financeira | StartFin</PageTitle>
+
+
+<div class="educacao-container">
+
+
+    <section class="educacao-cabecalho">
+        <span class="educacao-etiqueta">APRENDA E EVOLUA</span>
+
+
+        <h1>Educação Financeira</h1>
+
+
+        <p>
+            Aprenda a cuidar do seu dinheiro, fazer boas escolhas
+            e construir um futuro financeiro melhor.
+        </p>
+    </section>
+
+
+    <section class="jornada-card">
+        <div class="jornada-texto">
+            <span>SUA JORNADA COMEÇA AQUI</span>
+            <h2>Conhecimento vale dinheiro!</h2>
+            <p>
+                Descubra como organizar suas finanças, economizar
+                e alcançar seus objetivos.
+            </p>
+        </div>
+
+
+        <div class="jornada-icone">📚</div>
+    </section>
+
+
+    <section class="conteudos-section">
+        <div class="secao-titulo">
+            <h2>Explore os conteúdos</h2>
+            <p>Escolha um assunto e comece a aprender.</p>
+        </div>
+
+
+        <div class="conteudos-grid">
+
+
+            <div class="conteudo-card">
+                <div class="conteudo-icone roxo">📚</div>
+                <h3>Começando do zero</h3>
+                <p>
+                    Conheça os conceitos básicos e entenda
+                    como funciona a educação financeira.
+                </p>
+                <span class="conteudo-nivel">FUNDAMENTOS</span>
+            </div>
+
+
+            <div class="conteudo-card">
+                <div class="conteudo-icone verde">💰</div>
+                <h3>Organize seu dinheiro</h3>
+                <p>
+                    Aprenda a controlar sua renda, despesas
+                    e organizar seu orçamento.
+                </p>
+                <span class="conteudo-nivel">ORGANIZAÇÃO</span>
+            </div>
+
+
+            <div class="conteudo-card">
+                <div class="conteudo-icone laranja">🎯</div>
+                <h3>Metas e economia</h3>
+                <p>
+                    Descubra como economizar e planejar
+                    suas conquistas.
+                </p>
+                <span class="conteudo-nivel">PLANEJAMENTO</span>
+            </div>
+
+
+            <div class="conteudo-card">
+                <div class="conteudo-icone azul">🧠</div>
+                <h3>Teste seus conhecimentos</h3>
+                <p>
+                    Coloque o que aprendeu em prática
+                    com desafios e questionários.
+                </p>
+                <span class="conteudo-nivel">DESAFIOS</span>
+            </div>
+
+
+        </div>
+    </section>
+
+
+    
+       
+
+
+</div>
+
+<style>
+.educacao-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 35px 10px 50px;
+    color: #172b65;
+}
+
+
+.educacao-cabecalho {
+    margin-bottom: 30px;
+}
+
+
+.educacao-etiqueta {
+    color: #16b99a;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+
+.educacao-cabecalho h1 {
+    color: #172b65;
+    font-size: 34px;
+    font-weight: 800;
+    margin: 10px 0;
+}
+
+
+.educacao-cabecalho p {
+    color: #647da8;
+    font-size: 15px;
+    max-width: 600px;
+    line-height: 1.6;
+}
+
+
+.jornada-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 35px;
+    border-radius: 18px;
+    background: linear-gradient(120deg, #193477, #2858a5);
+    margin-bottom: 40px;
+    box-shadow: 0 12px 25px rgba(23, 43, 101, 0.12);
+}
+
+
+.jornada-texto span {
+    color: #75e0c5;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+
+.jornada-texto h2 {
+    color: white;
+    font-size: 26px;
+    margin: 12px 0;
+    font-weight: 800;
+}
+
+
+.jornada-texto p {
+    color: #e0eaff;
+    margin: 0;
+    line-height: 1.6;
+    max-width: 550px;
+}
+
+
+.jornada-icone {
+    font-size: 65px;
+    padding: 15px;
+}
+
+
+.secao-titulo {
+    margin-bottom: 20px;
+}
+
+
+.secao-titulo h2 {
+    color: #172b65;
+    font-size: 22px;
+    font-weight: 750;
+    margin-bottom: 6px;
+}
+
+
+.secao-titulo p {
+    color: #647da8;
+    font-size: 14px;
+}
+
+
+.conteudos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+
+.conteudo-card {
+    background: #f4f7fd;
+    border: 1px solid #e5eaf5;
+    border-radius: 15px;
+    padding: 23px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+
+.conteudo-card:hover {
+    transform: translateY(-4px);
+    border-color: #9bb6e8;
+}
+
+
+.conteudo-icone {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    margin-bottom: 17px;
+}
+
+
+.roxo { background: #eee9ff; }
+.verde { background: #dcf8ed; }
+.laranja { background: #fff0df; }
+.azul { background: #e0edff; }
+
+
+.conteudo-card h3 {
+    color: #172b65;
+    font-size: 17px;
+    font-weight: 750;
+    margin-bottom: 9px;
+}
+
+
+.conteudo-card p {
+    color: #647da8;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 42px;
+}
+
+
+.conteudo-nivel {
+    display: inline-block;
+    margin-top: 10px;
+    color: #159b83;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+
+@media (max-width: 650px) {
+    .conteudos-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .jornada-card {
+        padding: 25px;
+    }
+
+
+    .jornada-icone {
+        font-size: 42px;
+    }
+
+
+    .educacao-cabecalho h1 {
+        font-size: 28px;
+    }
+}
+</style>
+
