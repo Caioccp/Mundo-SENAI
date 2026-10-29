@@ -28,7 +28,7 @@
               
 
         </div>
-        <button class="btn btn-success" type="submit">
+        <button class="btn btn-success botao-criar-meta" type="submit">
             Criar meta
         </button>
     </EditForm>
@@ -99,10 +99,6 @@ else
     }
     private async Task CadastrarMeta()
     {
-        Console.WriteLine($"CADASTRO CHAMADO: nome={novaMeta.Nome}, valor={novaMeta.ValorObjetivo}");
-        mensagem = $"Teste: nome={novaMeta.Nome}, valor={novaMeta.ValorObjetivo}";
-        Console.WriteLine($"NOME=[{novaMeta.Nome}] VALOR=[{novaMeta.ValorObjetivo}]");
-
         if (string.IsNullOrWhiteSpace(novaMeta.Nome) ||
             novaMeta.ValorObjetivo <= 0)
         {
@@ -188,36 +184,3 @@ private async Task ExcluirMeta(int id)
         public decimal ValorGuardado { get; set; }
     }
 }
-
-<style>
-
-    .cabecalho-metas {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.cabecalho-metas h1 {
-    margin: 0;
-}
-
-    .botao-voltar {
-    display: block;
-    width: fit-content;
-    margin: 0;
-    padding: 6px 10px;
-    background: #142d70;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: bold;
-    transition: background 0.2s;
-}
-
-.botao-voltar:hover {
-    background: #2455a4;
-}
-</style>

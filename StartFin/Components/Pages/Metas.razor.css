@@ -1,0 +1,45 @@
+
+/* Cabeçalho da página */
+.cabecalho-metas {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.cabecalho-metas h1 {
+    margin: 0;
+}
+
+/* Botão voltar ao menu */
+.botao-voltar {
+    display: block;
+    width: fit-content;
+    margin: 0;
+    padding: 6px 10px;
+    background: #142d70;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.botao-voltar:hover {
+    background: #2455a4;
+}
+
+/* Botão criar meta */
+.botao-criar-meta {
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.botao-criar-meta:hover {
+    transform: scale(1.03);
+}
