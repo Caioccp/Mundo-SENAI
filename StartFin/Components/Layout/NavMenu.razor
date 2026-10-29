@@ -6,11 +6,17 @@
             <a class="navbar-brand" href="">StartFin</a>
         }
 
-        <button class="botao-menu"
+        <button class="botao-menu @(menuAberto ? "aberto" : "fechado")"
                 type="button"
                 @onclick="AlternarMenu"
-                aria-label="Abrir ou fechar menu">
-            ☰
+                aria-label="Abrir ou fechar menu"
+                title="Abrir ou fechar menu">
+
+            <span class="icone-menu" aria-hidden="true">
+                <span class="linha-menu"></span>
+            </span>
+
+            <span class="logo-recolhida" aria-hidden="true">$F</span>
         </button>
     </div>
 </div>

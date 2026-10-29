@@ -8,6 +8,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
 }
 
 .navbar-brand {
@@ -17,35 +18,84 @@
 }
 
 .botao-menu {
+    position: relative;
+    flex-shrink: 0;
     cursor: pointer;
     width: 2.5rem;
     height: 2.5rem;
+    padding: 0;
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    font-size: 1.4rem;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .botao-menu:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.13);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Ícone de barra lateral */
+.icone-menu {
+    position: relative;
+    display: block;
+    width: 21px;
+    height: 18px;
+    border: 1.7px solid currentColor;
+    border-radius: 4px;
+}
+
+.linha-menu {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1.7px;
+    background: currentColor;
+    transition: left 0.2s, right 0.2s;
+}
+
+/* Menu aberto: risco à esquerda */
+.botao-menu.aberto .linha-menu {
+    left: 5px;
+}
+
+/* Menu fechado: risco à direita */
+.botao-menu.fechado .linha-menu {
+    right: 5px;
+}
+
+/* Logo $F */
+.logo-recolhida {
+    display: none;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+/* Fechado: mostra a logo */
+.botao-menu.fechado .logo-recolhida {
+    display: block;
+}
+
+.botao-menu.fechado .icone-menu {
+    display: none;
+}
+
+/* Ao passar o mouse: mostra o ícone */
+.botao-menu.fechado:hover .logo-recolhida {
+    display: none;
+}
+
+.botao-menu.fechado:hover .icone-menu {
+    display: block;
 }
 
 .nav-scrollable {
     overflow-y: auto;
-    transition: max-height 0.25s ease;
-}
-
-.nav-scrollable.menu-aberto {
-    display: block;
-}
-
-.nav-scrollable.menu-fechado {
-    display: none;
 }
 
 .nav-item {
