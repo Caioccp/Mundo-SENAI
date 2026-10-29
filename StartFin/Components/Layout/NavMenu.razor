@@ -1,42 +1,44 @@
 ﻿
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        @if (menuAberto)
-        {
-            <a class="navbar-brand" href="">StartFin</a>
-        }
+<div class="nav-menu-root @(menuAberto ? "menu-aberto" : "menu-fechado")">
+    <div class="top-row ps-3 navbar navbar-dark">
+        <div class="container-fluid">
+            @if (menuAberto)
+            {
+                <a class="navbar-brand" href="">StartFin</a>
+            }
 
-        <button class="botao-menu @(menuAberto ? "aberto" : "fechado")"
-                type="button"
-                @onclick="AlternarMenu"
-                aria-label="Abrir ou fechar menu"
-                title="Abrir ou fechar menu">
+            <button class="botao-menu @(menuAberto ? "aberto" : "fechado")"
+                    type="button"
+                    @onclick="AlternarMenu"
+                    aria-label="Abrir ou fechar menu"
+                    title="Abrir ou fechar menu">
 
-            <span class="icone-menu" aria-hidden="true">
-                <span class="linha-menu"></span>
-            </span>
+                <span class="icone-menu" aria-hidden="true">
+                    <span class="linha-menu"></span>
+                </span>
 
-            <span class="logo-recolhida" aria-hidden="true">$F</span>
-        </button>
+                <span class="logo-recolhida" aria-hidden="true">$F</span>
+            </button>
+        </div>
     </div>
-</div>
 
-<div class="nav-scrollable">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Início">
-                <span class="icone-link" aria-hidden="true">🏠</span>
-                <span class="texto-link">Início</span>
-            </NavLink>
-        </div>
+    <div class="nav-scrollable">
+        <nav class="nav flex-column">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Início">
+                    <span class="icone-link" aria-hidden="true">🏠</span>
+                    <span class="texto-link">Início</span>
+                </NavLink>
+            </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="metas" title="Metas">
-                <span class="icone-link" aria-hidden="true">🎯</span>
-                <span class="texto-link">Metas</span>
-            </NavLink>
-        </div>
-    </nav>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="metas" title="Metas">
+                    <span class="icone-link" aria-hidden="true">🎯</span>
+                    <span class="texto-link">Metas</span>
+                </NavLink>
+            </div>
+        </nav>
+    </div>
 </div>
 
 @code {
