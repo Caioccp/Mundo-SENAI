@@ -177,9 +177,10 @@
 }
 
 /* Impede clicar nos links enquanto o menu estiver fechado */
+/* Mantém os links clicáveis quando o menu está fechado */
 .nav-menu-root.menu-fechado .nav-item ::deep .nav-link {
-    pointer-events: none;
-    cursor: default;
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 @media (min-width: 641px) {
