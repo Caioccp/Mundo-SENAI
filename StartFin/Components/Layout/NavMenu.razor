@@ -1,4 +1,7 @@
-﻿<div class="nav-menu-root @(menuAberto ? "menu-aberto" : "menu-fechado")">
+﻿
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="nav-menu-root @(menuAberto ? "menu-aberto" : "menu-fechado")">
     <div class="top-row ps-3 navbar navbar-dark">
         <div class="container-fluid">
             @if (menuAberto)
@@ -6,28 +9,23 @@
                 <a class="navbar-brand" href="">StartFin</a>
             }
 
-
             <button class="botao-menu @(menuAberto ? "aberto" : "fechado")"
                     type="button"
                     @onclick="AlternarMenu"
                     aria-label="Abrir ou fechar menu"
                     title="Abrir ou fechar menu">
 
-
                 <span class="icone-menu" aria-hidden="true">
                     <span class="linha-menu"></span>
                 </span>
-
 
                 <span class="logo-recolhida" aria-hidden="true">$F</span>
             </button>
         </div>
     </div>
 
-
     <div class="nav-scrollable">
         <nav class="nav flex-column">
-
 
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Início">
@@ -36,14 +34,12 @@
                 </NavLink>
             </div>
 
-
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="metas" title="Metas">
                     <span class="icone-link" aria-hidden="true">🎯</span>
                     <span class="texto-link">Metas</span>
                 </NavLink>
             </div>
-
 
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="educacao-financeira" title="Educação Financeira">
@@ -52,19 +48,38 @@
                 </NavLink>
             </div>
 
+            <AuthorizeView>
+                <Authorized>
+                    <div class="nav-item px-3">
+                        <form method="post" action="/logout">
+                            <AntiforgeryToken />
+                            <button type="submit" class="nav-link">
+                                <span class="icone-link" aria-hidden="true">🚪</span>
+                                <span class="texto-link">Sair da conta</span>
+                            </button>
+                        </form>
+                    </div>
+                </Authorized>
+
+                <NotAuthorized>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="entrar" title="Entrar">
+                            <span class="icone-link" aria-hidden="true">👤</span>
+                            <span class="texto-link">Entrar</span>
+                        </NavLink>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
 
         </nav>
     </div>
 </div>
 
-
 @code {
     [Parameter]
     public EventCallback<bool> AoAlternar { get; set; }
 
-
     private bool menuAberto = true;
-
 
     private async Task AlternarMenu()
     {
