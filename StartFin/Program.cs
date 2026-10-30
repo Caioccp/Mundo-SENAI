@@ -9,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddCascadingAuthenticationState();
+
 builder.Services.AddScoped<ConexaoBanco>();
 
 builder.Services.AddDbContext<StartFinContext>(options =>
@@ -50,6 +52,32 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseAntiforgery();
+
+app.MapPost("/login", async (
+    HttpContext context,
+    SignInManager<Usuario> signInManager,
+    Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery) =>
+{
+    await antiforgery.ValidateRequestAsync(context);
+
+    var formulario = await context.Request.ReadFormAsync();
+
+    var email = formulario["email"].ToString();
+    var senha = formulario["senha"].ToString();
+
+    var resultado = await signInManager.PasswordSignInAsync(
+        email,
+        senha,
+        isPersistent: true,
+        lockoutOnFailure: false);
+
+    if (resultado.Succeeded)
+    {
+        return Results.Redirect("/");
+    }
+
+    return Results.Redirect("/login?erro=1");
+});
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

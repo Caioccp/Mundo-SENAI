@@ -1,9 +1,22 @@
 ﻿@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.AspNetCore.Components.Authorization
+
 <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <AuthorizeRouteView RouteData="routeData"
+                            DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <LayoutView Layout="typeof(Layout.MainLayout)">
+                    <h1>Acesso necessário</h1>
+                    <p>Você precisa entrar para acessar esta página.</p>
+                    <a href="/entrar">Fazer login</a>
+                </LayoutView>
+            </NotAuthorized>
+        </AuthorizeRouteView>
+
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+
     <NotFound>
         <LayoutView Layout="typeof(Layout.MainLayout)">
             <h1>Página não encontrada</h1>

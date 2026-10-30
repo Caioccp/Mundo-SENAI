@@ -1,0 +1,42 @@
+
+@page "/entrar"
+@using StartFin.Modelos
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Usuario> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Entrar | StartFin</PageTitle>
+
+<div class="container mt-5" style="max-width: 480px;">
+    <h1>Entrar na StartFin</h1>
+    <p>Acesse sua conta para continuar.</p>
+
+    <form method="post" action="/login">
+        <AntiforgeryToken />
+
+        <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            <input class="form-control"
+                   type="email"
+                   name="email"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Senha</label>
+            <input class="form-control"
+                   type="password"
+                   name="senha"
+                   required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            Entrar
+        </button>
+    </form>
+
+    <p class="mt-3">
+        Ainda não tem conta?
+        <a href="/cadastro">Criar conta</a>
+    </p>
+</div>
