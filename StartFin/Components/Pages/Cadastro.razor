@@ -1,0 +1,103 @@
+
+@page "/cadastro"
+@using StartFin.Modelos
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Usuario> UserManager
+@inject NavigationManager Navigation
+
+<PageTitle>Criar conta | StartFin</PageTitle>
+
+<div class="container mt-5" style="max-width: 480px;">
+    <h1>Criar conta</h1>
+    <p>Comece sua jornada financeira com a StartFin!</p>
+
+    <EditForm Model="novoUsuario" OnValidSubmit="Cadastrar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nome completo</label>
+            <InputText class="form-control"
+                       @bind-Value="novoUsuario.NomeCompleto" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            <InputText class="form-control"
+                       type="email"
+                       @bind-Value="novoUsuario.Email" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Senha</label>
+            <InputText class="form-control"
+                       type="password"
+                       @bind-Value="senha" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Confirmar senha</label>
+            <InputText class="form-control"
+                       type="password"
+                       @bind-Value="confirmarSenha" />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            Criar minha conta
+        </button>
+    </EditForm>
+
+    @if (!string.IsNullOrWhiteSpace(mensagem))
+    {
+        <p class="mt-3">@mensagem</p>
+    }
+
+    <p class="mt-3">
+        Já tem uma conta?
+        <a href="/login">Entrar</a>
+    </p>
+</div>
+
+@code {
+    private Usuario novoUsuario = new();
+    private string senha = "";
+    private string confirmarSenha = "";
+    private string mensagem = "";
+
+    private async Task Cadastrar()
+    {
+        mensagem = "";
+
+        if (string.IsNullOrWhiteSpace(novoUsuario.NomeCompleto) ||
+            string.IsNullOrWhiteSpace(novoUsuario.Email))
+        {
+            mensagem = "Preencha todos os campos.";
+            return;
+        }
+
+        if (senha.Length < 8)
+        {
+            mensagem = "A senha precisa ter pelo menos 8 caracteres.";
+            return;
+        }
+
+        if (senha != confirmarSenha)
+        {
+            mensagem = "As senhas não são iguais.";
+            return;
+        }
+
+        novoUsuario.UserName = novoUsuario.Email.Trim();
+        novoUsuario.Email = novoUsuario.Email.Trim();
+
+        var resultado = await UserManager.CreateAsync(novoUsuario, senha);
+
+        if (resultado.Succeeded)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        mensagem = string.Join(" ", resultado.Errors.Select(e => e.Description));
+    }
+}
