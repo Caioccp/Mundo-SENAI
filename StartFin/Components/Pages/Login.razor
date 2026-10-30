@@ -2,14 +2,20 @@
 @page "/entrar"
 @using StartFin.Modelos
 @using Microsoft.AspNetCore.Identity
-@inject SignInManager<Usuario> SignInManager
-@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components
 
 <PageTitle>Entrar | StartFin</PageTitle>
 
 <div class="container mt-5" style="max-width: 480px;">
     <h1>Entrar na StartFin</h1>
     <p>Acesse sua conta para continuar.</p>
+
+    @if (Erro == "1")
+    {
+        <div class="alert alert-danger" role="alert">
+            E-mail ou senha inválidos. Confira seus dados e tente novamente.
+        </div>
+    }
 
     <form method="post" action="/login">
         <AntiforgeryToken />
@@ -40,3 +46,8 @@
         <a href="/cadastro">Criar conta</a>
     </p>
 </div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "erro")]
+    public string? Erro { get; set; }
+}

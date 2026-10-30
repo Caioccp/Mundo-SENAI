@@ -33,8 +33,8 @@ builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/login";
-    options.AccessDeniedPath = "/login";
+    options.LoginPath = "/entrar";
+    options.AccessDeniedPath = "/entrar";
 });
 
 var app = builder.Build();
@@ -96,7 +96,7 @@ app.MapPost("/login", async (
         return Results.Redirect("/");
     }
 
-    return Results.Redirect("/login?erro=1");
+    return Results.Redirect("/entrar?erro=1");
 });
 
 app.MapPost("/logout", async (
