@@ -1,0 +1,565 @@
+
+@page "/educacao-financeira/teste-seus-conhecimentos"
+
+<PageTitle>Quiz de Educação Financeira | StartFin</PageTitle>
+
+<div class="quiz-container">
+    @if (!Finalizado)
+    {
+        <header class="quiz-header">
+            <a href="/educacao-financeira" class="voltar">← Voltar para Educação Financeira</a>
+            <span class="etiqueta">EDUCAÇÃO FINANCEIRA</span>
+            <h1>Teste seus conhecimentos 🧠</h1>
+            <p>Desafie seus conhecimentos e descubra o quanto aprendeu sobre dinheiro.</p>
+        </header>
+
+        <section class="quiz-card">
+            <div class="progresso-info">
+                <span>Questão @(Indice + 1) de @Perguntas.Count</span>
+                <span>@Pontos pontos</span>
+            </div>
+
+            <div class="barra-progresso">
+                <div class="barra-preenchida"
+                     style="width: @(((Indice + 1) * 100 / Perguntas.Count))%">
+                </div>
+            </div>
+
+            <span class="tipo-pergunta">
+                @(PerguntaAtual.Tipo == "multi" ? "MÚLTIPLA ESCOLHA" : "ESCOLHA UMA ALTERNATIVA")
+            </span>
+
+            <h2>@PerguntaAtual.Enunciado</h2>
+
+            <div class="alternativas">
+                @foreach (var opcao in PerguntaAtual.Opcoes)
+                {
+                    <button class="@ClasseOpcao(opcao.Id)"
+                            disabled="@Respondida"
+                            @onclick="() => Selecionar(opcao.Id)">
+                        <span class="letra">@opcao.Id</span>
+                        <span>@opcao.Texto</span>
+                    </button>
+                }
+            </div>
+
+            @if (PerguntaAtual.Tipo == "multi" && !Respondida)
+            {
+                <button class="botao-confirmar"
+                        disabled="@(Selecionadas.Count == 0)"
+                        @onclick="ConfirmarMultipla">
+                    Confirmar resposta
+                </button>
+            }
+
+            @if (Respondida)
+            {
+                <div class="feedback @(Acertou ? "feedback-certo" : "feedback-erro")">
+                    <h3>@(Acertou ? "Muito bem! Resposta correta!" : "Não foi dessa vez!")</h3>
+                    <p>@PerguntaAtual.Explicacao</p>
+                </div>
+
+                <button class="botao-proximo" @onclick="Proxima">
+                    @(Indice == Perguntas.Count - 1 ? "Ver resultado" : "Próxima questão →")
+                </button>
+            }
+        </section>
+    }
+    else
+    {
+        <section class="resultado">
+            <span class="icone-resultado">🏆</span>
+            <span class="etiqueta">RESULTADO FINAL</span>
+            <h1>Quiz concluído!</h1>
+            <p>Você terminou o desafio de Educação Financeira do StartFin.</p>
+
+            <div class="pontuacao">
+                <strong>@Pontos</strong>
+                <span>de @Perguntas.Count questões corretas</span>
+            </div>
+
+            <h2>@MensagemResultado</h2>
+            <p>Continue aprendendo e colocando seus conhecimentos em prática!</p>
+
+            <button class="botao-proximo" @onclick="Reiniciar">
+                Refazer o quiz
+            </button>
+
+            <a href="/educacao-financeira" class="link-voltar">
+                Voltar para Educação Financeira
+            </a>
+        </section>
+    }
+</div>
+
+<style>
+    .quiz-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px 20px 60px;
+        color: #26364d;
+    }
+
+    .quiz-header {
+        margin-bottom: 28px;
+    }
+
+    .voltar {
+        display: inline-block;
+        margin-bottom: 28px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        background: #edf2f7;
+        color: #2455a4;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .etiqueta {
+        display: block;
+        color: #26866a;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .quiz-header h1, .resultado h1 {
+        color: #172b4d;
+        font-size: 34px;
+        font-weight: 800;
+        margin: 8px 0;
+    }
+
+    .quiz-header p, .resultado > p {
+        color: #718096;
+        line-height: 1.6;
+    }
+
+    .quiz-card, .resultado {
+        background: white;
+        border: 1px solid #e5eaf1;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(23, 43, 77, 0.05);
+    }
+
+    .progresso-info {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .barra-progresso {
+        height: 9px;
+        background: #e8edf3;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 28px;
+    }
+
+    .barra-preenchida {
+        height: 100%;
+        background: #279b75;
+        border-radius: 20px;
+        transition: width .3s;
+    }
+
+    .tipo-pergunta {
+        color: #26866a;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .quiz-card h2 {
+        color: #172b4d;
+        font-size: 21px;
+        line-height: 1.55;
+        margin: 14px 0 25px;
+    }
+
+    .alternativas {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .opcao {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-align: left;
+        width: 100%;
+        padding: 16px;
+        border: 2px solid #e5eaf1;
+        border-radius: 12px;
+        background: #fff;
+        color: #34445c;
+        font-size: 14px;
+        line-height: 1.5;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .opcao:not(:disabled):hover {
+        border-color: #279b75;
+        background: #f4fbf8;
+    }
+
+    .opcao:disabled {
+        cursor: default;
+    }
+
+    .opcao.selecionada {
+        border-color: #3479c9;
+        background: #eff6ff;
+    }
+
+    .letra {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #edf2f7;
+        color: #2455a4;
+        font-weight: 800;
+    }
+
+    .feedback {
+        margin-top: 24px;
+        padding: 18px;
+        border-radius: 12px;
+        line-height: 1.6;
+    }
+
+    .feedback h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+    }
+
+    .feedback p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .feedback-certo {
+        background: #eaf8f1;
+        color: #176b4b;
+    }
+
+    .feedback-erro {
+        background: #fff2ed;
+        color: #a3442c;
+    }
+
+    .botao-confirmar, .botao-proximo {
+        display: block;
+        width: 100%;
+        margin-top: 22px;
+        padding: 15px;
+        border: none;
+        border-radius: 11px;
+        background: #2455a4;
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .botao-confirmar:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+
+    .botao-proximo {
+        background: #218665;
+    }
+
+    .resultado {
+        text-align: center;
+        padding: 45px 30px;
+    }
+
+    .icone-resultado {
+        display: block;
+        font-size: 55px;
+        margin-bottom: 18px;
+    }
+
+    .pontuacao {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin: 28px auto;
+        padding: 25px;
+        background: #f0f6fb;
+        border-radius: 14px;
+    }
+
+    .pontuacao strong {
+        font-size: 48px;
+        color: #218665;
+    }
+
+    .pontuacao span {
+        color: #718096;
+    }
+
+    .resultado h2 {
+        color: #172b4d;
+        font-size: 21px;
+    }
+
+    .link-voltar {
+        display: block;
+        margin-top: 20px;
+        color: #2455a4;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 600px) {
+        .quiz-card, .resultado {
+            padding: 20px;
+        }
+
+        .quiz-header h1, .resultado h1 {
+            font-size: 28px;
+        }
+
+        .quiz-card h2 {
+            font-size: 18px;
+        }
+    }
+</style>
+
+@code {
+    private int Indice = 0;
+    private int Pontos = 0;
+    private bool Respondida = false;
+    private bool Acertou = false;
+    private bool Finalizado = false;
+    private HashSet<string> Selecionadas = new();
+
+    private Pergunta PerguntaAtual => Perguntas[Indice];
+
+    private string MensagemResultado =>
+        Pontos == 10 ? "Excelente! Você domina o assunto!" :
+        Pontos >= 7 ? "Muito bom! Você tem bons conhecimentos!" :
+        Pontos >= 5 ? "Bom trabalho! Continue aprendendo!" :
+        "Continue estudando! A prática ajuda a melhorar.";
+
+    private class Opcao
+    {
+        public string Id { get; set; } = "";
+        public string Texto { get; set; } = "";
+    }
+
+    private class Pergunta
+    {
+        public string Tipo { get; set; } = "unica";
+        public string Enunciado { get; set; } = "";
+        public List<Opcao> Opcoes { get; set; } = new();
+        public string[] Corretas { get; set; } = Array.Empty<string>();
+        public string Explicacao { get; set; } = "";
+    }
+
+    private List<Pergunta> Perguntas = new()
+    {
+        new Pergunta {
+            Enunciado = "Mariana recebe R$ 900 por mês. Seus gastos são: R$ 250 com transporte, R$ 200 com alimentação, R$ 120 com internet e R$ 180 com lazer. Ela deseja guardar pelo menos R$ 100 mensalmente. Qual análise representa melhor sua situação financeira?",
+            Opcoes = Opcoes(
+                "Ela consegue guardar R$ 150, pois seus gastos somam R$ 750.",
+                "Ela precisa reduzir obrigatoriamente todos os gastos pela metade.",
+                "Ela não consegue economizar porque possui gastos fixos.",
+                "Ela pode guardar R$ 250, considerando apenas transporte e alimentação."
+            ),
+            Corretas = new[] { "A" },
+            Explicacao = "Os gastos somam R$ 750. Como Mariana recebe R$ 900, sobram R$ 150. Ela consegue guardar R$ 100 e ainda manter R$ 50 disponíveis."
+        },
+        new Pergunta {
+            Enunciado = "Pedro deseja comprar um fone de ouvido. Encontrou duas condições: R$ 420 à vista ou seis parcelas de R$ 75. Como possui o dinheiro necessário, mas também está economizando para outra meta, qual conclusão está correta ao comparar os valores?",
+            Opcoes = Opcoes(
+                "Parcelar é melhor, pois as parcelas são menores que o preço total.",
+                "Pagar à vista custa R$ 30 a menos que parcelar.",
+                "As duas opções possuem o mesmo custo.",
+                "Parcelar economiza R$ 60."
+            ),
+            Corretas = new[] { "B" },
+            Explicacao = "Seis parcelas de R$ 75 totalizam R$ 450. O pagamento à vista custa R$ 420, ou seja, R$ 30 a menos."
+        },
+        new Pergunta {
+            Enunciado = "Lucas recebe R$ 300 de mesada e costuma gastar quase tudo na primeira semana. Ele separou dinheiro para necessidades, lazer e economia. Porém, recebeu um convite para um passeio de R$ 70, depois de já ter utilizado todo o valor planejado para lazer. Qual atitude demonstra melhor controle financeiro?",
+            Opcoes = Opcoes(
+                "Usar o dinheiro reservado para uma necessidade.",
+                "Pedir dinheiro emprestado sem planejar a devolução.",
+                "Avaliar o passeio e reorganizar gastos não essenciais sem comprometer necessidades e metas.",
+                "Gastar os R$ 70 e deixar o planejamento para o próximo mês."
+            ),
+            Corretas = new[] { "C" },
+            Explicacao = "Reavaliar despesas não essenciais permite tomar uma decisão consciente sem comprometer prioridades ou assumir dívidas."
+        },
+        new Pergunta {
+            Tipo = "unica",
+            Enunciado = "Uma pessoa recebe R$ 1.200 por mês e gasta R$ 1.150. É possível afirmar que sua situação financeira é necessariamente saudável apenas porque suas despesas são menores que sua renda?",
+            Opcoes = Opcoes(
+                "Sim, pois qualquer valor que sobra garante estabilidade financeira.",
+                "Sim, desde que ela não tenha metas de economia.",
+                "Não, pois dívidas, imprevistos e falta de planejamento também precisam ser considerados.",
+                "Não, pois toda pessoa precisa gastar exatamente metade da renda."
+            ),
+            Corretas = new[] { "C" },
+            Explicacao = "Sobrar R$ 50 é positivo, mas não garante saúde financeira. É necessário considerar dívidas, imprevistos e planejamento."
+        },
+        new Pergunta {
+            Enunciado = "Ana quer juntar R$ 720 para comprar um computador em oito meses. Ela consegue guardar R$ 70 por mês. Sem considerar rendimentos ou dinheiro extra, quanto ainda faltará para atingir sua meta?",
+            Opcoes = Opcoes(
+                "R$ 80.",
+                "R$ 160.",
+                "R$ 120.",
+                "R$ 70."
+            ),
+            Corretas = new[] { "B" },
+            Explicacao = "Oito depósitos de R$ 70 totalizam R$ 560. Subtraindo R$ 560 de R$ 720, faltam R$ 160."
+        },
+        new Pergunta {
+            Tipo = "multi",
+            Enunciado = "Rafael percebeu que compra produtos por impulso depois de ver anúncios de promoções. Para mudar esse comportamento, decidiu criar regras pessoais antes de comprar. Quais atitudes podem ajudá-lo a tomar decisões mais conscientes? Selecione todas as alternativas corretas.",
+            Opcoes = Opcoes(
+                "Pesquisar preços em diferentes lojas antes de decidir.",
+                "Avaliar se precisa do produto e se ele cabe no orçamento.",
+                "Comprar imediatamente sempre que encontrar uma promoção com prazo limitado.",
+                "Esperar um período antes de comprar itens que não são necessários naquele momento."
+            ),
+            Corretas = new[] { "A", "B", "D" },
+            Explicacao = "Pesquisar preços, avaliar a necessidade e evitar decisões apressadas ajudam a reduzir compras por impulso. Promoções não garantem que uma compra seja necessária ou vantajosa."
+        },
+        new Pergunta {
+            Enunciado = "Beatriz guarda dinheiro todos os meses, mas frequentemente utiliza o valor economizado para pagar despesas inesperadas. Ela deseja construir uma reserva financeira para situações que não estavam previstas no orçamento. Qual estratégia combina melhor com esse objetivo?",
+            Opcoes = Opcoes(
+                "Utilizar toda a economia em compras planejadas.",
+                "Separar uma quantia regularmente e reservar esse dinheiro para imprevistos.",
+                "Deixar de registrar os gastos para não perceber quanto está utilizando.",
+                "Assumir parcelas maiores para guardar mais dinheiro no futuro."
+            ),
+            Corretas = new[] { "B" },
+            Explicacao = "Uma reserva financeira deve ser construída regularmente e utilizada para situações inesperadas, não para compras comuns."
+        },
+        new Pergunta {
+            Enunciado = "Ao comprar um produto parcelado, analisar somente o valor de cada prestação pode levar a uma decisão inadequada, pois a soma das parcelas e os compromissos futuros também precisam ser considerados.",
+            Opcoes = Opcoes(
+                "Verdadeiro.",
+                "Falso."
+            ),
+            Corretas = new[] { "A" },
+            Explicacao = "O custo total e o impacto das parcelas no orçamento futuro são fundamentais para avaliar uma compra."
+        },
+        new Pergunta {
+            Enunciado = "Uma estudante recebe R$ 500 por mês. Gasta R$ 180 com transporte, R$ 140 com alimentação e R$ 90 com outras despesas. Ela deseja juntar R$ 600 em seis meses. Qual conclusão está correta, considerando que os gastos permaneçam iguais?",
+            Opcoes = Opcoes(
+                "Ela pode guardar R$ 90 por mês e atingir a meta exatamente.",
+                "Ela pode guardar R$ 100 por mês, pois suas despesas somam R$ 400.",
+                "Ela precisa guardar R$ 100 por mês e ajustar o orçamento para conseguir mais R$ 10 mensais.",
+                "Ela já possui dinheiro suficiente, pois suas despesas são menores que sua renda."
+            ),
+            Corretas = new[] { "C" },
+            Explicacao = "As despesas somam R$ 410, deixando R$ 90 disponíveis. A meta exige R$ 100 por mês, então será necessário ajustar R$ 10 mensais."
+        },
+        new Pergunta {
+            Enunciado = "Depois de acompanhar seus gastos durante três meses, Gustavo percebeu que sempre ultrapassa o valor planejado para lazer. Ao mesmo tempo, deseja economizar para comprar uma bicicleta e não quer abandonar completamente suas atividades de lazer. Qual mudança representa um planejamento financeiro mais equilibrado?",
+            Opcoes = Opcoes(
+                "Eliminar todo o lazer e guardar o máximo possível.",
+                "Continuar gastando sem limites e economizar apenas quando sobrar dinheiro.",
+                "Definir um limite realista para lazer, acompanhar os gastos e reservar uma quantia mensal para a bicicleta.",
+                "Comprar a bicicleta parcelada sem avaliar as despesas futuras."
+            ),
+            Corretas = new[] { "C" },
+            Explicacao = "Um planejamento sustentável combina limites para os gastos, acompanhamento do orçamento e economia constante para atingir objetivos."
+        }
+    };
+
+    private static List<Opcao> Opcoes(
+    string a, string b, string? c = null, string? d = null)
+{
+    var opcoes = new List<Opcao>
+    {
+        new() { Id = "A", Texto = a },
+        new() { Id = "B", Texto = b }
+    };
+
+    if (c != null)
+        opcoes.Add(new() { Id = "C", Texto = c });
+
+    if (d != null)
+        opcoes.Add(new() { Id = "D", Texto = d });
+
+    return opcoes;
+}
+
+    private string ClasseOpcao(string id)
+    {
+        return Selecionadas.Contains(id) ? "opcao selecionada" : "opcao";
+    }
+
+    private void Selecionar(string id)
+    {
+        if (Respondida) return;
+
+        if (PerguntaAtual.Tipo == "multi")
+        {
+            if (!Selecionadas.Add(id))
+                Selecionadas.Remove(id);
+
+            return;
+        }
+
+        Selecionadas.Clear();
+        Selecionadas.Add(id);
+        Corrigir();
+    }
+
+    private void ConfirmarMultipla()
+    {
+        if (Respondida || Selecionadas.Count == 0) return;
+        Corrigir();
+    }
+
+    private void Corrigir()
+    {
+        Respondida = true;
+        Acertou = Selecionadas.SetEquals(PerguntaAtual.Corretas);
+
+        if (Acertou)
+            Pontos++;
+    }
+
+    private void Proxima()
+    {
+        if (Indice < Perguntas.Count - 1)
+        {
+            Indice++;
+            Respondida = false;
+            Acertou = false;
+            Selecionadas.Clear();
+        }
+        else
+        {
+            Finalizado = true;
+        }
+    }
+
+    private void Reiniciar()
+    {
+        Indice = 0;
+        Pontos = 0;
+        Respondida = false;
+        Acertou = false;
+        Finalizado = false;
+        Selecionadas.Clear();
+    }
+}
