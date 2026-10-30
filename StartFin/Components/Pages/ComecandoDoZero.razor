@@ -5,17 +5,19 @@
 
 <div class="conteudo-pagina">
 
-    <a href="/educacao-financeira" class="voltar">
-        ← Voltar para Educação Financeira
-    </a>
-
     <header class="cabecalho">
-        <span class="etiqueta">EDUCAÇÃO FINANCEIRA • FUNDAMENTOS</span>
-        <h1>Começando do zero 📚</h1>
-        <p>
-            Aprenda os primeiros passos para entender e cuidar melhor
-            do seu dinheiro.
-        </p>
+        <div>
+            <span class="etiqueta">EDUCAÇÃO FINANCEIRA • FUNDAMENTOS</span>
+            <h1>Começando do zero 📚</h1>
+            <p>
+                Aprenda os primeiros passos para entender e cuidar melhor
+                do seu dinheiro.
+            </p>
+        </div>
+
+        <a href="/educacao-financeira" class="botao-voltar">
+            ← Voltar para Educação Financeira
+        </a>
     </header>
 
     <section class="destaque">
@@ -104,21 +106,29 @@
         color: #172b65;
     }
 
-    .voltar {
-        display: inline-block;
-        color: #2455a4;
-        text-decoration: none;
-        font-weight: 700;
-        margin-bottom: 25px;
-    }
-
-    .voltar:hover {
-        text-decoration: underline;
-    }
-
     .cabecalho {
-        margin-bottom: 30px;
-    }
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+    .botao-voltar {
+    display: inline-block;
+    background: #edf2f7;
+    color: #2455a4;
+    padding: 10px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: 0.2s;
+    margin-top: 0;
+}
+
+.botao-voltar:hover {
+    background: #dce7f5;
+}
 
     .etiqueta {
         color: #16b99a;
@@ -195,6 +205,11 @@
     }
 
     @@media (max-width: 650px) {
+        .cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
         .cards {
             grid-template-columns: 1fr;
         }

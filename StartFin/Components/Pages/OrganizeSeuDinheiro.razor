@@ -5,17 +5,19 @@
 
 <div class="pagina-organizacao">
 
-    <a href="/educacao-financeira" class="voltar">
-        ← Voltar para Educação Financeira
-    </a>
-
     <header class="cabecalho">
-        <span class="etiqueta">EDUCAÇÃO FINANCEIRA • ORGANIZAÇÃO</span>
-        <h1>Organize seu dinheiro 💰</h1>
-        <p>
-            Aprenda a entender seus ganhos, controlar seus gastos
-            e organizar melhor seu dinheiro.
-        </p>
+        <div>
+            <span class="etiqueta">EDUCAÇÃO FINANCEIRA • ORGANIZAÇÃO</span>
+            <h1>Organize seu dinheiro 💰</h1>
+            <p>
+                Aprenda a entender seus ganhos, controlar seus gastos
+                e organizar melhor seu dinheiro.
+            </p>
+        </div>
+
+        <a href="/educacao-financeira" class="botao-voltar">
+            ← Voltar para Educação Financeira
+        </a>
     </header>
 
     <section class="destaque">
@@ -148,20 +150,28 @@
     color: #172b65;
 }
 
-.voltar {
+.cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.botao-voltar {
     display: inline-block;
+    background: #edf2f7;
     color: #2455a4;
+    padding: 10px 16px;
+    border-radius: 10px;
     text-decoration: none;
     font-weight: 700;
-    margin-bottom: 25px;
+    transition: 0.2s;
+    margin-top: 0;
 }
 
-.voltar:hover {
-    text-decoration: underline;
-}
-
-.cabecalho {
-    margin-bottom: 30px;
+.botao-voltar:hover {
+    background: #dce7f5;
 }
 
 .etiqueta {
@@ -297,6 +307,10 @@
 }
 
 @@media (max-width: 650px) {
+    .cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+}
     .cards,
     .valores {
         grid-template-columns: 1fr;
