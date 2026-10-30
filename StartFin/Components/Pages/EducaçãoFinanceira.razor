@@ -5,6 +5,11 @@
 
 <PageTitle>Educação Financeira | StartFin</PageTitle>
 
+<div class="cabecalho-educacao">
+    <h1>Educação Financeira 📚</h1>
+    <a href="/" class="botao-voltar">← Voltar ao Menu</a>
+</div>
+
 
 <div class="educacao-container">
 
@@ -267,8 +272,42 @@
     letter-spacing: 1px;
 }
 
+.cabecalho-educacao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
 
-@media (max-width: 650px) {
+
+.cabecalho-educacao h1 {
+    color: #142d70;
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0;
+}
+
+
+.botao-voltar {
+    background: #142d70;
+    color: white;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+
+.botao-voltar:hover {
+    background: #2455a4;
+    color: white;
+}
+
+
+@@media (max-width: 650px) {
     .conteudos-grid {
         grid-template-columns: 1fr;
     }
