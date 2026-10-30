@@ -1,34 +1,58 @@
-    using StartFin.Components;
-    using Microsoft.EntityFrameworkCore;
+using StartFin.Components;
+using StartFin.Dados;
+using StartFin.Modelos;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
-    var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-    // Add services to the container.
-    builder.Services.AddRazorComponents()
-        .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
-    builder.Services.AddScoped<StartFin.Dados.ConexaoBanco>();
+builder.Services.AddScoped<ConexaoBanco>();
 
-    builder.Services.AddDbContext<StartFin.Dados.StartFinContext>(options =>
-        options.UseNpgsql(
-            builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<StartFinContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    var app = builder.Build();
+// Configuração do sistema de usuários
+builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
+{
+    options.User.RequireUniqueEmail = true;
 
-    // Configure the HTTP request pipeline.
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseExceptionHandler("/Error", createScopeForErrors: true);
-        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-        app.UseHsts();
-    }
-    app.UseStatusCodePagesWithReExecute("/not-found");
-    app.UseHttpsRedirection();
+    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+})
+.AddEntityFrameworkStores<StartFinContext>()
+.AddDefaultTokenProviders();
 
-    app.UseAntiforgery();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/login";
+    options.AccessDeniedPath = "/login";
+});
 
-    app.MapStaticAssets();
-    app.MapRazorComponents<App>()
-        .AddInteractiveServerRenderMode();
+var app = builder.Build();
 
-    app.Run();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseHsts();
+}
+
+app.UseStatusCodePagesWithReExecute("/not-found");
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseAntiforgery();
+
+app.MapStaticAssets();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
+app.Run();
