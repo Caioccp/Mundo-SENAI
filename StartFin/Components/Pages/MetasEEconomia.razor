@@ -1,0 +1,203 @@
+
+@page "/educacao-financeira/metas-e-economia"
+
+<PageTitle>Metas e Economia | StartFin</PageTitle>
+
+<div class="pagina-educacao">
+
+    <a href="/educacao-financeira" class="voltar">
+        ← Voltar para Educação Financeira
+    </a>
+
+    <header class="topo-pagina">
+        <div>
+            <span class="etiqueta">EDUCAÇÃO FINANCEIRA</span>
+            <h1>Metas e Economia 🎯</h1>
+            <p>Aprenda a guardar dinheiro para realizar seus planos.</p>
+        </div>
+        <a href="/educacao-financeira" class="voltar">
+            ← Voltar para Educação Financeira
+        </a>
+    </header>
+
+    <section class="conteudo-principal">
+        <h2>O que são metas financeiras?</h2>
+        <p>
+            Metas financeiras são objetivos que você deseja alcançar usando seu dinheiro.
+            Elas ajudam a organizar suas economias e a manter o foco no que é importante.
+        </p>
+
+        <h2>Como criar uma meta?</h2>
+        <div class="passos">
+            <div class="passo">
+                <strong>1. Escolha seu objetivo</strong>
+                <p>Decida o que deseja conquistar, como comprar um fone ou um jogo.</p>
+            </div>
+            <div class="passo">
+                <strong>2. Defina o valor</strong>
+                <p>Pesquise quanto custa seu objetivo e estabeleça uma quantia para alcançar.</p>
+            </div>
+            <div class="passo">
+                <strong>3. Planeje suas economias</strong>
+                <p>Decida quanto consegue guardar por semana ou por mês.</p>
+            </div>
+            <div class="passo">
+                <strong>4. Acompanhe seu progresso</strong>
+                <p>Observe quanto já guardou e quanto ainda falta para alcançar sua meta.</p>
+            </div>
+        </div>
+
+        <h2>Exemplo prático</h2>
+        <div class="exemplo-meta">
+            <h3>🎧 Meta: comprar um fone</h3>
+            <p>Valor necessário: R$ 300,00</p>
+            <p>Valor guardado: R$ 100,00</p>
+            <div class="barra-progresso">
+                <div class="progresso"></div>
+            </div>
+            <strong>33% da meta alcançada!</strong>
+        </div>
+
+        <div class="dica">
+            <strong>💡 Dica StartFin</strong>
+            <p>
+                Comece com metas pequenas e realistas. Guardar um pouco de dinheiro
+                regularmente pode ajudar você a conquistar seus objetivos.
+            </p>
+        </div>
+    </section>
+</div>
+
+<style>
+    .pagina-educacao {
+        padding: 30px;
+        color: #26364a;
+    }
+
+    .topo-pagina {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .etiqueta {
+        color: #16a085;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .topo-pagina h1 {
+        margin: 8px 0;
+        color: #172b4d;
+        font-size: 30px;
+    }
+
+    .topo-pagina p {
+        color: #718096;
+    }
+
+    .voltar {
+    display: inline-block;
+    color: #2455a4;
+    text-decoration: none;
+    font-weight: 700;
+    margin-bottom: 25px;
+}
+
+.voltar:hover {
+    text-decoration: underline;
+}
+
+    .conteudo-principal {
+        background: white;
+        padding: 28px;
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+    }
+
+    .conteudo-principal h2 {
+        color: #172b4d;
+        margin-top: 24px;
+    }
+
+    .conteudo-principal p {
+        color: #718096;
+        line-height: 1.7;
+    }
+
+    .passos {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-top: 18px;
+    }
+
+    .passo {
+        background: #f4f7fb;
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .passo strong {
+        color: #172b4d;
+    }
+
+    .exemplo-meta {
+        background: #f4f7fb;
+        padding: 22px;
+        border-radius: 12px;
+        margin-top: 16px;
+    }
+
+    .exemplo-meta h3 {
+        color: #172b4d;
+    }
+
+    .barra-progresso {
+        height: 12px;
+        background: #dce5ef;
+        border-radius: 20px;
+        overflow: hidden;
+        margin: 16px 0 8px;
+    }
+
+    .progresso {
+        width: 33%;
+        height: 100%;
+        background: #16a085;
+        border-radius: 20px;
+    }
+
+    .exemplo-meta > strong {
+        color: #16a085;
+    }
+
+    .dica {
+        background: #eaf8f4;
+        padding: 20px;
+        border-radius: 12px;
+        margin-top: 24px;
+    }
+
+    .dica strong {
+        color: #13866f;
+    }
+
+    @@media (max-width: 650px) {
+        .pagina-educacao {
+            padding: 18px;
+        }
+
+        .topo-pagina {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .passos {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

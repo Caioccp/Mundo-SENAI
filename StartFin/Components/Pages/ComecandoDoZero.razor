@@ -1,0 +1,206 @@
+
+@page "/educacao-financeira/comecando-do-zero"
+
+<PageTitle>Começando do Zero | StartFin</PageTitle>
+
+<div class="conteudo-pagina">
+
+    <a href="/educacao-financeira" class="voltar">
+        ← Voltar para Educação Financeira
+    </a>
+
+    <header class="cabecalho">
+        <span class="etiqueta">EDUCAÇÃO FINANCEIRA • FUNDAMENTOS</span>
+        <h1>Começando do zero 📚</h1>
+        <p>
+            Aprenda os primeiros passos para entender e cuidar melhor
+            do seu dinheiro.
+        </p>
+    </header>
+
+    <section class="destaque">
+        <h2>O que é educação financeira?</h2>
+        <p>
+            Educação financeira é aprender a organizar o dinheiro,
+            controlar gastos, fazer escolhas conscientes e planejar
+            objetivos para o futuro.
+        </p>
+    </section>
+
+    <section class="secao">
+        <h2>Por que isso é importante?</h2>
+        <p>
+            Aprender a cuidar do dinheiro ajuda você a evitar gastos
+            desnecessários, planejar compras e se preparar para
+            imprevistos.
+        </p>
+    </section>
+
+    <section class="secao">
+        <h2>Necessidade ou desejo?</h2>
+
+        <div class="cards">
+            <article class="card">
+                <span>🏠</span>
+                <h3>Necessidade</h3>
+                <p>
+                    Algo importante para o dia a dia, como alimentação,
+                    transporte e materiais escolares.
+                </p>
+            </article>
+
+            <article class="card">
+                <span>🎮</span>
+                <h3>Desejo</h3>
+                <p>
+                    Algo que você gostaria de ter, mas que não é
+                    essencial, como um jogo ou um acessório novo.
+                </p>
+            </article>
+        </div>
+    </section>
+
+    <section class="secao">
+        <h2>Conheça três conceitos básicos</h2>
+
+        <div class="conceito">
+            <h3>💵 Renda</h3>
+            <p>É o dinheiro que você recebe, como mesada ou salário.</p>
+        </div>
+
+        <div class="conceito">
+            <h3>🛒 Despesas</h3>
+            <p>São os gastos que você tem, como transporte e compras.</p>
+        </div>
+
+        <div class="conceito">
+            <h3>🐷 Economia</h3>
+            <p>
+                É guardar parte do dinheiro para alcançar objetivos
+                ou se preparar para imprevistos.
+            </p>
+        </div>
+    </section>
+
+    <section class="exemplo">
+        <h2>Exemplo do dia a dia</h2>
+        <p>
+            Imagine que você recebeu R$ 100. Antes de gastar tudo,
+            pode pensar no que precisa comprar, no que gostaria de
+            comprar e se consegue guardar uma parte.
+        </p>
+        <p>
+            Assim, você começa a tomar decisões mais conscientes!
+        </p>
+    </section>
+
+</div>
+
+<style>
+    .conteudo-pagina {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 30px 15px 50px;
+        color: #172b65;
+    }
+
+    .voltar {
+        display: inline-block;
+        color: #2455a4;
+        text-decoration: none;
+        font-weight: 700;
+        margin-bottom: 25px;
+    }
+
+    .voltar:hover {
+        text-decoration: underline;
+    }
+
+    .cabecalho {
+        margin-bottom: 30px;
+    }
+
+    .etiqueta {
+        color: #16b99a;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+    }
+
+    .cabecalho h1 {
+        font-size: 34px;
+        font-weight: 800;
+        margin: 10px 0;
+    }
+
+    .cabecalho p,
+    .secao p,
+    .destaque p,
+    .exemplo p {
+        color: #647da8;
+        line-height: 1.7;
+    }
+
+    .destaque,
+    .exemplo {
+        background: #edf3ff;
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+
+    .destaque h2,
+    .exemplo h2 {
+        margin-top: 0;
+        font-size: 22px;
+    }
+
+    .secao {
+        margin-bottom: 35px;
+    }
+
+    .secao h2 {
+        font-size: 22px;
+        margin-bottom: 18px;
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .card,
+    .conceito {
+        background: #f4f7fd;
+        border: 1px solid #e5eaf5;
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 12px;
+    }
+
+    .card span {
+        font-size: 30px;
+    }
+
+    .card h3,
+    .conceito h3 {
+        color: #172b65;
+        margin-bottom: 8px;
+    }
+
+    .card p,
+    .conceito p {
+        margin-bottom: 0;
+    }
+
+    @@media (max-width: 650px) {
+        .cards {
+            grid-template-columns: 1fr;
+        }
+
+        .cabecalho h1 {
+            font-size: 28px;
+        }
+    }
+</style>
