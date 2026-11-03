@@ -129,15 +129,6 @@
             </p>
         </div>
 
-        <div class="d-flex justify-content-end mb-4">
-            @if (!editando)
-            {
-                <button class="conta-botao" @onclick="AbrirEdicao">
-                    ✏️ Editar perfil
-                </button>
-            }
-        </div>
-
         @if (editando)
         {
             <div class="conta-card mb-4">
@@ -234,7 +225,16 @@
         </div>
     }
         
-        <h5 class="conta-secao">Informações pessoais</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="conta-secao mb-0">Informações pessoais</h5>
+
+    @if (!editando)
+    {
+        <button class="conta-botao" @onclick="AbrirEdicao">
+            ✏️ Editar perfil
+        </button>
+    }
+</div>
 
         <div class="row g-3">
 
