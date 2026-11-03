@@ -209,6 +209,34 @@ namespace StartFin.Migrations
                     b.ToTable("PreferenciasNotificacoes");
                 });
 
+            modelBuilder.Entity("StartFin.Modelos.ResultadoQuiz", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DataConclusao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Pontos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalPerguntas")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("ResultadosQuiz");
+                });
+
             modelBuilder.Entity("StartFin.Modelos.Usuario", b =>
                 {
                     b.Property<string>("Id")
@@ -329,6 +357,17 @@ namespace StartFin.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("StartFin.Modelos.ResultadoQuiz", b =>
+                {
+                    b.HasOne("StartFin.Modelos.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 #pragma warning restore 612, 618
         }

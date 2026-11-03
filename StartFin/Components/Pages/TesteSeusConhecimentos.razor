@@ -1,5 +1,10 @@
 
 @page "/educacao-financeira/teste-seus-conhecimentos"
+@using StartFin.Dados
+@using StartFin.Modelos
+@using Microsoft.AspNetCore.Components.Authorization
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
 
 <PageTitle>Quiz de Educação Financeira | StartFin</PageTitle>
 
@@ -72,6 +77,11 @@
             <span class="etiqueta">RESULTADO FINAL</span>
             <h1>Quiz concluído!</h1>
             <p>Você terminou o desafio de Educação Financeira do StartFin.</p>
+
+            @if (ResultadoSalvo)
+{
+    <p>✅ Seu resultado foi salvo na sua conta!</p>
+}
 
             <div class="pontuacao">
                 <strong>@Pontos</strong>
@@ -345,6 +355,7 @@
     private bool Acertou = false;
     private bool Finalizado = false;
     private HashSet<string> Selecionadas = new();
+    private bool ResultadoSalvo = false;
 
     private Pergunta PerguntaAtual => Perguntas[Indice];
 
@@ -538,20 +549,45 @@
             Pontos++;
     }
 
-    private void Proxima()
+    private async Task Proxima()
+{
+    if (Indice < Perguntas.Count - 1)
     {
-        if (Indice < Perguntas.Count - 1)
-        {
-            Indice++;
-            Respondida = false;
-            Acertou = false;
-            Selecionadas.Clear();
-        }
-        else
-        {
-            Finalizado = true;
-        }
+        Indice++;
+        Respondida = false;
+        Acertou = false;
+        Selecionadas.Clear();
     }
+    else
+    {
+        Finalizado = true;
+        await SalvarResultadoAsync();
+    }
+}
+
+private async Task SalvarResultadoAsync()
+{
+    if (ResultadoSalvo) return;
+
+    var estado = await AuthProvider.GetAuthenticationStateAsync();
+    var usuarioId = estado.User.FindFirst(
+        System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(usuarioId)) return;
+
+    var resultado = new ResultadoQuiz
+    {
+        UsuarioId = usuarioId,
+        Pontos = Pontos,
+        TotalPerguntas = Perguntas.Count,
+        DataConclusao = DateTime.UtcNow
+    };
+
+    Context.ResultadosQuiz.Add(resultado);
+    await Context.SaveChangesAsync();
+
+    ResultadoSalvo = true;
+}
 
     private void Reiniciar()
     {
@@ -561,5 +597,6 @@
         Acertou = false;
         Finalizado = false;
         Selecionadas.Clear();
+        ResultadoSalvo = false;
     }
 }
