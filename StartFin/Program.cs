@@ -18,19 +18,19 @@ builder.Services.AddDbContext<StartFinContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configuração do sistema de usuários
 builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
 {
     options.User.RequireUniqueEmail = false;
 
     options.Password.RequiredLength = 8;
     options.Password.RequireDigit = true;
-    options.Password.RequireUppercase = false;
+    options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
-    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireNonAlphanumeric = true;
 })
 .AddEntityFrameworkStores<StartFinContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+.AddErrorDescriber<DescritorErrosIdentity>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
