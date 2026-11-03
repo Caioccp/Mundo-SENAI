@@ -1,4 +1,3 @@
-
 @page "/minha-conta"
 @using StartFin.Modelos
 @using Microsoft.AspNetCore.Identity
@@ -100,6 +99,7 @@
 
 <div class="container py-5 conta-container">
 
+    <!-- CABEÇALHO -->
     <div class="conta-banner">
         <span class="small fw-bold">STARTFIN • ÁREA DO USUÁRIO</span>
         <h1 class="fw-bold mt-3">Minha conta</h1>
@@ -120,6 +120,7 @@
     }
     else
     {
+        <!-- BOAS-VINDAS -->
         <div class="conta-card mb-4">
             <span class="conta-label">BEM-VINDO(A) À STARTFIN</span>
             <h3 class="fw-bold mb-2">@usuario.NomeCompleto</h3>
@@ -129,6 +130,19 @@
             </p>
         </div>
 
+        <!-- INFORMAÇÕES PESSOAIS -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="conta-secao mb-0">Informações pessoais</h5>
+
+            @if (!editando)
+            {
+                <button class="conta-botao" @onclick="AbrirEdicao">
+                    ✏️ Editar perfil
+                </button>
+            }
+        </div>
+
+        <!-- FORMULÁRIO DE EDIÇÃO -->
         @if (editando)
         {
             <div class="conta-card mb-4">
@@ -168,75 +182,8 @@
             </div>
         }
 
-        <div class="conta-card mb-4">
-    <h5 class="conta-secao">Segurança da conta</h5>
-
-    <p class="text-muted">
-        Mantenha sua conta protegida atualizando sua senha.
-    </p>
-
-    <button class="conta-botao"
-            @onclick="AbrirAlteracaoSenha">
-        🔒 Alterar senha
-    </button>
-</div>
-
-@if (alterandoSenha)
-{
-    <div class="conta-card mb-4">
-        <h5 class="conta-secao">Alterar senha</h5>
-
-        <div class="mb-3">
-            <label class="form-label">Senha atual</label>
-            <input type="password" class="form-control"
-                   @bind="senhaAtual" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Nova senha</label>
-            <input type="password" class="form-control"
-                   @bind="novaSenha" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Confirmar nova senha</label>
-            <input type="password" class="form-control"
-                   @bind="confirmarNovaSenha" />
-        </div>
-
-        <button class="conta-botao"
-                @onclick="AlterarSenha"
-                disabled="@salvandoSenha">
-            @(salvandoSenha ? "Salvando..." : "Salvar nova senha")
-        </button>
-
-        <button class="conta-cancelar ms-2"
-                @onclick="CancelarAlteracaoSenha"
-                disabled="@salvandoSenha">
-            Cancelar
-        </button>
-
-        @if (!string.IsNullOrWhiteSpace(mensagemSenha))
-        {
-            <div class="alert @(sucessoSenha ? "alert-success" : "alert-danger") mt-3">
-                @mensagemSenha
-            </div>
-        }
-        </div>
-    }
-        
-        <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="conta-secao mb-0">Informações pessoais</h5>
-
-    @if (!editando)
-    {
-        <button class="conta-botao" @onclick="AbrirEdicao">
-            ✏️ Editar perfil
-        </button>
-    }
-</div>
-
-        <div class="row g-3">
+        <!-- CARTÕES COM OS DADOS -->
+        <div class="row g-3 mb-4">
 
             <div class="col-md-6">
                 <div class="conta-card">
@@ -273,10 +220,68 @@
             </div>
 
         </div>
+
+        <!-- SEGURANÇA DA CONTA -->
+        <div class="conta-card mb-4">
+            <h5 class="conta-secao">Segurança da conta</h5>
+
+            <p class="text-muted">
+                Mantenha sua conta protegida atualizando sua senha.
+            </p>
+
+            <button class="conta-botao"
+                    @onclick="AbrirAlteracaoSenha">
+                🔒 Alterar senha
+            </button>
+        </div>
+
+        <!-- FORMULÁRIO DE ALTERAÇÃO DE SENHA -->
+        @if (alterandoSenha)
+        {
+            <div class="conta-card mb-4">
+                <h5 class="conta-secao">Alterar senha</h5>
+
+                <div class="mb-3">
+                    <label class="form-label">Senha atual</label>
+                    <input type="password" class="form-control"
+                           @bind="senhaAtual" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nova senha</label>
+                    <input type="password" class="form-control"
+                           @bind="novaSenha" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Confirmar nova senha</label>
+                    <input type="password" class="form-control"
+                           @bind="confirmarNovaSenha" />
+                </div>
+
+                <button class="conta-botao"
+                        @onclick="AlterarSenha"
+                        disabled="@salvandoSenha">
+                    @(salvandoSenha ? "Salvando..." : "Salvar nova senha")
+                </button>
+
+                <button class="conta-cancelar ms-2"
+                        @onclick="CancelarAlteracaoSenha"
+                        disabled="@salvandoSenha">
+                    Cancelar
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(mensagemSenha))
+                {
+                    <div class="alert @(sucessoSenha ? "alert-success" : "alert-danger") mt-3">
+                        @mensagemSenha
+                    </div>
+                }
+            </div>
+        }
     }
 
 </div>
-
 
 @code {
     private Usuario? usuario;
@@ -291,13 +296,13 @@
     private string mensagem = "";
 
     private bool alterandoSenha = false;
-private bool salvandoSenha = false;
-private bool sucessoSenha = false;
+    private bool salvandoSenha = false;
+    private bool sucessoSenha = false;
 
-private string senhaAtual = "";
-private string novaSenha = "";
-private string confirmarNovaSenha = "";
-private string mensagemSenha = "";
+    private string senhaAtual = "";
+    private string novaSenha = "";
+    private string confirmarNovaSenha = "";
+    private string mensagemSenha = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -331,153 +336,153 @@ private string mensagemSenha = "";
     }
 
     private async Task SalvarEdicao()
-{
-    mensagem = "";
-    sucesso = false;
-
-    if (usuario is null)
-        return;
-
-    if (string.IsNullOrWhiteSpace(nomeEditado) ||
-        string.IsNullOrWhiteSpace(usuarioEditado))
     {
-        mensagem = "Preencha todos os campos.";
-        return;
-    }
+        mensagem = "";
+        sucesso = false;
 
-    nomeEditado = nomeEditado.Trim();
-    usuarioEditado = usuarioEditado.Trim();
+        if (usuario is null)
+            return;
 
-    if (usuarioEditado.Length < 3 ||
-        usuarioEditado.Length > 30)
-    {
-        mensagem = "O nome de usuário deve ter entre 3 e 30 caracteres.";
-        return;
-    }
-
-    salvando = true;
-
-    try
-    {
-        var usuarioExistente =
-            await UserManager.FindByNameAsync(usuarioEditado);
-
-        if (usuarioExistente != null &&
-            usuarioExistente.Id != usuario.Id)
+        if (string.IsNullOrWhiteSpace(nomeEditado) ||
+            string.IsNullOrWhiteSpace(usuarioEditado))
         {
-            mensagem = "Esse nome de usuário já está em uso. Escolha outro.";
+            mensagem = "Preencha todos os campos.";
             return;
         }
 
-        var resultadoNomeUsuario =
-            await UserManager.SetUserNameAsync(usuario, usuarioEditado);
+        nomeEditado = nomeEditado.Trim();
+        usuarioEditado = usuarioEditado.Trim();
 
-        if (!resultadoNomeUsuario.Succeeded)
+        if (usuarioEditado.Length < 3 ||
+            usuarioEditado.Length > 30)
         {
-            mensagem = string.Join(" ",
-                resultadoNomeUsuario.Errors.Select(e => e.Description));
+            mensagem = "O nome de usuário deve ter entre 3 e 30 caracteres.";
             return;
         }
 
-        usuario.NomeCompleto = nomeEditado;
+        salvando = true;
 
-        var resultado = await UserManager.UpdateAsync(usuario);
-
-        if (resultado.Succeeded)
+        try
         {
-            sucesso = true;
-            mensagem = "Perfil atualizado com sucesso!";
-            editando = false;
+            var usuarioExistente =
+                await UserManager.FindByNameAsync(usuarioEditado);
+
+            if (usuarioExistente != null &&
+                usuarioExistente.Id != usuario.Id)
+            {
+                mensagem = "Esse nome de usuário já está em uso. Escolha outro.";
+                return;
+            }
+
+            var resultadoNomeUsuario =
+                await UserManager.SetUserNameAsync(usuario, usuarioEditado);
+
+            if (!resultadoNomeUsuario.Succeeded)
+            {
+                mensagem = string.Join(" ",
+                    resultadoNomeUsuario.Errors.Select(e => e.Description));
+                return;
+            }
+
+            usuario.NomeCompleto = nomeEditado;
+
+            var resultado = await UserManager.UpdateAsync(usuario);
+
+            if (resultado.Succeeded)
+            {
+                sucesso = true;
+                mensagem = "Perfil atualizado com sucesso!";
+                editando = false;
+            }
+            else
+            {
+                mensagem = string.Join(" ",
+                    resultado.Errors.Select(e => e.Description));
+            }
         }
-        else
+        finally
         {
-            mensagem = string.Join(" ",
-                resultado.Errors.Select(e => e.Description));
-        }
-    }
-    finally
-    {
-        salvando = false;
-    }
-}
-
-private void AbrirAlteracaoSenha()
-{
-    senhaAtual = "";
-    novaSenha = "";
-    confirmarNovaSenha = "";
-    mensagemSenha = "";
-    sucessoSenha = false;
-
-    alterandoSenha = true;
-}
-
-private void CancelarAlteracaoSenha()
-{
-    alterandoSenha = false;
-    senhaAtual = "";
-    novaSenha = "";
-    confirmarNovaSenha = "";
-    mensagemSenha = "";
-}
-
-private async Task AlterarSenha()
-{
-    mensagemSenha = "";
-    sucessoSenha = false;
-
-    if (usuario is null)
-        return;
-
-    if (string.IsNullOrWhiteSpace(senhaAtual) ||
-        string.IsNullOrWhiteSpace(novaSenha) ||
-        string.IsNullOrWhiteSpace(confirmarNovaSenha))
-    {
-        mensagemSenha = "Preencha todos os campos.";
-        return;
-    }
-
-    if (novaSenha != confirmarNovaSenha)
-    {
-        mensagemSenha = "As novas senhas não coincidem.";
-        return;
-    }
-
-    salvandoSenha = true;
-
-    try
-    {
-        var resultado = await UserManager.ChangePasswordAsync(
-            usuario, senhaAtual, novaSenha);
-
-        if (resultado.Succeeded)
-        {
-            sucessoSenha = true;
-            mensagemSenha = "Senha alterada com sucesso!";
-
-            senhaAtual = "";
-            novaSenha = "";
-            confirmarNovaSenha = "";
-            alterandoSenha = false;
-        }
-        else
-        {
-            mensagemSenha = string.Join(" ",
-                resultado.Errors.Select(e =>
-                    e.Code == "PasswordMismatch"
-                        ? "A senha atual está incorreta."
-                        : e.Code == "PasswordTooShort"
-                            ? "A nova senha deve ter pelo menos 8 caracteres."
-                            : e.Code == "PasswordRequiresDigit"
-                                ? "A nova senha deve conter pelo menos um número."
-                                : e.Code == "PasswordRequiresLower"
-                                    ? "A nova senha deve conter pelo menos uma letra minúscula."
-                                    : e.Description));
+            salvando = false;
         }
     }
-    finally
+
+    private void AbrirAlteracaoSenha()
     {
-        salvandoSenha = false;
+        senhaAtual = "";
+        novaSenha = "";
+        confirmarNovaSenha = "";
+        mensagemSenha = "";
+        sucessoSenha = false;
+
+        alterandoSenha = true;
     }
-}
+
+    private void CancelarAlteracaoSenha()
+    {
+        alterandoSenha = false;
+        senhaAtual = "";
+        novaSenha = "";
+        confirmarNovaSenha = "";
+        mensagemSenha = "";
+    }
+
+    private async Task AlterarSenha()
+    {
+        mensagemSenha = "";
+        sucessoSenha = false;
+
+        if (usuario is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(senhaAtual) ||
+            string.IsNullOrWhiteSpace(novaSenha) ||
+            string.IsNullOrWhiteSpace(confirmarNovaSenha))
+        {
+            mensagemSenha = "Preencha todos os campos.";
+            return;
+        }
+
+        if (novaSenha != confirmarNovaSenha)
+        {
+            mensagemSenha = "As novas senhas não coincidem.";
+            return;
+        }
+
+        salvandoSenha = true;
+
+        try
+        {
+            var resultado = await UserManager.ChangePasswordAsync(
+                usuario, senhaAtual, novaSenha);
+
+            if (resultado.Succeeded)
+            {
+                sucessoSenha = true;
+                mensagemSenha = "Senha alterada com sucesso!";
+
+                senhaAtual = "";
+                novaSenha = "";
+                confirmarNovaSenha = "";
+                alterandoSenha = false;
+            }
+            else
+            {
+                mensagemSenha = string.Join(" ",
+                    resultado.Errors.Select(e =>
+                        e.Code == "PasswordMismatch"
+                            ? "A senha atual está incorreta."
+                            : e.Code == "PasswordTooShort"
+                                ? "A nova senha deve ter pelo menos 8 caracteres."
+                                : e.Code == "PasswordRequiresDigit"
+                                    ? "A nova senha deve conter pelo menos um número."
+                                    : e.Code == "PasswordRequiresLower"
+                                        ? "A nova senha deve conter pelo menos uma letra minúscula."
+                                        : e.Description));
+            }
+        }
+        finally
+        {
+            salvandoSenha = false;
+        }
+    }
 }
