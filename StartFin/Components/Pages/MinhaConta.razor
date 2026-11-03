@@ -1,3 +1,4 @@
+
 @page "/minha-conta"
 @using StartFin.Dados
 @using StartFin.Modelos
@@ -282,7 +283,7 @@
             </div>
         }
 
-                <!-- PREFERÊNCIAS DE NOTIFICAÇÃO -->
+        <!-- PREFERÊNCIAS DE NOTIFICAÇÃO -->
         @if (preferencias != null)
         {
             <div class="conta-card mb-4">
@@ -362,6 +363,7 @@
 @code {
     private Usuario? usuario;
     private PreferenciasNotificacao? preferencias;
+
     private bool salvandoPreferencias = false;
     private bool sucessoPreferencias = false;
     private string mensagemPreferencias = "";
@@ -394,9 +396,9 @@
             usuario = await UserManager.GetUserAsync(estado.User);
 
             if (usuario != null)
-{
-    preferencias = await PreferenciasServico.ObterAsync(usuario.Id);
-}
+            {
+                preferencias = await PreferenciasServico.ObterAsync(usuario.Id);
+            }
         }
         finally
         {
@@ -502,33 +504,6 @@
         alterandoSenha = true;
     }
 
-    private async Task SalvarPreferencias()
-{
-    mensagemPreferencias = "";
-    sucessoPreferencias = false;
-
-    if (preferencias is null)
-        return;
-
-    salvandoPreferencias = true;
-
-    try
-    {
-        await PreferenciasServico.SalvarAsync(preferencias);
-
-        sucessoPreferencias = true;
-        mensagemPreferencias = "Preferências salvas com sucesso!";
-    }
-    catch
-    {
-        mensagemPreferencias = "Não foi possível salvar as preferências. Tente novamente.";
-    }
-    finally
-    {
-        salvandoPreferencias = false;
-    }
-}
-
     private void CancelarAlteracaoSenha()
     {
         alterandoSenha = false;
@@ -597,5 +572,31 @@
             salvandoSenha = false;
         }
     }
+
+    private async Task SalvarPreferencias()
+    {
+        mensagemPreferencias = "";
+        sucessoPreferencias = false;
+
+        if (preferencias is null)
+            return;
+
+        salvandoPreferencias = true;
+
+        try
+        {
+            await PreferenciasServico.SalvarAsync(preferencias);
+
+            sucessoPreferencias = true;
+            mensagemPreferencias = "Preferências salvas com sucesso!";
+        }
+        catch
+        {
+            mensagemPreferencias = "Não foi possível salvar as preferências. Tente novamente.";
+        }
+        finally
+        {
+            salvandoPreferencias = false;
+        }
+    }
 }
-```
