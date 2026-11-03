@@ -1,3 +1,4 @@
+```razor
 @page "/minha-conta"
 @using StartFin.Modelos
 @using Microsoft.AspNetCore.Identity
@@ -279,6 +280,23 @@
                 }
             </div>
         }
+
+        <!-- SAIR DA CONTA -->
+        <div class="conta-card mb-4">
+            <h5 class="conta-secao">Sair da conta</h5>
+
+            <p class="text-muted">
+                Encerre sua sessão com segurança.
+            </p>
+
+            <form method="post" action="/logout">
+                <AntiforgeryToken />
+
+                <button type="submit" class="btn btn-danger">
+                    ↪ Sair da conta
+                </button>
+            </form>
+        </div>
     }
 
 </div>
@@ -486,3 +504,4 @@
         }
     }
 }
+```
