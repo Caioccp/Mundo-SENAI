@@ -6,7 +6,7 @@
 <div class="inicio">
     <header class="cabecalho">
         <div class="logo">Start<span>Fin.</span></div>
-        <span class="perfil">Minha conta</span>
+        <a href="/minha-conta" class="perfil">Minha conta</a>
     </header>
     <section class="boas-vindas">
         <p class="subtitulo">SEU FUTURO COMEÇA AQUI</p>
@@ -161,6 +161,13 @@
         padding: 10px 16px;
         border-radius: 20px;
         font-size: 14px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .perfil:hover {
+        background: #dce6ff;
     }
     .boas-vindas {
         margin-bottom: 28px;

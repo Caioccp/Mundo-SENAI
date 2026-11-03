@@ -1,0 +1,316 @@
+
+@page "/minha-conta"
+@using StartFin.Modelos
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+@inject UserManager<Usuario> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Minha Conta | StartFin</PageTitle>
+
+<style>
+    .conta-container {
+        max-width: 850px;
+        margin: auto;
+    }
+
+    .conta-banner {
+        background: linear-gradient(120deg, #075bff, #5426a8);
+        color: white;
+        border-radius: 18px;
+        padding: 30px;
+        margin-bottom: 25px;
+        box-shadow: 0 5px 18px rgba(40, 70, 160, 0.18);
+    }
+
+    .conta-banner p {
+        color: rgba(255,255,255,0.85);
+    }
+
+    .conta-card {
+        background: white;
+        border: 1px solid #edf0f7;
+        border-radius: 15px;
+        padding: 20px;
+        height: 100%;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .conta-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 7px 18px rgba(0,0,0,0.08);
+    }
+
+    .conta-icone {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #edf3ff;
+        color: #075bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-bottom: 14px;
+    }
+
+    .conta-label {
+        color: #788398;
+        font-size: 13px;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .conta-valor {
+        color: #17233b;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .conta-secao {
+        color: #17233b;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .conta-botao {
+        background: #075bff;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-weight: 600;
+    }
+
+    .conta-botao:hover {
+        background: #0648ca;
+    }
+
+    .conta-cancelar {
+        background: #edf0f7;
+        color: #17233b;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 18px;
+    }
+</style>
+
+<div class="container py-5 conta-container">
+
+    <div class="conta-banner">
+        <span class="small fw-bold">STARTFIN • ÁREA DO USUÁRIO</span>
+        <h1 class="fw-bold mt-3">Minha conta</h1>
+        <p class="mb-0">
+            Suas informações pessoais em um só lugar.
+        </p>
+    </div>
+
+    @if (carregando)
+    {
+        <p>Carregando suas informações...</p>
+    }
+    else if (usuario is null)
+    {
+        <div class="alert alert-danger">
+            Não foi possível carregar os dados da sua conta.
+        </div>
+    }
+    else
+    {
+        <div class="conta-card mb-4">
+            <span class="conta-label">BEM-VINDO(A) À STARTFIN</span>
+            <h3 class="fw-bold mb-2">@usuario.NomeCompleto</h3>
+            <p class="text-muted mb-0">
+                Que bom ter você por aqui!
+                Continue acompanhando sua jornada financeira.
+            </p>
+        </div>
+
+        <div class="d-flex justify-content-end mb-4">
+            @if (!editando)
+            {
+                <button class="conta-botao" @onclick="AbrirEdicao">
+                    ✏️ Editar perfil
+                </button>
+            }
+        </div>
+
+        @if (editando)
+        {
+            <div class="conta-card mb-4">
+                <h5 class="conta-secao">Editar perfil</h5>
+
+                <div class="mb-3">
+                    <label class="form-label">Nome completo</label>
+                    <input class="form-control"
+                           @bind="nomeEditado" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nome de usuário</label>
+                    <input class="form-control"
+                           @bind="usuarioEditado"
+                           maxlength="30" />
+                </div>
+
+                <button class="conta-botao"
+                        @onclick="SalvarEdicao"
+                        disabled="@salvando">
+                    @(salvando ? "Salvando..." : "Salvar alterações")
+                </button>
+
+                <button class="conta-cancelar ms-2"
+                        @onclick="CancelarEdicao"
+                        disabled="@salvando">
+                    Cancelar
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(mensagem))
+                {
+                    <div class="alert @(sucesso ? "alert-success" : "alert-danger") mt-3">
+                        @mensagem
+                    </div>
+                }
+            </div>
+        }
+
+        <h5 class="conta-secao">Informações pessoais</h5>
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <div class="conta-card">
+                    <div class="conta-icone">👤</div>
+                    <span class="conta-label">NOME COMPLETO</span>
+                    <div class="conta-valor">@usuario.NomeCompleto</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="conta-card">
+                    <div class="conta-icone">🎮</div>
+                    <span class="conta-label">NOME DE USUÁRIO</span>
+                    <div class="conta-valor">@usuario.UserName</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="conta-card">
+                    <div class="conta-icone">📅</div>
+                    <span class="conta-label">DATA DE CRIAÇÃO</span>
+                    <div class="conta-valor">
+                        @usuario.DataCriacao.ToLocalTime().ToString("dd/MM/yyyy")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="conta-card">
+                    <div class="conta-icone">🆔</div>
+                    <span class="conta-label">ID DO USUÁRIO</span>
+                    <div class="conta-valor">@usuario.Id</div>
+                </div>
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    private Usuario? usuario;
+
+    private bool carregando = true;
+    private bool editando = false;
+    private bool salvando = false;
+    private bool sucesso = false;
+
+    private string nomeEditado = "";
+    private string usuarioEditado = "";
+    private string mensagem = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var estado = await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+            usuario = await UserManager.GetUserAsync(estado.User);
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void AbrirEdicao()
+    {
+        nomeEditado = usuario!.NomeCompleto;
+        usuarioEditado = usuario.UserName ?? "";
+
+        mensagem = "";
+        sucesso = false;
+        editando = true;
+    }
+
+    private void CancelarEdicao()
+    {
+        editando = false;
+        mensagem = "";
+    }
+
+    private async Task SalvarEdicao()
+    {
+        mensagem = "";
+        sucesso = false;
+
+        if (usuario is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(nomeEditado) ||
+            string.IsNullOrWhiteSpace(usuarioEditado))
+        {
+            mensagem = "Preencha todos os campos.";
+            return;
+        }
+
+        nomeEditado = nomeEditado.Trim();
+        usuarioEditado = usuarioEditado.Trim();
+
+        if (usuarioEditado.Length < 3 ||
+            usuarioEditado.Length > 30)
+        {
+            mensagem = "O nome de usuário deve ter entre 3 e 30 caracteres.";
+            return;
+        }
+
+        salvando = true;
+
+        try
+        {
+            usuario.NomeCompleto = nomeEditado;
+            usuario.UserName = usuarioEditado;
+
+            var resultado = await UserManager.UpdateAsync(usuario);
+
+            if (resultado.Succeeded)
+            {
+                sucesso = true;
+                mensagem = "Perfil atualizado com sucesso!";
+                editando = false;
+                return;
+            }
+
+            mensagem = string.Join(" ",
+                resultado.Errors.Select(e => e.Description));
+        }
+        finally
+        {
+            salvando = false;
+        }
+    }
+}
