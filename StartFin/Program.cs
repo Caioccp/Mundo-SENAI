@@ -12,6 +12,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddScoped<ConexaoBanco>();
+builder.Services.AddScoped<PreferenciasNotificacaoServico>();
 
 builder.Services.AddDbContext<StartFinContext>(options =>
     options.UseNpgsql(

@@ -180,6 +180,35 @@ namespace StartFin.Migrations
                     b.ToTable("Objetivos");
                 });
 
+            modelBuilder.Entity("StartFin.Modelos.PreferenciasNotificacao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AvisosMetas")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ComunicadosGerais")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LembretesObjetivos")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NovidadesEducacao")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PreferenciasNotificacoes");
+                });
+
             modelBuilder.Entity("StartFin.Modelos.Usuario", b =>
                 {
                     b.Property<string>("Id")
@@ -191,6 +220,9 @@ namespace StartFin.Migrations
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("DataCriacao")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)

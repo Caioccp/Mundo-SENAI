@@ -1,4 +1,5 @@
 @page "/minha-conta"
+@using StartFin.Dados
 @using StartFin.Modelos
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Authorization
@@ -6,6 +7,7 @@
 
 @inject UserManager<Usuario> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject PreferenciasNotificacaoServico PreferenciasServico
 
 <PageTitle>Minha Conta | StartFin</PageTitle>
 
@@ -280,6 +282,63 @@
             </div>
         }
 
+                <!-- PREFERÊNCIAS DE NOTIFICAÇÃO -->
+        @if (preferencias != null)
+        {
+            <div class="conta-card mb-4">
+                <h5 class="conta-secao">🔔 Preferências de notificação</h5>
+
+                <p class="text-muted">
+                    Escolha quais avisos deseja receber da StartFin.
+                </p>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox"
+                           @bind="preferencias.AvisosMetas" />
+                    <label class="form-check-label">
+                        Avisos sobre metas de economia
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox"
+                           @bind="preferencias.NovidadesEducacao" />
+                    <label class="form-check-label">
+                        Novidades da educação financeira
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox"
+                           @bind="preferencias.LembretesObjetivos" />
+                    <label class="form-check-label">
+                        Lembretes de objetivos financeiros
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox"
+                           @bind="preferencias.ComunicadosGerais" />
+                    <label class="form-check-label">
+                        Comunicados gerais do StartFin
+                    </label>
+                </div>
+
+                <button class="conta-botao"
+                        @onclick="SalvarPreferencias"
+                        disabled="@salvandoPreferencias">
+                    @(salvandoPreferencias ? "Salvando..." : "Salvar preferências")
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(mensagemPreferencias))
+                {
+                    <div class="alert @(sucessoPreferencias ? "alert-success" : "alert-danger") mt-3">
+                        @mensagemPreferencias
+                    </div>
+                }
+            </div>
+        }
+
         <!-- SAIR DA CONTA -->
         <div class="conta-card mb-4">
             <h5 class="conta-secao">Sair da conta</h5>
@@ -302,6 +361,10 @@
 
 @code {
     private Usuario? usuario;
+    private PreferenciasNotificacao? preferencias;
+    private bool salvandoPreferencias = false;
+    private bool sucessoPreferencias = false;
+    private string mensagemPreferencias = "";
 
     private bool carregando = true;
     private bool editando = false;
@@ -329,6 +392,11 @@
                 .GetAuthenticationStateAsync();
 
             usuario = await UserManager.GetUserAsync(estado.User);
+
+            if (usuario != null)
+{
+    preferencias = await PreferenciasServico.ObterAsync(usuario.Id);
+}
         }
         finally
         {
@@ -433,6 +501,33 @@
 
         alterandoSenha = true;
     }
+
+    private async Task SalvarPreferencias()
+{
+    mensagemPreferencias = "";
+    sucessoPreferencias = false;
+
+    if (preferencias is null)
+        return;
+
+    salvandoPreferencias = true;
+
+    try
+    {
+        await PreferenciasServico.SalvarAsync(preferencias);
+
+        sucessoPreferencias = true;
+        mensagemPreferencias = "Preferências salvas com sucesso!";
+    }
+    catch
+    {
+        mensagemPreferencias = "Não foi possível salvar as preferências. Tente novamente.";
+    }
+    finally
+    {
+        salvandoPreferencias = false;
+    }
+}
 
     private void CancelarAlteracaoSenha()
     {

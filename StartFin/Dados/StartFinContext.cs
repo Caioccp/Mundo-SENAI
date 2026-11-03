@@ -13,4 +13,6 @@ public class StartFinContext : IdentityDbContext<Usuario>
     }
 
     public DbSet<Objetivo> Objetivos => Set<Objetivo>();
+
+    public DbSet<PreferenciasNotificacao> PreferenciasNotificacoes => Set<PreferenciasNotificacao>();
 }
