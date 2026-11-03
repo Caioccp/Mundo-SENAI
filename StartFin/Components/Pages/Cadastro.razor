@@ -1,4 +1,4 @@
-
+```razor
 @page "/cadastro"
 @using StartFin.Modelos
 @using Microsoft.AspNetCore.Identity
@@ -22,10 +22,10 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">E-mail</label>
+            <label class="form-label">Nome de usuário</label>
             <InputText class="form-control"
-                       type="email"
-                       @bind-Value="novoUsuario.Email" />
+                       @bind-Value="nomeUsuario"
+                       maxlength="30" />
         </div>
 
         <div class="mb-3">
@@ -49,29 +49,41 @@
 
     @if (!string.IsNullOrWhiteSpace(mensagem))
     {
-        <p class="mt-3">@mensagem</p>
+        <div class="alert @classeMensagem mt-3" role="alert">
+            @mensagem
+        </div>
     }
 
     <p class="mt-3">
-        Já tem uma conta?
+        Já tem conta?
         <a href="/entrar">Entrar</a>
     </p>
 </div>
 
 @code {
     private Usuario novoUsuario = new();
+    private string nomeUsuario = "";
     private string senha = "";
     private string confirmarSenha = "";
     private string mensagem = "";
+    private string classeMensagem = "alert-danger";
 
     private async Task Cadastrar()
     {
         mensagem = "";
 
         if (string.IsNullOrWhiteSpace(novoUsuario.NomeCompleto) ||
-            string.IsNullOrWhiteSpace(novoUsuario.Email))
+            string.IsNullOrWhiteSpace(nomeUsuario))
         {
             mensagem = "Preencha todos os campos.";
+            return;
+        }
+
+        nomeUsuario = nomeUsuario.Trim();
+
+        if (nomeUsuario.Length < 3 || nomeUsuario.Length > 30)
+        {
+            mensagem = "O nome de usuário deve ter entre 3 e 30 caracteres.";
             return;
         }
 
@@ -87,17 +99,27 @@
             return;
         }
 
-        novoUsuario.UserName = novoUsuario.Email.Trim();
-        novoUsuario.Email = novoUsuario.Email.Trim();
+        var usuarioExistente = await UserManager.FindByNameAsync(nomeUsuario);
+
+        if (usuarioExistente != null)
+        {
+            mensagem = "Esse nome de usuário já está em uso. Escolha outro.";
+            return;
+        }
+
+        novoUsuario.UserName = nomeUsuario;
+        novoUsuario.Email = null;
 
         var resultado = await UserManager.CreateAsync(novoUsuario, senha);
 
         if (resultado.Succeeded)
         {
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/entrar");
             return;
         }
 
-        mensagem = string.Join(" ", resultado.Errors.Select(e => e.Description));
+        mensagem = string.Join(" ",
+            resultado.Errors.Select(e => e.Description));
     }
 }
+```

@@ -20,7 +20,7 @@ builder.Services.AddDbContext<StartFinContext>(options =>
 // Configuração do sistema de usuários
 builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
 {
-    options.User.RequireUniqueEmail = true;
+    options.User.RequireUniqueEmail = false;
 
     options.Password.RequiredLength = 8;
     options.Password.RequireDigit = true;
@@ -82,11 +82,11 @@ app.MapPost("/login", async (
 
     var formulario = await context.Request.ReadFormAsync();
 
-    var email = formulario["email"].ToString();
+    var usuario = formulario["usuario"].ToString().Trim();
     var senha = formulario["senha"].ToString();
 
     var resultado = await signInManager.PasswordSignInAsync(
-        email,
+        usuario,
         senha,
         isPersistent: true,
         lockoutOnFailure: false);
