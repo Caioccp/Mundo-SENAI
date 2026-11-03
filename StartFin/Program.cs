@@ -1,3 +1,4 @@
+
 using StartFin.Components;
 using StartFin.Dados;
 using StartFin.Modelos;
@@ -100,15 +101,25 @@ app.MapPost("/login", async (
     return Results.Redirect("/entrar?erro=1");
 });
 
+// GERENCIAR SESSÃO
 app.MapPost("/logout", async (
+    HttpContext context,
     SignInManager<Usuario> signInManager) =>
 {
     await signInManager.SignOutAsync();
+
+    var destino = context.Request.Query["destino"].ToString();
+
+    if (destino == "cadastro")
+    {
+        return Results.Redirect("/cadastro");
+    }
 
     return Results.Redirect("/entrar");
 });
 
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -89,6 +89,7 @@
 
     .conta-botao:hover {
         background: #0648ca;
+        color: white;
     }
 
     .conta-cancelar {
@@ -153,8 +154,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Nome completo</label>
-                    <input class="form-control"
-                           @bind="nomeEditado" />
+                    <input class="form-control" @bind="nomeEditado" />
                 </div>
 
                 <div class="mb-3">
@@ -232,8 +232,7 @@
                 Mantenha sua conta protegida atualizando sua senha.
             </p>
 
-            <button class="conta-botao"
-                    @onclick="AbrirAlteracaoSenha">
+            <button class="conta-botao" @onclick="AbrirAlteracaoSenha">
                 🔒 Alterar senha
             </button>
         </div>
@@ -246,20 +245,17 @@
 
                 <div class="mb-3">
                     <label class="form-label">Senha atual</label>
-                    <input type="password" class="form-control"
-                           @bind="senhaAtual" />
+                    <input type="password" class="form-control" @bind="senhaAtual" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Nova senha</label>
-                    <input type="password" class="form-control"
-                           @bind="novaSenha" />
+                    <input type="password" class="form-control" @bind="novaSenha" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Confirmar nova senha</label>
-                    <input type="password" class="form-control"
-                           @bind="confirmarNovaSenha" />
+                    <input type="password" class="form-control" @bind="confirmarNovaSenha" />
                 </div>
 
                 <button class="conta-botao"
@@ -340,22 +336,46 @@
             </div>
         }
 
-        <!-- SAIR DA CONTA -->
-        <div class="conta-card mb-4">
-            <h5 class="conta-secao">Sair da conta</h5>
+        
 
-            <p class="text-muted">
-                Encerre sua sessão com segurança.
-            </p>
+<!-- GERENCIAR CONTA -->
+<div class="conta-card mb-4">
+    <h5 class="conta-secao">Gerenciar conta</h5>
 
-            <form method="post" action="/logout">
-                <AntiforgeryToken />
+    <p class="text-muted">
+        Gerencie seu acesso à StartFin.
+    </p>
 
-                <button type="submit" class="btn btn-danger">
-                    ↪ Sair da conta
-                </button>
-            </form>
-        </div>
+    <div class="d-flex flex-wrap gap-2">
+
+        <form method="post" action="/logout?destino=entrar">
+            <AntiforgeryToken />
+            <button type="submit" class="conta-botao"
+                    style="width: 245px; height: 50px;">
+                🔄 Entrar com outra conta
+            </button>
+        </form>
+
+        <form method="post" action="/logout?destino=cadastro">
+            <AntiforgeryToken />
+            <button type="submit" class="btn btn-success"
+                    style="width: 245px; height: 50px;">
+                ➕ Criar outra conta
+            </button>
+        </form>
+
+        <form method="post" action="/logout">
+            <AntiforgeryToken />
+            <button type="submit" class="btn btn-danger"
+                    style="width: 245px; height: 50px;">
+                ↪ Sair da conta
+            </button>
+        </form>
+
+    </div>
+</div>
+
+
     }
 
 </div>
@@ -390,9 +410,7 @@
     {
         try
         {
-            var estado = await AuthenticationStateProvider
-                .GetAuthenticationStateAsync();
-
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             usuario = await UserManager.GetUserAsync(estado.User);
 
             if (usuario != null)
@@ -410,7 +428,6 @@
     {
         nomeEditado = usuario!.NomeCompleto;
         usuarioEditado = usuario.UserName ?? "";
-
         mensagem = "";
         sucesso = false;
         editando = true;
@@ -440,8 +457,7 @@
         nomeEditado = nomeEditado.Trim();
         usuarioEditado = usuarioEditado.Trim();
 
-        if (usuarioEditado.Length < 3 ||
-            usuarioEditado.Length > 30)
+        if (usuarioEditado.Length < 3 || usuarioEditado.Length > 30)
         {
             mensagem = "O nome de usuário deve ter entre 3 e 30 caracteres.";
             return;
@@ -451,23 +467,19 @@
 
         try
         {
-            var usuarioExistente =
-                await UserManager.FindByNameAsync(usuarioEditado);
+            var usuarioExistente = await UserManager.FindByNameAsync(usuarioEditado);
 
-            if (usuarioExistente != null &&
-                usuarioExistente.Id != usuario.Id)
+            if (usuarioExistente != null && usuarioExistente.Id != usuario.Id)
             {
                 mensagem = "Esse nome de usuário já está em uso. Escolha outro.";
                 return;
             }
 
-            var resultadoNomeUsuario =
-                await UserManager.SetUserNameAsync(usuario, usuarioEditado);
+            var resultadoNomeUsuario = await UserManager.SetUserNameAsync(usuario, usuarioEditado);
 
             if (!resultadoNomeUsuario.Succeeded)
             {
-                mensagem = string.Join(" ",
-                    resultadoNomeUsuario.Errors.Select(e => e.Description));
+                mensagem = string.Join(" ", resultadoNomeUsuario.Errors.Select(e => e.Description));
                 return;
             }
 
@@ -483,8 +495,7 @@
             }
             else
             {
-                mensagem = string.Join(" ",
-                    resultado.Errors.Select(e => e.Description));
+                mensagem = string.Join(" ", resultado.Errors.Select(e => e.Description));
             }
         }
         finally
@@ -500,7 +511,6 @@
         confirmarNovaSenha = "";
         mensagemSenha = "";
         sucessoSenha = false;
-
         alterandoSenha = true;
     }
 
@@ -539,14 +549,12 @@
 
         try
         {
-            var resultado = await UserManager.ChangePasswordAsync(
-                usuario, senhaAtual, novaSenha);
+            var resultado = await UserManager.ChangePasswordAsync(usuario, senhaAtual, novaSenha);
 
             if (resultado.Succeeded)
             {
                 sucessoSenha = true;
                 mensagemSenha = "Senha alterada com sucesso!";
-
                 senhaAtual = "";
                 novaSenha = "";
                 confirmarNovaSenha = "";
@@ -554,17 +562,16 @@
             }
             else
             {
-                mensagemSenha = string.Join(" ",
-                    resultado.Errors.Select(e =>
-                        e.Code == "PasswordMismatch"
-                            ? "A senha atual está incorreta."
-                            : e.Code == "PasswordTooShort"
-                                ? "A nova senha deve ter pelo menos 8 caracteres."
-                                : e.Code == "PasswordRequiresDigit"
-                                    ? "A nova senha deve conter pelo menos um número."
-                                    : e.Code == "PasswordRequiresLower"
-                                        ? "A nova senha deve conter pelo menos uma letra minúscula."
-                                        : e.Description));
+                mensagemSenha = string.Join(" ", resultado.Errors.Select(e =>
+                    e.Code == "PasswordMismatch"
+                        ? "A senha atual está incorreta."
+                        : e.Code == "PasswordTooShort"
+                            ? "A nova senha deve ter pelo menos 8 caracteres."
+                            : e.Code == "PasswordRequiresDigit"
+                                ? "A nova senha deve conter pelo menos um número."
+                                : e.Code == "PasswordRequiresLower"
+                                    ? "A nova senha deve conter pelo menos uma letra minúscula."
+                                    : e.Description));
             }
         }
         finally
@@ -586,7 +593,6 @@
         try
         {
             await PreferenciasServico.SalvarAsync(preferencias);
-
             sucessoPreferencias = true;
             mensagemPreferencias = "Preferências salvas com sucesso!";
         }
