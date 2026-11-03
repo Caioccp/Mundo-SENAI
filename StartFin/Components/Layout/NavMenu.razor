@@ -1,4 +1,4 @@
-﻿
+﻿```razor
 @using Microsoft.AspNetCore.Components.Authorization
 
 <div class="nav-menu-root @(menuAberto ? "menu-aberto" : "menu-fechado")">
@@ -49,18 +49,6 @@
             </div>
 
             <AuthorizeView>
-                <Authorized>
-                    <div class="nav-item px-3">
-                        <form method="post" action="/logout">
-                            <AntiforgeryToken />
-                            <button type="submit" class="nav-link">
-                                <span class="icone-link" aria-hidden="true">🚪</span>
-                                <span class="texto-link">Sair da conta</span>
-                            </button>
-                        </form>
-                    </div>
-                </Authorized>
-
                 <NotAuthorized>
                     <div class="nav-item px-3">
                         <NavLink class="nav-link" href="entrar" title="Entrar">
@@ -87,3 +75,4 @@
         await AoAlternar.InvokeAsync(menuAberto);
     }
 }
+```
