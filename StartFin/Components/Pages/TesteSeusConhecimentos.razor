@@ -48,11 +48,11 @@
                 }
             </div>
 
-            @if (PerguntaAtual.Tipo == "multi" && !Respondida)
+            @if (!Respondida)
             {
                 <button class="botao-confirmar"
                         disabled="@(Selecionadas.Count == 0)"
-                        @onclick="ConfirmarMultipla">
+                        @onclick="ConfirmarResposta">
                     Confirmar resposta
                 </button>
             }
@@ -62,6 +62,14 @@
                 <div class="feedback @(Acertou ? "feedback-certo" : "feedback-erro")">
                     <h3>@(Acertou ? "Muito bem! Resposta correta!" : "Não foi dessa vez!")</h3>
                     <p>@PerguntaAtual.Explicacao</p>
+
+                    @if (!Acertou)
+                    {
+                        <p>
+                            <strong>Resposta correta:</strong>
+                            @TextoRespostasCorretas
+                        </p>
+                    }
                 </div>
 
                 <button class="botao-proximo" @onclick="Proxima">
@@ -79,9 +87,9 @@
             <p>Você terminou o desafio de Educação Financeira do StartFin.</p>
 
             @if (ResultadoSalvo)
-{
-    <p>✅ Seu resultado foi salvo na sua conta!</p>
-}
+            {
+                <p>✅ Seu resultado foi salvo na sua conta!</p>
+            }
 
             <div class="pontuacao">
                 <strong>@Pontos</strong>
@@ -253,7 +261,7 @@
     }
 
     .feedback p {
-        margin: 0;
+        margin: 0 0 8px;
         font-size: 14px;
     }
 
@@ -358,6 +366,11 @@
     private bool ResultadoSalvo = false;
 
     private Pergunta PerguntaAtual => Perguntas[Indice];
+
+    private string TextoRespostasCorretas =>
+        string.Join(", ", PerguntaAtual.Opcoes
+            .Where(o => PerguntaAtual.Corretas.Contains(o.Id))
+            .Select(o => $"{o.Id} — {o.Texto}"));
 
     private string MensagemResultado =>
         Pontos == 10 ? "Excelente! Você domina o assunto!" :
@@ -495,22 +508,22 @@
     };
 
     private static List<Opcao> Opcoes(
-    string a, string b, string? c = null, string? d = null)
-{
-    var opcoes = new List<Opcao>
+        string a, string b, string? c = null, string? d = null)
     {
-        new() { Id = "A", Texto = a },
-        new() { Id = "B", Texto = b }
-    };
+        var opcoes = new List<Opcao>
+        {
+            new() { Id = "A", Texto = a },
+            new() { Id = "B", Texto = b }
+        };
 
-    if (c != null)
-        opcoes.Add(new() { Id = "C", Texto = c });
+        if (c != null)
+            opcoes.Add(new() { Id = "C", Texto = c });
 
-    if (d != null)
-        opcoes.Add(new() { Id = "D", Texto = d });
+        if (d != null)
+            opcoes.Add(new() { Id = "D", Texto = d });
 
-    return opcoes;
-}
+        return opcoes;
+    }
 
     private string ClasseOpcao(string id)
     {
@@ -525,23 +538,18 @@
         {
             if (!Selecionadas.Add(id))
                 Selecionadas.Remove(id);
-
-            return;
         }
-
-        Selecionadas.Clear();
-        Selecionadas.Add(id);
-        Corrigir();
+        else
+        {
+            Selecionadas.Clear();
+            Selecionadas.Add(id);
+        }
     }
 
-    private void ConfirmarMultipla()
+    private void ConfirmarResposta()
     {
         if (Respondida || Selecionadas.Count == 0) return;
-        Corrigir();
-    }
 
-    private void Corrigir()
-    {
         Respondida = true;
         Acertou = Selecionadas.SetEquals(PerguntaAtual.Corretas);
 
@@ -550,44 +558,44 @@
     }
 
     private async Task Proxima()
-{
-    if (Indice < Perguntas.Count - 1)
     {
-        Indice++;
-        Respondida = false;
-        Acertou = false;
-        Selecionadas.Clear();
+        if (Indice < Perguntas.Count - 1)
+        {
+            Indice++;
+            Respondida = false;
+            Acertou = false;
+            Selecionadas.Clear();
+        }
+        else
+        {
+            Finalizado = true;
+            await SalvarResultadoAsync();
+        }
     }
-    else
+
+    private async Task SalvarResultadoAsync()
     {
-        Finalizado = true;
-        await SalvarResultadoAsync();
+        if (ResultadoSalvo) return;
+
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        var usuarioId = estado.User.FindFirst(
+            System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(usuarioId)) return;
+
+        var resultado = new ResultadoQuiz
+        {
+            UsuarioId = usuarioId,
+            Pontos = Pontos,
+            TotalPerguntas = Perguntas.Count,
+            DataConclusao = DateTime.UtcNow
+        };
+
+        Context.ResultadosQuiz.Add(resultado);
+        await Context.SaveChangesAsync();
+
+        ResultadoSalvo = true;
     }
-}
-
-private async Task SalvarResultadoAsync()
-{
-    if (ResultadoSalvo) return;
-
-    var estado = await AuthProvider.GetAuthenticationStateAsync();
-    var usuarioId = estado.User.FindFirst(
-        System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-    if (string.IsNullOrEmpty(usuarioId)) return;
-
-    var resultado = new ResultadoQuiz
-    {
-        UsuarioId = usuarioId,
-        Pontos = Pontos,
-        TotalPerguntas = Perguntas.Count,
-        DataConclusao = DateTime.UtcNow
-    };
-
-    Context.ResultadosQuiz.Add(resultado);
-    await Context.SaveChangesAsync();
-
-    ResultadoSalvo = true;
-}
 
     private void Reiniciar()
     {
