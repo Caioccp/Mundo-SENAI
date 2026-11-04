@@ -19,4 +19,6 @@ public class StartFinContext : IdentityDbContext<Usuario>
     public DbSet<ResultadoQuiz> ResultadosQuiz => Set<ResultadoQuiz>();
 
     public DbSet<Carteira> Carteiras => Set<Carteira>();
+
+    public DbSet<Movimentacao> Movimentacoes => Set<Movimentacao>();
 }

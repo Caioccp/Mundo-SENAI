@@ -182,6 +182,38 @@ namespace StartFin.Migrations
                     b.ToTable("Carteiras");
                 });
 
+            modelBuilder.Entity("StartFin.Modelos.Movimentacao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CarteiraId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarteiraId");
+
+                    b.ToTable("Movimentacoes");
+                });
+
             modelBuilder.Entity("StartFin.Modelos.Objetivo", b =>
                 {
                     b.Property<int>("Id")
@@ -400,6 +432,17 @@ namespace StartFin.Migrations
                         .IsRequired();
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("StartFin.Modelos.Movimentacao", b =>
+                {
+                    b.HasOne("StartFin.Modelos.Carteira", "Carteira")
+                        .WithMany()
+                        .HasForeignKey("CarteiraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Carteira");
                 });
 
             modelBuilder.Entity("StartFin.Modelos.ResultadoQuiz", b =>
