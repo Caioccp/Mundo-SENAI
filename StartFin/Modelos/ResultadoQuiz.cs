@@ -15,6 +15,9 @@ public class ResultadoQuiz
     [ForeignKey(nameof(UsuarioId))]
     public Usuario Usuario { get; set; } = null!;
 
+    [Required]
+    public string IdentificadorQuiz { get; set; } = "geral";
+
     public int Pontos { get; set; }
 
     public int TotalPerguntas { get; set; }

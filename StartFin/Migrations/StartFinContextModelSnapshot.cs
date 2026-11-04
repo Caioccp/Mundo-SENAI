@@ -220,6 +220,10 @@ namespace StartFin.Migrations
                     b.Property<DateTime>("DataConclusao")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("IdentificadorQuiz")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Pontos")
                         .HasColumnType("integer");
 
