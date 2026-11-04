@@ -1,0 +1,228 @@
+
+@page "/guardar-dinheiro"
+@using Npgsql
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@inject IConfiguration Configuration
+@inject AuthenticationStateProvider AuthStateProvider
+@inject StartFin.Servicos.CarteiraServico CarteiraServico
+
+<PageTitle>Guardar dinheiro | StartFin</PageTitle>
+
+<div class="container mt-4">
+    <h1>🐷 Guardar dinheiro</h1>
+    <p>Escolha uma meta e dê mais um passo para realizar seu objetivo!</p>
+
+    @if (!string.IsNullOrWhiteSpace(mensagem))
+    {
+        <div class="alert @(sucesso ? "alert-success" : "alert-warning")">
+            @mensagem
+        </div>
+    }
+
+    @if (carregando)
+    {
+        <p>Carregando suas metas...</p>
+    }
+    else if (metas.Count == 0)
+    {
+        <div class="card p-4">
+            <h3>Você ainda não tem metas.</h3>
+            <p>Cadastre uma meta antes de começar a guardar dinheiro.</p>
+            <a href="/metas" class="btn btn-primary">Criar minha meta</a>
+        </div>
+    }
+    else
+    {
+        <div class="card p-4 mb-4">
+            <h2>Nova quantia guardada</h2>
+
+            <div class="mb-3">
+                <label class="form-label">Escolha sua meta</label>
+                <select class="form-select" @bind="metaSelecionadaId">
+                    <option value="0">Selecione uma meta</option>
+                    @foreach (var meta in metas)
+                    {
+                        <option value="@meta.Id">
+                            @meta.Nome
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Quanto deseja guardar? (R$)</label>
+                <input class="form-control"
+                       type="number"
+                       min="0.01"
+                       step="0.01"
+                       @bind="valor"
+                       @bind:event="oninput" />
+            </div>
+
+            <button class="btn btn-success"
+                    @onclick="Guardar"
+                    disabled="@salvando">
+                @(salvando ? "Guardando..." : "Guardar dinheiro")
+            </button>
+        </div>
+
+        <h2>Progresso das suas metas</h2>
+
+        @foreach (var meta in metas)
+        {
+            var percentual = meta.ValorObjetivo > 0
+                ? Math.Min(100, (double)(meta.ValorGuardado / meta.ValorObjetivo * 100))
+                : 0;
+
+            <div class="card p-3 mb-3" @key="meta.Id">
+                <h3>@meta.Nome</h3>
+
+                <p>
+                    @meta.ValorGuardado.ToString("C2", cultura)
+                    de @meta.ValorObjetivo.ToString("C2", cultura)
+                </p>
+
+                <div class="progress" style="height: 18px;">
+                    <div class="progress-bar bg-success"
+                         role="progressbar"
+                         style="width: @(percentual)%"
+                         aria-valuenow="@percentual"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
+                </div>
+
+                <small class="mt-2">
+                    @percentual.ToString("F1", cultura)% concluído
+                </small>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private readonly System.Globalization.CultureInfo cultura =
+        System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+
+    private List<MetaEconomia> metas = new();
+    private string usuarioId = "";
+    private int metaSelecionadaId;
+    private decimal valor;
+    private string? mensagem;
+    private bool sucesso;
+    private bool carregando = true;
+    private bool salvando;
+
+    private string ConnectionString =>
+        Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException(
+            "A conexão com o banco não foi configurada.");
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var estado = await AuthStateProvider.GetAuthenticationStateAsync();
+
+            usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+
+            if (string.IsNullOrWhiteSpace(usuarioId))
+            {
+                mensagem = "Não foi possível identificar sua conta.";
+                return;
+            }
+
+            await CarregarMetas();
+        }
+        catch
+        {
+            mensagem = "Não foi possível carregar suas metas.";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private async Task CarregarMetas()
+    {
+        await using var conexao = new NpgsqlConnection(ConnectionString);
+        await conexao.OpenAsync();
+
+        metas.Clear();
+
+        var comando = new NpgsqlCommand(
+            @"SELECT id, nome, valor_objetivo, valor_guardado
+              FROM metas_economia
+              WHERE usuario_id = @usuarioId
+              ORDER BY id DESC;",
+            conexao);
+
+        comando.Parameters.AddWithValue("@usuarioId", usuarioId);
+
+        await using var leitor = await comando.ExecuteReaderAsync();
+
+        while (await leitor.ReadAsync())
+        {
+            metas.Add(new MetaEconomia
+            {
+                Id = leitor.GetInt32(0),
+                Nome = leitor.GetString(1),
+                ValorObjetivo = leitor.GetDecimal(2),
+                ValorGuardado = leitor.GetDecimal(3)
+            });
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (metaSelecionadaId <= 0)
+        {
+            mensagem = "Selecione uma meta.";
+            sucesso = false;
+            return;
+        }
+
+        if (valor <= 0)
+        {
+            mensagem = "Informe um valor maior que zero.";
+            sucesso = false;
+            return;
+        }
+
+        salvando = true;
+
+        try
+        {
+            await CarteiraServico.GuardarNaMetaAsync(
+                usuarioId,
+                metaSelecionadaId,
+                valor);
+
+            await CarregarMetas();
+
+            valor = 0;
+            mensagem = "Dinheiro guardado com sucesso! 🎉";
+            sucesso = true;
+        }
+        catch (Exception ex)
+        {
+            mensagem = ex.Message;
+            sucesso = false;
+        }
+        finally
+        {
+            salvando = false;
+        }
+    }
+
+    private class MetaEconomia
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; } = "";
+        public decimal ValorObjetivo { get; set; }
+        public decimal ValorGuardado { get; set; }
+    }
+}
