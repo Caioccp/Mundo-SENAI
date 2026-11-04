@@ -1,68 +1,272 @@
 
 @page "/educacao-financeira/metas-e-economia"
 
-<PageTitle>Metas e Economia | StartFin</PageTitle>
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using StartFin.Dados
+@using StartFin.Modelos
 
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Metas e Economia | StartFin</PageTitle>
 
 <div class="pagina-educacao">
 
     <header class="topo-pagina">
-    <div>
-        <span class="etiqueta">EDUCAÇÃO FINANCEIRA</span>
-        <h1>Metas e Economia 🎯</h1>
-        <p>Aprenda a guardar dinheiro para realizar seus planos.</p>
-    </div>
+        <div>
+            <span class="etiqueta">EDUCAÇÃO FINANCEIRA</span>
+            <h1>Metas e Economia 🎯</h1>
+            <p>Aprenda a guardar dinheiro para realizar seus planos.</p>
+        </div>
 
-    <a href="/educacao-financeira" class="botao-voltar">
-        ← Voltar para Educação Financeira
-    </a>
-</header>
+        <a href="/educacao-financeira" class="botao-voltar">
+            ← Voltar para Educação Financeira
+        </a>
+    </header>
 
     <section class="conteudo-principal">
+
         <h2>O que são metas financeiras?</h2>
+
         <p>
             Metas financeiras são objetivos que você deseja alcançar usando seu dinheiro.
-            Elas ajudam a organizar suas economias e a manter o foco no que é importante.
+            Elas ajudam a organizar suas economias, controlar seus gastos e manter o foco
+            naquilo que realmente importa.
         </p>
 
-        <h2>Como criar uma meta?</h2>
+        <p>
+            Por exemplo, se você deseja comprar um celular, fazer uma viagem ou adquirir
+            um computador, pode estabelecer uma meta e planejar como juntar o dinheiro
+            necessário.
+        </p>
+
+        <h2>Por que economizar é importante?</h2>
+
+        <p>
+            Economizar significa reservar uma parte do dinheiro recebido para utilizar
+            no futuro. Esse hábito ajuda a evitar gastos desnecessários e permite que
+            você esteja mais preparado para realizar seus objetivos.
+        </p>
+
+        <p>
+            Além disso, ter dinheiro reservado pode ajudar quando aparece uma despesa
+            inesperada, evitando que você precise depender de outras pessoas ou fazer
+            compras sem planejamento.
+        </p>
+
+        <h2>Tipos de metas financeiras</h2>
+
         <div class="passos">
+
+            <div class="passo">
+                <strong>⏱️ Curto prazo</strong>
+                <p>
+                    São objetivos que podem ser alcançados em pouco tempo.
+                    Exemplo: comprar um livro, um acessório ou um jogo.
+                </p>
+            </div>
+
+            <div class="passo">
+                <strong>📅 Médio prazo</strong>
+                <p>
+                    São objetivos que exigem mais organização e alguns meses
+                    de economia. Exemplo: comprar um fone ou uma bicicleta.
+                </p>
+            </div>
+
+            <div class="passo">
+                <strong>🚀 Longo prazo</strong>
+                <p>
+                    São objetivos que exigem mais tempo e planejamento.
+                    Exemplo: juntar dinheiro para um computador ou uma viagem.
+                </p>
+            </div>
+
+            <div class="passo">
+                <strong>🛡️ Reserva financeira</strong>
+                <p>
+                    É uma quantia guardada para situações inesperadas,
+                    como uma emergência ou uma despesa que não estava planejada.
+                </p>
+            </div>
+
+        </div>
+
+        <h2>Como criar uma meta financeira?</h2>
+
+        <div class="passos">
+
             <div class="passo">
                 <strong>1. Escolha seu objetivo</strong>
-                <p>Decida o que deseja conquistar, como comprar um fone ou um jogo.</p>
+                <p>
+                    Decida o que deseja conquistar e tenha clareza sobre
+                    o motivo dessa escolha.
+                </p>
             </div>
+
             <div class="passo">
                 <strong>2. Defina o valor</strong>
-                <p>Pesquise quanto custa seu objetivo e estabeleça uma quantia para alcançar.</p>
+                <p>
+                    Pesquise o preço do que deseja comprar e estabeleça
+                    quanto dinheiro será necessário.
+                </p>
             </div>
+
             <div class="passo">
                 <strong>3. Planeje suas economias</strong>
-                <p>Decida quanto consegue guardar por semana ou por mês.</p>
+                <p>
+                    Observe quanto recebe e quais são seus gastos.
+                    Depois, defina uma quantia que consiga guardar regularmente.
+                </p>
             </div>
+
             <div class="passo">
                 <strong>4. Acompanhe seu progresso</strong>
-                <p>Observe quanto já guardou e quanto ainda falta para alcançar sua meta.</p>
+                <p>
+                    Observe quanto já conseguiu guardar e quanto ainda falta.
+                    Isso ajuda a manter a motivação.
+                </p>
             </div>
+
         </div>
 
         <h2>Exemplo prático</h2>
+
+        <p>
+            Imagine que você deseja comprar um fone de ouvido, mas não quer
+            comprometer todo o dinheiro que recebe.
+        </p>
+
         <div class="exemplo-meta">
             <h3>🎧 Meta: comprar um fone</h3>
             <p>Valor necessário: R$ 300,00</p>
             <p>Valor guardado: R$ 100,00</p>
+
             <div class="barra-progresso">
                 <div class="progresso"></div>
             </div>
+
             <strong>33% da meta alcançada!</strong>
+
+            <p>
+                Ainda faltam R$ 200,00 para alcançar o objetivo.
+                Acompanhar esse progresso permite visualizar sua evolução.
+            </p>
         </div>
+
+        <h2>O que fazer quando fica difícil economizar?</h2>
+
+        <p>
+            Nem sempre é fácil guardar dinheiro. Às vezes aparecem convites,
+            promoções ou produtos que despertam vontade de comprar.
+            Nessas situações, é importante lembrar das suas prioridades.
+        </p>
+
+        <div class="passos">
+
+            <div class="passo">
+                <strong>Evite compras por impulso</strong>
+                <p>
+                    Antes de comprar, pense se realmente precisa daquele produto
+                    e se a compra pode esperar.
+                </p>
+            </div>
+
+            <div class="passo">
+                <strong>Revise seus gastos</strong>
+                <p>
+                    Observe se existem despesas que podem ser reduzidas
+                    sem prejudicar suas necessidades.
+                </p>
+            </div>
+
+            <div class="passo">
+                <strong>Tenha metas realistas</strong>
+                <p>
+                    Não estabeleça valores que não consegue guardar.
+                    É melhor economizar pouco regularmente do que desistir.
+                </p>
+            </div>
+
+            <div class="passo">
+                <strong>Não desista por causa de imprevistos</strong>
+                <p>
+                    Se precisar utilizar parte do dinheiro guardado,
+                    reorganize seu planejamento e continue quando puder.
+                </p>
+            </div>
+
+        </div>
+
+        <h2>O que você deve lembrar?</h2>
+
+        <p>
+            Uma boa organização financeira não depende de ganhar muito dinheiro,
+            mas de aprender a utilizar os recursos disponíveis com responsabilidade.
+        </p>
+
+        <p>
+            Definir objetivos, controlar os gastos, economizar regularmente e
+            acompanhar os resultados são atitudes que ajudam a construir
+            hábitos financeiros mais conscientes.
+        </p>
 
         <div class="dica">
             <strong>💡 Dica StartFin</strong>
             <p>
                 Comece com metas pequenas e realistas. Guardar um pouco de dinheiro
                 regularmente pode ajudar você a conquistar seus objetivos.
+                Cada pequena economia representa um passo em direção ao que deseja.
             </p>
         </div>
+
+        <div class="area-quiz">
+            <h2>Teste seus conhecimentos!</h2>
+
+            <p>
+                Agora que você aprendeu sobre metas financeiras e economia,
+                chegou a hora de colocar seus conhecimentos em prática.
+            </p>
+
+            <a href="/educacao-financeira/quiz/metas-e-economia"
+               class="botao-quiz">
+                Fazer o quiz →
+            </a>
+
+            <button class="botao-resultado"
+                    @onclick="VerUltimoResultadoAsync">
+                📊 Ver último resultado
+            </button>
+
+            @if (MostrarResultado)
+            {
+                <div class="resultado-anterior">
+                    @if (Carregando)
+                    {
+                        <p>Carregando resultado...</p>
+                    }
+                    else if (UltimoResultado != null)
+                    {
+                        <strong>Seu último resultado:</strong>
+                        <p>
+                            @UltimoResultado.Pontos de
+                            @UltimoResultado.TotalPerguntas pontos
+                        </p>
+                        <p>
+                            Concluído em:
+                            @UltimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </p>
+                    }
+                    else
+                    {
+                        <p>@MensagemResultado</p>
+                    }
+                </div>
+            }
+        </div>
+
     </section>
 </div>
 
@@ -72,13 +276,13 @@
         color: #26364a;
     }
 
-   .topo-pagina {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
-    margin-bottom: 30px;
-}
+    .topo-pagina {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
 
     .etiqueta {
         color: #16a085;
@@ -88,31 +292,31 @@
     }
 
     .topo-pagina h1 {
-    margin: 8px 0;
-    color: #172b4d;
-    font-size: 34px;
-    font-weight: 800;
-}
+        margin: 8px 0;
+        color: #172b4d;
+        font-size: 34px;
+        font-weight: 800;
+    }
 
     .topo-pagina p {
         color: #718096;
     }
 
     .botao-voltar {
-    display: inline-block;
-    background: #edf2f7;
-    color: #2455a4;
-    padding: 10px 16px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 700;
-    transition: 0.2s;
-    margin-top: 0;
-}
+        display: inline-block;
+        background: #edf2f7;
+        color: #2455a4;
+        padding: 10px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.2s;
+        margin-top: 0;
+    }
 
-.botao-voltar:hover {
-    background: #dce7f5;
-}
+    .botao-voltar:hover {
+        background: #dce7f5;
+    }
 
     .conteudo-principal {
         background: white;
@@ -189,6 +393,58 @@
         color: #13866f;
     }
 
+    .area-quiz {
+        margin-top: 30px;
+        padding: 24px;
+        background: #f4f7fb;
+        border-radius: 14px;
+    }
+
+    .area-quiz h2 {
+        margin-top: 0;
+        color: #172b4d;
+    }
+
+    .botao-quiz,
+    .botao-resultado {
+        display: inline-block;
+        margin: 10px 10px 0 0;
+        padding: 13px 20px;
+        border: none;
+        border-radius: 10px;
+        background: #087f5b;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .botao-quiz:hover,
+    .botao-resultado:hover {
+        background: #066849;
+    }
+
+    .botao-resultado {
+        background: #2455a4;
+    }
+
+    .botao-resultado:hover {
+        background: #1c4380;
+    }
+
+    .resultado-anterior {
+        margin-top: 18px;
+        padding: 16px;
+        background: white;
+        border-radius: 10px;
+        border: 1px solid #dce5ef;
+    }
+
+    .resultado-anterior strong {
+        color: #087f5b;
+    }
+
     @@media (max-width: 650px) {
         .pagina-educacao {
             padding: 18px;
@@ -204,3 +460,53 @@
         }
     }
 </style>
+
+@code {
+    private bool MostrarResultado = false;
+    private bool Carregando = false;
+
+    private ResultadoQuiz? UltimoResultado;
+    private string MensagemResultado = string.Empty;
+
+    private async Task VerUltimoResultadoAsync()
+    {
+        MostrarResultado = true;
+        Carregando = true;
+        UltimoResultado = null;
+        MensagemResultado = string.Empty;
+
+        try
+        {
+            var estado = await AuthProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                MensagemResultado = "Entre na sua conta para consultar seu resultado.";
+                return;
+            }
+
+            UltimoResultado = await Context.ResultadosQuiz
+                .Where(r =>
+                    r.UsuarioId == usuarioId &&
+                    r.IdentificadorQuiz == "metas-e-economia")
+                .OrderByDescending(r => r.DataConclusao)
+                .FirstOrDefaultAsync();
+
+            if (UltimoResultado == null)
+            {
+                MensagemResultado = "Você ainda não concluiu este quiz.";
+            }
+        }
+        catch
+        {
+            MensagemResultado = "Não foi possível carregar seu resultado.";
+        }
+        finally
+        {
+            Carregando = false;
+        }
+    }
+}
