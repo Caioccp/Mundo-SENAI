@@ -4,8 +4,11 @@ using StartFin.Dados;
 using StartFin.Modelos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using StartFin.Servicos;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<CarteiraServico>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
