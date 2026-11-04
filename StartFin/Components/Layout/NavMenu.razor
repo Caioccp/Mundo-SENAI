@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+﻿
+@using Microsoft.AspNetCore.Components.Authorization
 
 <div class="nav-menu-root @(menuAberto ? "menu-aberto" : "menu-fechado")">
     <div class="top-row ps-3 navbar navbar-dark">
@@ -27,45 +28,47 @@
         <nav class="nav flex-column">
 
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Início">
-                    <span class="icone-link" aria-hidden="true">🏠</span>
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="icone-link">🏠</span>
                     <span class="texto-link">Início</span>
                 </NavLink>
             </div>
 
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="metas" title="Metas">
-                    <span class="icone-link" aria-hidden="true">🎯</span>
+                <NavLink class="nav-link" href="metas">
+                    <span class="icone-link">🎯</span>
                     <span class="texto-link">Metas</span>
                 </NavLink>
             </div>
 
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="movimentacoes" title="Ver movimentações">
-                    <span class="icone-link" aria-hidden="true">📋</span>
-                    <span class="texto-link">Ver movimentações</span>
-                </NavLink>
-            </div>
-
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="nova-movimentacao" title="Fazer movimentação">
-                    <span class="icone-link" aria-hidden="true">💸</span>
-                    <span class="texto-link">Fazer movimentação</span>
-                </NavLink>
-            </div>
-
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="educacao-financeira" title="Educação Financeira">
-                    <span class="icone-link" aria-hidden="true">📚</span>
-                    <span class="texto-link">Educação Financeira</span>
+                <NavLink class="nav-link" href="educacao-financeira">
+                    <span class="icone-link">📚</span>
+                    <span class="texto-link">Educação financeira</span>
                 </NavLink>
             </div>
 
             <AuthorizeView>
+                <Authorized>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="nova-movimentacao">
+                            <span class="icone-link">💸</span>
+                            <span class="texto-link">Fazer movimentação</span>
+                        </NavLink>
+                    </div>
+
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="movimentacoes">
+                            <span class="icone-link">📋</span>
+                            <span class="texto-link">Ver movimentações</span>
+                        </NavLink>
+                    </div>
+                </Authorized>
+
                 <NotAuthorized>
                     <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="entrar" title="Entrar">
-                            <span class="icone-link" aria-hidden="true">👤</span>
+                        <NavLink class="nav-link" href="Account/Login">
+                            <span class="icone-link">🔐</span>
                             <span class="texto-link">Entrar</span>
                         </NavLink>
                     </div>
