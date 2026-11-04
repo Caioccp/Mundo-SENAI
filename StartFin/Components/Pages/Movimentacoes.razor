@@ -1,4 +1,4 @@
- @page "/movimentacoes"
+@page "/movimentacoes"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 @using System.Globalization
@@ -10,15 +10,15 @@
 @inject CarteiraServico CarteiraServico
 @inject AuthenticationStateProvider AuthProvider
 
-<PageTitle>Movimentações | StartFin</PageTitle>
+<PageTitle>Histórico | StartFin</PageTitle>
 
 <div class="pagina">
 
     <header class="topo">
         <div>
             <span class="etiqueta">MINHA CARTEIRA</span>
-            <h1>Entradas e saídas 💰</h1>
-            <p>Organize seu dinheiro e acompanhe suas movimentações.</p>
+            <h1>Histórico de movimentações 📋</h1>
+            <p>Acompanhe todas as entradas e saídas da sua carteira.</p>
         </div>
 
         <a href="/" class="botao-voltar">← Voltar ao início</a>
@@ -27,7 +27,7 @@
     @if (Carregando)
     {
         <div class="cartao">
-            <p>Carregando sua carteira...</p>
+            <p>Carregando seu histórico...</p>
         </div>
     }
     else
@@ -39,43 +39,8 @@
         </section>
 
         <section class="cartao">
-            <h2>Registrar movimentação</h2>
-            <p>Informe os dados da entrada ou saída de dinheiro.</p>
-
-            <div class="formulario">
-
-                <label>Tipo de movimentação</label>
-                <select @bind="Tipo">
-                    <option value="Entrada">Entrada</option>
-                    <option value="Saída">Saída</option>
-                </select>
-
-                <label>Descrição</label>
-                <input @bind="Descricao"
-                       placeholder="Ex.: Mesada, compra de um livro..." />
-
-                <label>Valor (R$)</label>
-                <input type="number"
-                       step="0.01"
-                       min="0.01"
-                       @bind="Valor"
-                       placeholder="0,00" />
-
-                <button @onclick="RegistrarAsync" disabled="@Salvando">
-                    @(Salvando ? "Registrando..." : "Registrar movimentação")
-                </button>
-
-                @if (!string.IsNullOrWhiteSpace(Mensagem))
-                {
-                    <p class="mensagem">@Mensagem</p>
-                }
-
-            </div>
-        </section>
-
-        <section class="cartao">
-            <h2>Histórico de movimentações</h2>
-            <p>Confira as entradas e saídas registradas na sua carteira.</p>
+            <h2>Suas movimentações</h2>
+            <p>Confira todas as entradas e saídas registradas.</p>
 
             @if (ListaMovimentacoes.Count == 0)
             {
@@ -107,6 +72,10 @@
                 </div>
             }
         </section>
+
+        <a href="/nova-movimentacao" class="botao-nova">
+            + Fazer movimentação
+        </a>
     }
 </div>
 
@@ -186,51 +155,6 @@
         margin-top: 0;
     }
 
-    .formulario {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 500px;
-        margin-top: 20px;
-    }
-
-    .formulario label {
-        color: #26364a;
-        font-weight: 700;
-        margin-top: 8px;
-    }
-
-    .formulario input, .formulario select {
-        padding: 12px;
-        border: 1px solid #dce5ef;
-        border-radius: 9px;
-        font-size: 15px;
-    }
-
-    .formulario button {
-        margin-top: 12px;
-        padding: 13px;
-        border: none;
-        border-radius: 10px;
-        background: #087f5b;
-        color: white;
-        font-weight: 700;
-        cursor: pointer;
-    }
-
-    .formulario button:hover {
-        background: #066849;
-    }
-
-    .formulario button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .mensagem {
-        font-weight: 600;
-    }
-
     .vazio {
         padding: 25px;
         text-align: center;
@@ -271,6 +195,20 @@
         color: #d64545;
     }
 
+    .botao-nova {
+        display: inline-block;
+        padding: 13px 20px;
+        border-radius: 10px;
+        background: #087f5b;
+        color: white;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .botao-nova:hover {
+        background: #066849;
+    }
+
     @@media (max-width: 650px) {
         .pagina {
             padding: 18px;
@@ -291,15 +229,8 @@
         CultureInfo.GetCultureInfo("pt-BR");
 
     private string UsuarioId = string.Empty;
-    private string Tipo = "Entrada";
-    private string Descricao = string.Empty;
-    private decimal Valor;
-
     private decimal Saldo;
     private bool Carregando = true;
-    private bool Salvando;
-
-    private string Mensagem = string.Empty;
 
     private List<Movimentacao> ListaMovimentacoes = new();
 
@@ -315,68 +246,17 @@
             if (string.IsNullOrEmpty(UsuarioId))
                 return;
 
-            await AtualizarDadosAsync();
-        }
-        catch
-        {
-            Mensagem = "Não foi possível carregar sua carteira.";
+            var carteira = await CarteiraServico
+                .ObterOuCriarCarteiraAsync(UsuarioId);
+
+            Saldo = carteira.SaldoDisponivel;
+
+            ListaMovimentacoes =
+                await CarteiraServico.ListarMovimentacoesAsync(UsuarioId);
         }
         finally
         {
             Carregando = false;
-        }
-    }
-
-    private async Task AtualizarDadosAsync()
-    {
-        var carteira = await CarteiraServico.ObterOuCriarCarteiraAsync(UsuarioId);
-
-        Saldo = carteira.SaldoDisponivel;
-
-        ListaMovimentacoes = await CarteiraServico.ListarMovimentacoesAsync(UsuarioId);
-    }
-
-    private async Task RegistrarAsync()
-    {
-        Mensagem = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(Descricao))
-        {
-            Mensagem = "Informe uma descrição.";
-            return;
-        }
-
-        if (Valor <= 0)
-        {
-            Mensagem = "Informe um valor maior que zero.";
-            return;
-        }
-
-        Salvando = true;
-
-        try
-        {
-            await CarteiraServico.RegistrarMovimentacaoAsync(
-                UsuarioId,
-                Tipo,
-                Descricao.Trim(),
-                Valor
-            );
-
-            await AtualizarDadosAsync();
-
-            Descricao = string.Empty;
-            Valor = 0;
-
-            Mensagem = "Movimentação registrada com sucesso!";
-        }
-        catch (Exception ex)
-        {
-            Mensagem = ex.Message;
-        }
-        finally
-        {
-            Salvando = false;
         }
     }
 }
