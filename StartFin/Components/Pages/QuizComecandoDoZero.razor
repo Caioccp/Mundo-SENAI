@@ -1,0 +1,614 @@
+```razor
+@page "/educacao-financeira/quiz/comecando-do-zero"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+@using StartFin.Modelos
+@using System.Security.Claims
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Quiz - Começando do zero | StartFin</PageTitle>
+
+<div class="quiz-container">
+
+    <a href="/educacao-financeira/comecando-do-zero" class="voltar">
+        ← Voltar para a aula
+    </a>
+
+    <div class="cabecalho">
+        <span class="etiqueta">STARTFIN • EDUCAÇÃO FINANCEIRA</span>
+        <h1>Quiz: Começando do zero</h1>
+        <p>
+            Agora é hora de aplicar seus conhecimentos em situações reais.
+            Leia com atenção antes de responder!
+        </p>
+        <span class="nivel">Nível intermediário • 10 questões</span>
+    </div>
+
+    @if (!Finalizado)
+    {
+        <div class="progresso">
+            <div class="progresso-texto">
+                <span>Pergunta @(Indice + 1) de @Perguntas.Count</span>
+                <span>@Pontos pontos</span>
+            </div>
+
+            <div class="barra">
+                <div class="barra-preenchida"
+                     style="width: @(((Indice + 1) * 100.0 / Perguntas.Count).ToString(System.Globalization.CultureInfo.InvariantCulture))%">
+                </div>
+            </div>
+        </div>
+
+        <section class="pergunta-card">
+
+            <span class="numero">QUESTÃO @(Indice + 1)</span>
+
+            <h2>@Perguntas[Indice].Enunciado</h2>
+
+            <div class="opcoes">
+                @foreach (var opcao in Perguntas[Indice].Opcoes)
+                {
+                    <button class="opcao @(Selecionada == opcao ? "selecionada" : "")"
+                            disabled="@Respondida"
+                            @onclick="() => Selecionar(opcao)">
+                        @opcao
+                    </button>
+                }
+            </div>
+
+            @if (Respondida)
+            {
+                <div class="feedback @(Acertou ? "correto" : "incorreto")">
+                    <strong>
+                        @(Acertou ? "Resposta correta!" : "Resposta incorreta!")
+                    </strong>
+                    <p>@Perguntas[Indice].Explicacao</p>
+                </div>
+            }
+
+            <div class="acoes">
+                @if (!Respondida)
+                {
+                    <button class="botao-principal"
+                            disabled="@string.IsNullOrEmpty(Selecionada)"
+                            @onclick="ConfirmarResposta">
+                        Confirmar resposta
+                    </button>
+                }
+                else
+                {
+                    <button class="botao-principal" @onclick="Proxima">
+                        @(Indice == Perguntas.Count - 1
+                            ? "Ver resultado"
+                            : "Próxima pergunta")
+                    </button>
+                }
+            </div>
+
+        </section>
+    }
+    else
+    {
+        <section class="resultado-card">
+
+            <span class="etiqueta">QUIZ CONCLUÍDO</span>
+            <h2>Você terminou!</h2>
+
+            <div class="pontuacao">
+                @Pontos <small>/ @Perguntas.Count</small>
+            </div>
+
+            <p>Você acertou @Pontos de @Perguntas.Count perguntas.</p>
+
+            <p class="mensagem">@MensagemResultado</p>
+
+            @if (ResultadoSalvo)
+            {
+                <p class="salvo">
+                    ✓ Seu resultado foi salvo na sua conta!
+                </p>
+            }
+            else
+            {
+                <p class="aviso">@MensagemSalvamento</p>
+            }
+
+            <button class="botao-principal" @onclick="Reiniciar">
+                Refazer quiz
+            </button>
+
+            <a href="/educacao-financeira/comecando-do-zero" class="link-aula">
+                Voltar para a aula
+            </a>
+
+        </section>
+    }
+
+</div>
+
+<style>
+    .quiz-container {
+        max-width: 850px;
+        margin: 35px auto;
+        padding: 20px;
+        color: #172033;
+    }
+
+    .voltar, .link-aula {
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .cabecalho {
+        margin: 30px 0;
+    }
+
+    .etiqueta, .numero {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .cabecalho h1 {
+        font-size: 32px;
+        margin: 10px 0;
+    }
+
+    .cabecalho p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .nivel {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 7px 12px;
+        background: #ecfdf5;
+        color: #087f5b;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .progresso {
+        margin-bottom: 20px;
+    }
+
+    .progresso-texto {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .barra {
+        height: 9px;
+        background: #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .barra-preenchida {
+        height: 100%;
+        background: #10b981;
+        border-radius: 20px;
+        transition: width .3s;
+    }
+
+    .pergunta-card, .resultado-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 5px 20px #00000008;
+    }
+
+    .pergunta-card h2 {
+        font-size: 22px;
+        line-height: 1.6;
+        margin: 15px 0 25px;
+    }
+
+    .opcoes {
+        display: grid;
+        gap: 12px;
+    }
+
+    .opcao {
+        width: 100%;
+        text-align: left;
+        padding: 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        background: white;
+        color: #172033;
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1.5;
+        transition: .2s;
+    }
+
+    .opcao:hover:not(:disabled) {
+        border-color: #10b981;
+        background: #f0fdf4;
+    }
+
+    .opcao.selecionada {
+        border: 2px solid #059669;
+        background: #ecfdf5;
+    }
+
+    .opcao:disabled {
+        cursor: default;
+        opacity: 1;
+    }
+
+    .feedback {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 12px;
+        line-height: 1.6;
+    }
+
+    .feedback p {
+        margin-bottom: 0;
+    }
+
+    .correto {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .incorreto {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .acoes {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .botao-principal {
+        border: none;
+        border-radius: 10px;
+        padding: 14px 24px;
+        background: #087f5b;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .botao-principal:hover {
+        background: #066849;
+    }
+
+    .botao-principal:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .resultado-card {
+        text-align: center;
+        padding: 45px 25px;
+    }
+
+    .resultado-card h2 {
+        font-size: 28px;
+    }
+
+    .pontuacao {
+        font-size: 65px;
+        font-weight: 800;
+        color: #087f5b;
+        margin: 15px 0;
+    }
+
+    .pontuacao small {
+        font-size: 25px;
+        color: #64748b;
+    }
+
+    .mensagem {
+        margin: 20px 0;
+        color: #475569;
+    }
+
+    .salvo {
+        color: #087f5b;
+        font-weight: 700;
+    }
+
+    .aviso {
+        color: #b45309;
+    }
+
+    .resultado-card .botao-principal {
+        display: block;
+        margin: 25px auto 15px;
+    }
+
+    @@media (max-width: 600px) {
+        .cabecalho h1 {
+            font-size: 26px;
+        }
+
+        .pergunta-card {
+            padding: 20px;
+        }
+
+        .pergunta-card h2 {
+            font-size: 19px;
+        }
+    }
+</style>
+
+@code {
+    private int Indice = 0;
+    private int Pontos = 0;
+
+    private bool Respondida = false;
+    private bool Acertou = false;
+    private bool Finalizado = false;
+    private bool ResultadoSalvo = false;
+
+    private string Selecionada = string.Empty;
+    private string MensagemResultado = string.Empty;
+    private string MensagemSalvamento = string.Empty;
+
+    private List<Pergunta> Perguntas = new()
+    {
+        new(
+            "Lucas recebe R$ 400 por mês. Ele gasta R$ 120 com transporte, R$ 80 com alimentação e R$ 70 com lazer. Quanto sobra depois dessas despesas?",
+            new()
+            {
+                "R$ 100",
+                "R$ 130",
+                "R$ 150",
+                "R$ 170"
+            },
+            "As despesas somam R$ 270. Subtraindo R$ 270 de R$ 400, sobram R$ 130.",
+            "R$ 130"
+        ),
+
+        new(
+            "Mariana quer comprar um fone de R$ 240. Ela consegue guardar R$ 40 por mês. Sem considerar juros ou outros depósitos, em quanto tempo conseguirá juntar o valor?",
+            new()
+            {
+                "4 meses",
+                "5 meses",
+                "6 meses",
+                "8 meses"
+            },
+            "Dividindo R$ 240 por R$ 40, temos 6. Portanto, Mariana precisará de 6 meses.",
+            "6 meses"
+        ),
+
+        new(
+            "Pedro recebe R$ 300 de mesada. Ele decide guardar 20% desse valor todos os meses. Quanto será guardado em um mês?",
+            new()
+            {
+                "R$ 30",
+                "R$ 40",
+                "R$ 50",
+                "R$ 60"
+            },
+            "20% de R$ 300 corresponde a R$ 60. Uma forma de calcular é dividir 300 por 100 e multiplicar por 20.",
+            "R$ 60"
+        ),
+
+        new(
+            "Ana tem R$ 150 disponíveis. Ela precisa comprar material escolar por R$ 65 e também quer comprar um acessório de R$ 100. Qual decisão demonstra melhor planejamento financeiro?",
+            new()
+            {
+                "Comprar o acessório e deixar o material para depois.",
+                "Comprar o material e avaliar se o acessório pode esperar.",
+                "Gastar os R$ 150 sem comparar prioridades.",
+                "Pedir dinheiro emprestado para comprar os dois imediatamente."
+            },
+            "O material escolar representa uma necessidade importante. Ana deve priorizá-lo e avaliar o acessório sem comprometer seu orçamento.",
+            "Comprar o material e avaliar se o acessório pode esperar."
+        ),
+
+        new(
+            "Uma loja vende um produto por R$ 120. Outra loja vende o mesmo produto por R$ 105, mas cobra R$ 12 de entrega. Qual opção apresenta o menor custo total?",
+            new()
+            {
+                "A primeira loja, por R$ 120.",
+                "A segunda loja, por R$ 117.",
+                "As duas lojas têm o mesmo custo.",
+                "A segunda loja, por R$ 105."
+            },
+            "Na segunda loja, o total é R$ 105 + R$ 12 = R$ 117. Portanto, ela custa R$ 3 a menos que a primeira.",
+            "A segunda loja, por R$ 117."
+        ),
+
+        new(
+            "João recebe R$ 500 e termina o mês com R$ 50. Qual porcentagem da renda ele conseguiu economizar?",
+            new()
+            {
+                "5%",
+                "10%",
+                "15%",
+                "20%"
+            },
+            "R$ 50 representa 10% de R$ 500, pois 50 dividido por 500 é igual a 0,10.",
+            "10%"
+        ),
+
+        new(
+            "Beatriz recebe R$ 350. Suas despesas são: R$ 100 com transporte, R$ 90 com alimentação e R$ 60 com outras necessidades. Ela quer guardar R$ 70. Quanto restará para outros gastos depois de separar tudo isso?",
+            new()
+            {
+                "R$ 20",
+                "R$ 30",
+                "R$ 40",
+                "R$ 50"
+            },
+            "As despesas e a economia somam R$ 320. Subtraindo de R$ 350, restam R$ 30.",
+            "R$ 30"
+        ),
+
+        new(
+            "Rafael anotou seus gastos durante o mês e percebeu que gastou R$ 90 em compras por impulso. Qual seria a atitude mais adequada para melhorar seu planejamento no mês seguinte?",
+            new()
+            {
+                "Ignorar os gastos porque já aconteceram.",
+                "Aumentar as compras para aproveitar o dinheiro.",
+                "Identificar esses gastos e estabelecer um limite para compras não planejadas.",
+                "Deixar de registrar as despesas menores."
+            },
+            "Analisar os gastos permite identificar hábitos que podem ser melhorados e estabelecer limites mais conscientes.",
+            "Identificar esses gastos e estabelecer um limite para compras não planejadas."
+        ),
+
+        new(
+            "Camila quer comprar um tablet de R$ 900. Ela já tem R$ 300 guardados e consegue economizar R$ 100 por mês. Em quantos meses terá o valor necessário?",
+            new()
+            {
+                "4 meses",
+                "5 meses",
+                "6 meses",
+                "9 meses"
+            },
+            "Faltam R$ 600 para chegar aos R$ 900. Guardando R$ 100 por mês, Camila precisará de mais 6 meses.",
+            "6 meses"
+        ),
+
+        new(
+            "Uma pessoa recebe R$ 600 por mês. Ela gasta R$ 250 com necessidades, R$ 180 com desejos e guarda R$ 100. No mês seguinte, surge uma despesa inesperada de R$ 50. Qual análise está correta?",
+            new()
+            {
+                "Ela não tem dinheiro suficiente, pois já gastou toda a renda.",
+                "Ela ainda tem R$ 20 disponíveis após os gastos e a despesa inesperada.",
+                "Ela tem R$ 70 disponíveis porque a economia não deve ser considerada.",
+                "Ela ficou com saldo negativo de R$ 50."
+            },
+            "Os gastos e a economia somam R$ 530. Com a despesa inesperada de R$ 50, o total chega a R$ 580. Portanto, restam R$ 20.",
+            "Ela ainda tem R$ 20 disponíveis após os gastos e a despesa inesperada."
+        )
+    };
+
+    private void Selecionar(string opcao)
+    {
+        if (!Respondida)
+        {
+            Selecionada = opcao;
+        }
+    }
+
+    private void ConfirmarResposta()
+    {
+        if (string.IsNullOrEmpty(Selecionada) || Respondida)
+            return;
+
+        Acertou = Selecionada == Perguntas[Indice].RespostaCorreta;
+
+        if (Acertou)
+            Pontos++;
+
+        Respondida = true;
+    }
+
+    private async Task Proxima()
+    {
+        if (Indice < Perguntas.Count - 1)
+        {
+            Indice++;
+            Selecionada = string.Empty;
+            Respondida = false;
+            Acertou = false;
+        }
+        else
+        {
+            Finalizado = true;
+
+            MensagemResultado = Pontos switch
+            {
+                10 => "Excelente! Você demonstrou domínio dos conceitos e das situações financeiras apresentadas.",
+                >= 8 => "Muito bom! Você conseguiu aplicar a maioria dos conceitos financeiros corretamente.",
+                >= 6 => "Bom esforço! Você já compreende vários conceitos, mas ainda pode melhorar.",
+                _ => "Continue praticando! Revise a aula e tente novamente para fortalecer seus conhecimentos."
+            };
+
+            await SalvarResultadoAsync();
+        }
+    }
+
+    private async Task SalvarResultadoAsync()
+    {
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
+                return;
+            }
+
+            var resultado = new ResultadoQuiz
+            {
+                UsuarioId = usuarioId,
+                IdentificadorQuiz = "comecando-do-zero",
+                Pontos = Pontos,
+                TotalPerguntas = Perguntas.Count,
+                DataConclusao = DateTime.UtcNow
+            };
+
+            Context.ResultadosQuiz.Add(resultado);
+            await Context.SaveChangesAsync();
+
+            ResultadoSalvo = true;
+        }
+        catch
+        {
+            MensagemSalvamento = "Não foi possível salvar o resultado. Tente novamente mais tarde.";
+        }
+    }
+
+    private void Reiniciar()
+    {
+        Indice = 0;
+        Pontos = 0;
+        Respondida = false;
+        Acertou = false;
+        Finalizado = false;
+        ResultadoSalvo = false;
+
+        Selecionada = string.Empty;
+        MensagemResultado = string.Empty;
+        MensagemSalvamento = string.Empty;
+    }
+
+    private class Pergunta
+    {
+        public string Enunciado { get; set; }
+        public List<string> Opcoes { get; set; }
+        public string Explicacao { get; set; }
+        public string RespostaCorreta { get; set; }
+
+        public Pergunta(
+            string enunciado,
+            List<string> opcoes,
+            string explicacao,
+            string respostaCorreta)
+        {
+            Enunciado = enunciado;
+            Opcoes = opcoes;
+            Explicacao = explicacao;
+            RespostaCorreta = respostaCorreta;
+        }
+    }
+}
+```

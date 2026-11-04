@@ -1,5 +1,12 @@
-
 @page "/educacao-financeira/comecando-do-zero"
+
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
 
 <PageTitle>Começando do Zero | StartFin</PageTitle>
 
@@ -7,11 +14,11 @@
 
     <header class="cabecalho">
         <div>
-            <span class="etiqueta">EDUCAÇÃO FINANCEIRA • FUNDAMENTOS</span>
+            <span class="etiqueta">EDUCAÇÃO FINANCEIRA • AULA 01</span>
             <h1>Começando do zero 📚</h1>
             <p>
-                Aprenda os primeiros passos para entender e cuidar melhor
-                do seu dinheiro.
+                Aprenda os primeiros passos para entender o dinheiro,
+                fazer escolhas conscientes e começar a organizar sua vida financeira.
             </p>
         </div>
 
@@ -21,117 +28,355 @@
     </header>
 
     <section class="destaque">
+        <span class="icone-grande">💡</span>
         <h2>O que é educação financeira?</h2>
         <p>
-            Educação financeira é aprender a organizar o dinheiro,
-            controlar gastos, fazer escolhas conscientes e planejar
-            objetivos para o futuro.
+            Educação financeira é aprender a lidar melhor com o dinheiro.
+            Isso envolve entender quanto recebemos, quanto gastamos,
+            como economizar e como planejar nossas escolhas.
         </p>
-    </section>
-
-    <section class="secao">
-        <h2>Por que isso é importante?</h2>
         <p>
-            Aprender a cuidar do dinheiro ajuda você a evitar gastos
-            desnecessários, planejar compras e se preparar para
-            imprevistos.
+            Não significa deixar de comprar tudo o que gostamos.
+            Significa aprender a decidir quando, como e quanto gastar,
+            sem comprometer nossas necessidades e objetivos.
         </p>
     </section>
 
     <section class="secao">
-        <h2>Necessidade ou desejo?</h2>
+        <h2>1. Por que aprender sobre dinheiro?</h2>
+        <p>
+            O dinheiro faz parte de diversas decisões do nosso cotidiano.
+            Mesmo quem ainda não trabalha pode começar a desenvolver
+            bons hábitos financeiros.
+        </p>
 
         <div class="cards">
             <article class="card">
-                <span>🏠</span>
-                <h3>Necessidade</h3>
+                <span>📋</span>
+                <h3>Organização</h3>
                 <p>
-                    Algo importante para o dia a dia, como alimentação,
-                    transporte e materiais escolares.
+                    Saber quanto dinheiro você recebe e onde está gastando
+                    ajuda a evitar surpresas no final do mês.
                 </p>
             </article>
 
             <article class="card">
-                <span>🎮</span>
-                <h3>Desejo</h3>
+                <span>🎯</span>
+                <h3>Planejamento</h3>
                 <p>
-                    Algo que você gostaria de ter, mas que não é
-                    essencial, como um jogo ou um acessório novo.
+                    Organizar suas escolhas permite guardar dinheiro
+                    para comprar algo que deseja no futuro.
+                </p>
+            </article>
+
+            <article class="card">
+                <span>🛡️</span>
+                <h3>Prevenção</h3>
+                <p>
+                    Ter uma reserva ajuda a lidar com despesas inesperadas,
+                    sem depender imediatamente de empréstimos.
+                </p>
+            </article>
+
+            <article class="card">
+                <span>🧠</span>
+                <h3>Decisões conscientes</h3>
+                <p>
+                    Comparar opções e pensar antes de comprar ajuda
+                    a evitar gastos por impulso.
                 </p>
             </article>
         </div>
     </section>
 
     <section class="secao">
-        <h2>Conheça três conceitos básicos</h2>
+        <h2>2. Necessidade ou desejo?</h2>
+        <p>
+            Uma das primeiras habilidades da educação financeira é
+            diferenciar aquilo de que precisamos daquilo que apenas
+            gostaríamos de ter.
+        </p>
 
-        <div class="conceito">
-            <h3>💵 Renda</h3>
-            <p>É o dinheiro que você recebe, como mesada ou salário.</p>
+        <div class="cards">
+            <article class="card categoria">
+                <span>🏠</span>
+                <h3>Necessidade</h3>
+                <p>
+                    É algo importante para o dia a dia, como alimentação,
+                    transporte, moradia e materiais escolares.
+                </p>
+                <strong>Exemplo: comprar o material necessário para estudar.</strong>
+            </article>
+
+            <article class="card categoria">
+                <span>🎮</span>
+                <h3>Desejo</h3>
+                <p>
+                    É algo que queremos ter, mas que não é essencial naquele
+                    momento, como um jogo, um acessório ou um celular novo.
+                </p>
+                <strong>Exemplo: comprar um jogo novo mesmo já tendo outros.</strong>
+            </article>
         </div>
 
-        <div class="conceito">
-            <h3>🛒 Despesas</h3>
-            <p>São os gastos que você tem, como transporte e compras.</p>
+        <div class="aviso">
+            <strong>Importante:</strong>
+            desejos não são proibidos! O segredo é organizar o orçamento
+            para aproveitar essas compras sem prejudicar as necessidades.
         </div>
+    </section>
 
-        <div class="conceito">
-            <h3>🐷 Economia</h3>
-            <p>
-                É guardar parte do dinheiro para alcançar objetivos
-                ou se preparar para imprevistos.
-            </p>
+    <section class="secao">
+        <h2>3. Conheça três conceitos básicos</h2>
+
+        <article class="conceito">
+            <span>💵</span>
+            <div>
+                <h3>Renda</h3>
+                <p>
+                    É todo o dinheiro que uma pessoa recebe.
+                    Pode vir de salário, mesada, trabalhos ou outras fontes.
+                </p>
+                <strong>Exemplo: receber R$ 300 de mesada.</strong>
+            </div>
+        </article>
+
+        <article class="conceito">
+            <span>🛒</span>
+            <div>
+                <h3>Despesas</h3>
+                <p>
+                    São os gastos realizados para pagar produtos,
+                    serviços e outras necessidades.
+                </p>
+                <strong>Exemplo: gastar R$ 50 com transporte.</strong>
+            </div>
+        </article>
+
+        <article class="conceito">
+            <span>🐷</span>
+            <div>
+                <h3>Economia</h3>
+                <p>
+                    É guardar uma parte do dinheiro em vez de gastar tudo.
+                    Esse valor pode ajudar a alcançar objetivos ou enfrentar
+                    imprevistos.
+                </p>
+                <strong>Exemplo: guardar R$ 30 todos os meses.</strong>
+            </div>
+        </article>
+    </section>
+
+    <section class="secao">
+        <h2>4. Como começar a organizar seu dinheiro?</h2>
+        <p>
+            Você não precisa ganhar muito dinheiro para começar.
+            O primeiro passo é entender como utiliza o valor que recebe.
+        </p>
+
+        <div class="passos">
+            <div class="passo">
+                <span>1</span>
+                <div>
+                    <h3>Anote quanto recebe</h3>
+                    <p>Registre sua mesada, salário ou qualquer outra renda.</p>
+                </div>
+            </div>
+
+            <div class="passo">
+                <span>2</span>
+                <div>
+                    <h3>Registre seus gastos</h3>
+                    <p>Anote as compras e despesas realizadas durante o mês.</p>
+                </div>
+            </div>
+
+            <div class="passo">
+                <span>3</span>
+                <div>
+                    <h3>Separe suas prioridades</h3>
+                    <p>Identifique o que é necessário e o que pode esperar.</p>
+                </div>
+            </div>
+
+            <div class="passo">
+                <span>4</span>
+                <div>
+                    <h3>Planeje uma economia</h3>
+                    <p>Se possível, reserve uma parte do dinheiro para seus objetivos.</p>
+                </div>
+            </div>
         </div>
     </section>
 
     <section class="exemplo">
-        <h2>Exemplo do dia a dia</h2>
+        <span class="etiqueta">EXEMPLO PRÁTICO</span>
+        <h2>O que fazer com R$ 100?</h2>
         <p>
-            Imagine que você recebeu R$ 100. Antes de gastar tudo,
-            pode pensar no que precisa comprar, no que gostaria de
-            comprar e se consegue guardar uma parte.
+            Imagine que você recebeu R$ 100 e decidiu organizar esse dinheiro.
+            Um exemplo de planejamento seria:
         </p>
+
+        <div class="distribuicao">
+            <div class="valor">
+                <strong>R$ 50</strong>
+                <span>Necessidades</span>
+            </div>
+            <div class="valor">
+                <strong>R$ 30</strong>
+                <span>Lazer e desejos</span>
+            </div>
+            <div class="valor">
+                <strong>R$ 20</strong>
+                <span>Economia</span>
+            </div>
+        </div>
+
         <p>
-            Assim, você começa a tomar decisões mais conscientes!
+            Nesse exemplo, os R$ 100 foram distribuídos entre diferentes
+            finalidades. Essa divisão é apenas ilustrativa: cada pessoa
+            deve adaptar seu planejamento à própria realidade.
         </p>
     </section>
 
+    <section class="secao">
+        <h2>5. Hábitos que ajudam no dia a dia</h2>
+
+        <ul class="lista-dicas">
+            <li>Pesquise preços antes de comprar.</li>
+            <li>Evite comprar por impulso.</li>
+            <li>Não gaste todo o dinheiro assim que receber.</li>
+            <li>Compare necessidades e desejos.</li>
+            <li>Acompanhe seus gastos regularmente.</li>
+            <li>Estabeleça pequenos objetivos de economia.</li>
+        </ul>
+    </section>
+
+    <section class="secao-quiz">
+        <span class="icone-quiz">🧠</span>
+        <span class="etiqueta">FINAL DA AULA 01</span>
+        <h2>Hora de testar seus conhecimentos!</h2>
+        <p>
+            Você chegou ao final da primeira aula. Agora responda
+            a 10 perguntas sobre educação financeira básica e descubra
+            quanto aprendeu.
+        </p>
+
+        <a href="/educacao-financeira/quiz/comecando-do-zero"
+           class="botao-quiz">
+            Começar quiz →
+        </a>
+
+        <small>10 perguntas • Resultado salvo na sua conta</small>
+
+        <button class="botao-resultado" @onclick="MostrarUltimoResultado">
+            📊 Ver último resultado
+        </button>
+
+        @if (ExibindoResultado)
+        {
+            <div class="resultado-anterior">
+                @if (UltimoResultado == null)
+                {
+                    <p>Você ainda não concluiu este quiz.</p>
+                }
+                else
+                {
+                    <h3>Seu último resultado</h3>
+                    <p>
+                        <strong>Pontuação:</strong>
+                        @UltimoResultado.Pontos de @UltimoResultado.TotalPerguntas
+                    </p>
+                    <p>
+                        <strong>Data:</strong>
+                        @UltimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                }
+            </div>
+        }
+    </section>
+
 </div>
+
+@code {
+    private bool ExibindoResultado = false;
+
+    private int? PontosUltimoResultado;
+    private int? TotalUltimoResultado;
+    private DateTime? DataUltimoResultado;
+
+    private ResultadoExibicao? UltimoResultado;
+
+    private class ResultadoExibicao
+    {
+        public int Pontos { get; set; }
+        public int TotalPerguntas { get; set; }
+        public DateTime DataConclusao { get; set; }
+    }
+
+    private async Task MostrarUltimoResultado()
+    {
+        ExibindoResultado = true;
+
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+
+        var usuarioId = estado.User
+            .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(usuarioId))
+            return;
+
+        var resultado = await Context.ResultadosQuiz
+            .Where(r => r.UsuarioId == usuarioId &&
+                        r.IdentificadorQuiz == "comecando-do-zero")
+            .OrderByDescending(r => r.DataConclusao)
+            .Select(r => new ResultadoExibicao
+            {
+                Pontos = r.Pontos,
+                TotalPerguntas = r.TotalPerguntas,
+                DataConclusao = r.DataConclusao
+            })
+            .FirstOrDefaultAsync();
+
+        UltimoResultado = resultado;
+    }
+}
 
 <style>
     .conteudo-pagina {
         max-width: 1000px;
         margin: 0 auto;
-        padding: 30px 15px 50px;
+        padding: 30px 15px 60px;
         color: #172b65;
     }
 
     .cabecalho {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
-    margin-bottom: 30px;
-}
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
 
     .botao-voltar {
-    display: inline-block;
-    background: #edf2f7;
-    color: #2455a4;
-    padding: 10px 16px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 700;
-    transition: 0.2s;
-    margin-top: 0;
-}
+        display: inline-block;
+        flex-shrink: 0;
+        background: #edf2f7;
+        color: #2455a4;
+        padding: 10px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.2s;
+    }
 
-.botao-voltar:hover {
-    background: #dce7f5;
-}
+    .botao-voltar:hover {
+        background: #dce7f5;
+    }
 
     .etiqueta {
-        color: #16b99a;
+        display: block;
+        color: #16a889;
         font-size: 11px;
         font-weight: 800;
         letter-spacing: 1.5px;
@@ -155,29 +400,34 @@
     .exemplo {
         background: #edf3ff;
         border-radius: 16px;
-        padding: 25px;
-        margin-bottom: 30px;
+        padding: 28px;
+        margin-bottom: 35px;
     }
 
     .destaque h2,
     .exemplo h2 {
-        margin-top: 0;
-        font-size: 22px;
+        margin-top: 8px;
+        font-size: 23px;
+    }
+
+    .icone-grande {
+        font-size: 35px;
     }
 
     .secao {
-        margin-bottom: 35px;
+        margin-bottom: 40px;
     }
 
     .secao h2 {
-        font-size: 22px;
-        margin-bottom: 18px;
+        font-size: 23px;
+        margin-bottom: 15px;
     }
 
     .cards {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
+        margin-top: 20px;
     }
 
     .card,
@@ -186,7 +436,6 @@
         border: 1px solid #e5eaf5;
         border-radius: 14px;
         padding: 22px;
-        margin-bottom: 12px;
     }
 
     .card span {
@@ -196,26 +445,219 @@
     .card h3,
     .conceito h3 {
         color: #172b65;
-        margin-bottom: 8px;
+        margin: 10px 0;
     }
 
     .card p,
     .conceito p {
-        margin-bottom: 0;
+        color: #647da8;
+        line-height: 1.7;
+    }
+
+    .card strong,
+    .conceito strong {
+        display: block;
+        color: #218665;
+        font-size: 13px;
+        line-height: 1.6;
+        margin-top: 12px;
+    }
+
+    .aviso {
+        background: #fff8e8;
+        border-left: 4px solid #e8b34e;
+        border-radius: 8px;
+        padding: 18px;
+        color: #705a2b;
+        line-height: 1.7;
+        margin-top: 20px;
+    }
+
+    .conceito {
+        display: flex;
+        gap: 18px;
+        align-items: flex-start;
+        margin-bottom: 14px;
+    }
+
+    .conceito > span {
+        font-size: 30px;
+    }
+
+    .conceito h3 {
+        margin-top: 0;
+    }
+
+    .passos {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .passo {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #f4f7fd;
+        border: 1px solid #e5eaf5;
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .passo > span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #2455a4;
+        color: white;
+        font-weight: 800;
+    }
+
+    .passo h3 {
+        margin: 0 0 5px;
+        font-size: 16px;
+    }
+
+    .passo p {
+        margin: 0;
+    }
+
+    .distribuicao {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin: 22px 0;
+    }
+
+    .valor {
+        background: white;
+        border: 1px solid #dce6f5;
+        border-radius: 12px;
+        padding: 18px 10px;
+        text-align: center;
+    }
+
+    .valor strong {
+        display: block;
+        color: #218665;
+        font-size: 23px;
+        margin-bottom: 8px;
+    }
+
+    .valor span {
+        color: #647da8;
+        font-size: 13px;
+    }
+
+    .lista-dicas {
+        background: #f4f7fd;
+        border-radius: 14px;
+        padding: 22px 22px 22px 42px;
+        color: #647da8;
+        line-height: 2;
+    }
+
+    .secao-quiz {
+        background: #f0f8f5;
+        border: 1px solid #d7eee4;
+        border-radius: 18px;
+        padding: 35px 25px;
+        text-align: center;
+        margin-top: 45px;
+    }
+
+    .icone-quiz {
+        display: block;
+        font-size: 42px;
+        margin-bottom: 15px;
+    }
+
+    .secao-quiz h2 {
+        color: #172b65;
+        font-size: 25px;
+        margin: 12px 0;
+    }
+
+    .secao-quiz p {
+        color: #647da8;
+        line-height: 1.7;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .botao-quiz {
+        display: inline-block;
+        background: #218665;
+        color: white;
+        padding: 15px 30px;
+        border-radius: 11px;
+        text-decoration: none;
+        font-weight: 800;
+        margin-top: 22px;
+        transition: 0.2s;
+    }
+
+    .botao-quiz:hover {
+        background: #176b4b;
+        transform: translateY(-2px);
+    }
+
+    .secao-quiz small {
+        display: block;
+        color: #718096;
+        margin-top: 15px;
+    }
+
+    .botao-resultado {
+        display: block;
+        margin: 15px auto 0;
+        padding: 12px 22px;
+        border: 1px solid #2455a4;
+        border-radius: 10px;
+        background: white;
+        color: #2455a4;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .resultado-anterior {
+        max-width: 400px;
+        margin: 18px auto 0;
+        padding: 18px;
+        border-radius: 12px;
+        background: white;
+        color: #172b65;
+    }
+
+    .resultado-anterior p {
+        margin: 8px 0;
     }
 
     @@media (max-width: 650px) {
         .cabecalho {
-    flex-direction: column;
-    align-items: flex-start;
-}
+            flex-direction: column;
+            align-items: flex-start;
+        }
 
         .cards {
             grid-template-columns: 1fr;
         }
 
+        .distribuicao {
+            grid-template-columns: 1fr;
+        }
+
         .cabecalho h1 {
             font-size: 28px;
+        }
+
+        .conceito {
+            gap: 12px;
         }
     }
 </style>
