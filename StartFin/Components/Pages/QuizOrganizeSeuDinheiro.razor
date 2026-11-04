@@ -1,0 +1,613 @@
+
+@page "/educacao-financeira/quiz/organize-seu-dinheiro"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+@using StartFin.Modelos
+@using System.Security.Claims
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Quiz - Organize seu dinheiro | StartFin</PageTitle>
+
+<div class="quiz-container">
+
+    <a href="/educacao-financeira/organize-seu-dinheiro" class="voltar">
+        ← Voltar para a aula
+    </a>
+
+    <div class="cabecalho">
+        <span class="etiqueta">STARTFIN • EDUCAÇÃO FINANCEIRA</span>
+        <h1>Quiz: Organize seu dinheiro</h1>
+        <p>
+            Teste sua capacidade de organizar ganhos, controlar despesas
+            e tomar decisões financeiras conscientes.
+        </p>
+        <span class="nivel">Nível intermediário • 10 questões</span>
+    </div>
+
+    @if (!Finalizado)
+    {
+        <div class="progresso">
+            <div class="progresso-texto">
+                <span>Pergunta @(Indice + 1) de @Perguntas.Count</span>
+                <span>@Pontos pontos</span>
+            </div>
+
+            <div class="barra">
+                <div class="barra-preenchida"
+                     style="width: @(((Indice + 1) * 100.0 / Perguntas.Count).ToString(System.Globalization.CultureInfo.InvariantCulture))%">
+                </div>
+            </div>
+        </div>
+
+        <section class="pergunta-card">
+
+            <span class="numero">QUESTÃO @(Indice + 1)</span>
+
+            <h2>@Perguntas[Indice].Enunciado</h2>
+
+            <div class="opcoes">
+                @foreach (var opcao in Perguntas[Indice].Opcoes)
+                {
+                    <button class="opcao @(Selecionada == opcao ? "selecionada" : "")"
+                            disabled="@Respondida"
+                            @onclick="() => Selecionar(opcao)">
+                        @opcao
+                    </button>
+                }
+            </div>
+
+            @if (Respondida)
+            {
+                <div class="feedback @(Acertou ? "correto" : "incorreto")">
+                    <strong>
+                        @(Acertou ? "Resposta correta!" : "Resposta incorreta!")
+                    </strong>
+                    <p>@Perguntas[Indice].Explicacao</p>
+                </div>
+            }
+
+            <div class="acoes">
+                @if (!Respondida)
+                {
+                    <button class="botao-principal"
+                            disabled="@string.IsNullOrEmpty(Selecionada)"
+                            @onclick="ConfirmarResposta">
+                        Confirmar resposta
+                    </button>
+                }
+                else
+                {
+                    <button class="botao-principal" @onclick="Proxima">
+                        @(Indice == Perguntas.Count - 1
+                            ? "Ver resultado"
+                            : "Próxima pergunta")
+                    </button>
+                }
+            </div>
+
+        </section>
+    }
+    else
+    {
+        <section class="resultado-card">
+
+            <span class="etiqueta">QUIZ CONCLUÍDO</span>
+            <h2>Você terminou!</h2>
+
+            <div class="pontuacao">
+                @Pontos <small>/ @Perguntas.Count</small>
+            </div>
+
+            <p>Você acertou @Pontos de @Perguntas.Count perguntas.</p>
+
+            <p class="mensagem">@MensagemResultado</p>
+
+            @if (ResultadoSalvo)
+            {
+                <p class="salvo">
+                    ✓ Seu resultado foi salvo na sua conta!
+                </p>
+            }
+            else
+            {
+                <p class="aviso">@MensagemSalvamento</p>
+            }
+
+            <button class="botao-principal" @onclick="Reiniciar">
+                Refazer quiz
+            </button>
+
+            <a href="/educacao-financeira/organize-seu-dinheiro" class="link-aula">
+                Voltar para a aula
+            </a>
+
+        </section>
+    }
+
+</div>
+
+<style>
+    .quiz-container {
+        max-width: 850px;
+        margin: 35px auto;
+        padding: 20px;
+        color: #172033;
+    }
+
+    .voltar, .link-aula {
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .cabecalho {
+        margin: 30px 0;
+    }
+
+    .etiqueta, .numero {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .cabecalho h1 {
+        font-size: 32px;
+        margin: 10px 0;
+    }
+
+    .cabecalho p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .nivel {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 7px 12px;
+        background: #ecfdf5;
+        color: #087f5b;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .progresso {
+        margin-bottom: 20px;
+    }
+
+    .progresso-texto {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .barra {
+        height: 9px;
+        background: #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .barra-preenchida {
+        height: 100%;
+        background: #10b981;
+        border-radius: 20px;
+        transition: width .3s;
+    }
+
+    .pergunta-card, .resultado-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 5px 20px #00000008;
+    }
+
+    .pergunta-card h2 {
+        font-size: 22px;
+        line-height: 1.6;
+        margin: 15px 0 25px;
+    }
+
+    .opcoes {
+        display: grid;
+        gap: 12px;
+    }
+
+    .opcao {
+        width: 100%;
+        text-align: left;
+        padding: 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        background: white;
+        color: #172033;
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1.5;
+        transition: .2s;
+    }
+
+    .opcao:hover:not(:disabled) {
+        border-color: #10b981;
+        background: #f0fdf4;
+    }
+
+    .opcao.selecionada {
+        border: 2px solid #059669;
+        background: #ecfdf5;
+    }
+
+    .opcao:disabled {
+        cursor: default;
+        opacity: 1;
+    }
+
+    .feedback {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 12px;
+        line-height: 1.6;
+    }
+
+    .feedback p {
+        margin-bottom: 0;
+    }
+
+    .correto {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .incorreto {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .acoes {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .botao-principal {
+        border: none;
+        border-radius: 10px;
+        padding: 14px 24px;
+        background: #087f5b;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .botao-principal:hover {
+        background: #066849;
+    }
+
+    .botao-principal:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .resultado-card {
+        text-align: center;
+        padding: 45px 25px;
+    }
+
+    .resultado-card h2 {
+        font-size: 28px;
+    }
+
+    .pontuacao {
+        font-size: 65px;
+        font-weight: 800;
+        color: #087f5b;
+        margin: 15px 0;
+    }
+
+    .pontuacao small {
+        font-size: 25px;
+        color: #64748b;
+    }
+
+    .mensagem {
+        margin: 20px 0;
+        color: #475569;
+    }
+
+    .salvo {
+        color: #087f5b;
+        font-weight: 700;
+    }
+
+    .aviso {
+        color: #b45309;
+    }
+
+    .resultado-card .botao-principal {
+        display: block;
+        margin: 25px auto 15px;
+    }
+
+    @@media (max-width: 600px) {
+        .cabecalho h1 {
+            font-size: 26px;
+        }
+
+        .pergunta-card {
+            padding: 20px;
+        }
+
+        .pergunta-card h2 {
+            font-size: 19px;
+        }
+    }
+</style>
+
+@code {
+    private int Indice = 0;
+    private int Pontos = 0;
+
+    private bool Respondida = false;
+    private bool Acertou = false;
+    private bool Finalizado = false;
+    private bool ResultadoSalvo = false;
+
+    private string Selecionada = string.Empty;
+    private string MensagemResultado = string.Empty;
+    private string MensagemSalvamento = string.Empty;
+
+    private List<Pergunta> Perguntas = new()
+    {
+        new(
+            "Mariana recebe dinheiro mensalmente e quer começar a se organizar. Qual atitude deve tomar primeiro?",
+            new()
+            {
+                "Comprar primeiro tudo o que deseja e observar o que sobrar.",
+                "Anotar quanto recebe e identificar para onde seu dinheiro está indo.",
+                "Guardar todo o dinheiro sem considerar suas necessidades.",
+                "Controlar apenas as compras de valores altos."
+            },
+            "Conhecer os ganhos e registrar os gastos é o primeiro passo para entender a própria situação financeira e começar um planejamento.",
+            "Anotar quanto recebe e identificar para onde seu dinheiro está indo."
+        ),
+
+        new(
+            "Lucas paga o plano de celular todos os meses e também costuma comprar lanches diferentes durante a semana. Como essas despesas podem ser classificadas?",
+            new()
+            {
+                "As duas são despesas fixas.",
+                "As duas são despesas variáveis.",
+                "O plano de celular é fixo e os lanches são variáveis.",
+                "O plano de celular é variável e os lanches são fixos."
+            },
+            "O plano de celular costuma ser uma despesa recorrente. Já os lanches podem mudar de frequência e valor, sendo gastos variáveis.",
+            "O plano de celular é fixo e os lanches são variáveis."
+        ),
+
+        new(
+            "Ana está organizando seu orçamento e percebe que costuma gastar com passeios antes de separar dinheiro para o transporte escolar. Qual seria a melhor decisão?",
+            new()
+            {
+                "Continuar gastando com passeios e resolver o transporte depois.",
+                "Priorizar o transporte e planejar os gastos com passeios dentro do dinheiro disponível.",
+                "Deixar de acompanhar os gastos durante o mês.",
+                "Utilizar o dinheiro reservado para outras necessidades."
+            },
+            "As necessidades e despesas importantes devem ser consideradas primeiro. Os desejos podem ser planejados com o dinheiro que estiver disponível.",
+            "Priorizar o transporte e planejar os gastos com passeios dentro do dinheiro disponível."
+        ),
+
+        new(
+            "Pedro deseja comprar um fone novo. Ao pesquisar, encontra um modelo de que gostou, mas percebe que ainda não tem dinheiro reservado para essa compra. O que seria mais adequado?",
+            new()
+            {
+                "Comprar imediatamente, mesmo sem planejamento.",
+                "Pedir dinheiro emprestado sem avaliar as condições.",
+                "Definir uma meta, pesquisar preços e guardar dinheiro aos poucos.",
+                "Deixar de pagar suas despesas para comprar o fone."
+            },
+            "Definir um objetivo e planejar a compra permite que Pedro se prepare financeiramente sem comprometer outras necessidades.",
+            "Definir uma meta, pesquisar preços e guardar dinheiro aos poucos."
+        ),
+
+        new(
+            "Beatriz começou a anotar todas as suas compras e percebeu que vários gastos pequenos não estavam sendo registrados. Por que isso é importante?",
+            new()
+            {
+                "Porque somente compras pequenas determinam a situação financeira.",
+                "Porque os registros ajudam a identificar hábitos e despesas que podem passar despercebidos.",
+                "Porque anotar gastos faz o dinheiro aumentar automaticamente.",
+                "Porque gastos pequenos nunca devem fazer parte do planejamento."
+            },
+            "Registrar também os gastos pequenos ajuda a enxergar melhor os hábitos de consumo e identificar oportunidades de melhorar o planejamento.",
+            "Porque os registros ajudam a identificar hábitos e despesas que podem passar despercebidos."
+        ),
+
+        new(
+            "Rafael planejou seus gastos para o mês, mas percebeu que está utilizando o dinheiro reservado para economias em compras por impulso. O que ele deveria fazer?",
+            new()
+            {
+                "Ignorar o planejamento e continuar comprando.",
+                "Parar de registrar suas despesas.",
+                "Revisar seus hábitos de consumo e ajustar os gastos que não são prioritários.",
+                "Aumentar todas as despesas para aproveitar o dinheiro."
+            },
+            "Revisar os hábitos de consumo permite identificar compras desnecessárias e recuperar o controle do planejamento financeiro.",
+            "Revisar seus hábitos de consumo e ajustar os gastos que não são prioritários."
+        ),
+
+        new(
+            "Uma pessoa recebe uma quantia inesperada de dinheiro. Ela já possui despesas planejadas e um objetivo de economia. Qual atitude demonstra melhor organização financeira?",
+            new()
+            {
+                "Gastar imediatamente todo o dinheiro recebido.",
+                "Avaliar suas prioridades e decidir como utilizar ou guardar a quantia.",
+                "Comprar algo apenas porque está em promoção.",
+                "Ignorar as despesas que já estavam planejadas."
+            },
+            "Mesmo quando o dinheiro recebido não era esperado, é importante avaliar as prioridades antes de decidir como utilizá-lo.",
+            "Avaliar suas prioridades e decidir como utilizar ou guardar a quantia."
+        ),
+
+        new(
+            "Camila percebeu que os preços de um produto variam bastante entre as lojas. Ela deseja comprá-lo, mas não tem pressa. Qual atitude é mais adequada?",
+            new()
+            {
+                "Comprar na primeira loja que encontrar.",
+                "Escolher sempre o produto mais caro.",
+                "Pesquisar preços, comparar opções e verificar se a compra cabe no planejamento.",
+                "Comprar sem observar as características do produto."
+            },
+            "Comparar preços e condições ajuda a fazer escolhas mais conscientes e evita comprometer o orçamento com uma compra precipitada.",
+            "Pesquisar preços, comparar opções e verificar se a compra cabe no planejamento."
+        ),
+
+        new(
+            "Durante o mês, Eduardo percebeu que seus gastos ficaram diferentes do que havia planejado. O que ele deve fazer para melhorar sua organização?",
+            new()
+            {
+                "Abandonar o planejamento porque ele não funcionou perfeitamente.",
+                "Revisar os registros, entender o que mudou e ajustar o planejamento.",
+                "Parar de anotar as despesas para evitar preocupações.",
+                "Continuar com os mesmos hábitos sem analisar os resultados."
+            },
+            "Um planejamento pode precisar de ajustes. Revisar os registros ajuda a entender o que aconteceu e a preparar um orçamento mais adequado.",
+            "Revisar os registros, entender o que mudou e ajustar o planejamento."
+        ),
+
+        new(
+            "Sofia está guardando dinheiro para comprar um computador. Ao mesmo tempo, percebe que possui despesas importantes e pode surgir algum imprevisto. Como deve organizar suas prioridades?",
+            new()
+            {
+                "Utilizar todo o dinheiro disponível na compra do computador.",
+                "Abandonar todas as economias e gastar com desejos.",
+                "Considerar as necessidades, manter uma reserva para imprevistos e planejar a meta do computador.",
+                "Ignorar as despesas importantes até conseguir comprar o computador."
+            },
+            "Uma boa organização considera as necessidades atuais, a preparação para imprevistos e os objetivos futuros. Assim, Sofia consegue buscar sua meta sem ignorar outras prioridades.",
+            "Considerar as necessidades, manter uma reserva para imprevistos e planejar a meta do computador."
+        )
+    };
+
+    private void Selecionar(string opcao)
+    {
+        if (!Respondida)
+        {
+            Selecionada = opcao;
+        }
+    }
+
+    private void ConfirmarResposta()
+    {
+        if (string.IsNullOrEmpty(Selecionada) || Respondida)
+            return;
+
+        Acertou = Selecionada == Perguntas[Indice].RespostaCorreta;
+
+        if (Acertou)
+            Pontos++;
+
+        Respondida = true;
+    }
+
+    private async Task Proxima()
+    {
+        if (Indice < Perguntas.Count - 1)
+        {
+            Indice++;
+            Selecionada = string.Empty;
+            Respondida = false;
+            Acertou = false;
+        }
+        else
+        {
+            Finalizado = true;
+
+            MensagemResultado = Pontos switch
+            {
+                10 => "Excelente! Você demonstrou domínio da organização financeira e sabe tomar decisões conscientes.",
+                >= 8 => "Muito bom! Você entende como planejar seus gastos e organizar suas prioridades.",
+                >= 6 => "Bom esforço! Você já conhece vários conceitos, mas ainda pode melhorar sua organização.",
+                _ => "Continue praticando! Revise a aula e tente novamente para fortalecer seus conhecimentos."
+            };
+
+            await SalvarResultadoAsync();
+        }
+    }
+
+    private async Task SalvarResultadoAsync()
+    {
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
+                return;
+            }
+
+            var resultado = new ResultadoQuiz
+            {
+                UsuarioId = usuarioId,
+                IdentificadorQuiz = "organize-seu-dinheiro",
+                Pontos = Pontos,
+                TotalPerguntas = Perguntas.Count,
+                DataConclusao = DateTime.UtcNow
+            };
+
+            Context.ResultadosQuiz.Add(resultado);
+            await Context.SaveChangesAsync();
+
+            ResultadoSalvo = true;
+        }
+        catch
+        {
+            MensagemSalvamento = "Não foi possível salvar o resultado. Tente novamente mais tarde.";
+        }
+    }
+
+    private void Reiniciar()
+    {
+        Indice = 0;
+        Pontos = 0;
+        Respondida = false;
+        Acertou = false;
+        Finalizado = false;
+        ResultadoSalvo = false;
+
+        Selecionada = string.Empty;
+        MensagemResultado = string.Empty;
+        MensagemSalvamento = string.Empty;
+    }
+
+    private class Pergunta
+    {
+        public string Enunciado { get; set; }
+        public List<string> Opcoes { get; set; }
+        public string Explicacao { get; set; }
+        public string RespostaCorreta { get; set; }
+
+        public Pergunta(
+            string enunciado,
+            List<string> opcoes,
+            string explicacao,
+            string respostaCorreta)
+        {
+            Enunciado = enunciado;
+            Opcoes = opcoes;
+            Explicacao = explicacao;
+            RespostaCorreta = respostaCorreta;
+        }
+    }
+}

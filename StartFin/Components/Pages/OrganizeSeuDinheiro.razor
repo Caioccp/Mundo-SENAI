@@ -1,6 +1,15 @@
 
 @page "/educacao-financeira/organize-seu-dinheiro"
 
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+@using StartFin.Modelos
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
+
 <PageTitle>Organize seu dinheiro | StartFin</PageTitle>
 
 <div class="pagina-organizacao">
@@ -10,8 +19,8 @@
             <span class="etiqueta">EDUCAÇÃO FINANCEIRA • ORGANIZAÇÃO</span>
             <h1>Organize seu dinheiro 💰</h1>
             <p>
-                Aprenda a entender seus ganhos, controlar seus gastos
-                e organizar melhor seu dinheiro.
+                Aprenda a controlar seus ganhos, entender seus gastos
+                e planejar melhor o uso do seu dinheiro.
             </p>
         </div>
 
@@ -21,27 +30,43 @@
     </header>
 
     <section class="destaque">
-        <h2>Para onde vai seu dinheiro?</h2>
+        <h2>Por que organizar o dinheiro?</h2>
+
         <p>
             Organizar o dinheiro significa saber quanto você recebe,
-            quanto gasta e quanto consegue guardar.
+            quanto gasta e quanto consegue guardar. Esse controle ajuda
+            a tomar decisões melhores e evita que o dinheiro acabe
+            antes do final do mês.
         </p>
+
         <p>
-            Quando você acompanha seus gastos, fica mais fácil
-            tomar decisões e evitar compras por impulso.
+            Mesmo quando recebemos pouco dinheiro, é importante aprender
+            a administrá-lo. Pequenas escolhas feitas diariamente podem
+            fazer diferença no planejamento financeiro.
+        </p>
+
+        <p>
+            Uma boa organização também permite estabelecer objetivos,
+            como comprar algo que você deseja, guardar dinheiro para o
+            futuro ou ter uma reserva para imprevistos.
         </p>
     </section>
 
     <section class="secao">
-        <h2>Conheça suas finanças</h2>
+        <h2>1. Conheça suas finanças</h2>
+
+        <p class="introducao">
+            O primeiro passo é entender de onde vem e para onde vai
+            seu dinheiro. Existem três elementos importantes:
+        </p>
 
         <div class="cards">
             <article class="card">
                 <span>💵</span>
                 <h3>Ganhos</h3>
                 <p>
-                    Todo dinheiro que entra, como mesada,
-                    salário ou dinheiro recebido de presente.
+                    Todo dinheiro que entra, como mesada, salário,
+                    dinheiro de trabalhos ou presentes.
                 </p>
             </article>
 
@@ -59,20 +84,75 @@
                 <h3>Economias</h3>
                 <p>
                     Parte do dinheiro que você decide guardar
-                    para objetivos futuros.
+                    para alcançar objetivos futuros.
                 </p>
             </article>
         </div>
     </section>
 
     <section class="secao">
-        <h2>Como organizar seu dinheiro?</h2>
+        <h2>2. Entenda os tipos de gastos</h2>
+
+        <p class="introducao">
+            Nem todos os gastos são iguais. Identificar cada tipo
+            ajuda a entender quais despesas precisam de mais atenção.
+        </p>
+
+        <div class="duas-colunas">
+            <article class="card-tipo">
+                <h3>📌 Gastos fixos</h3>
+                <p>
+                    São despesas que costumam acontecer regularmente
+                    e possuem valores iguais ou parecidos.
+                </p>
+                <ul>
+                    <li>Mensalidade de serviços.</li>
+                    <li>Plano de celular.</li>
+                    <li>Transporte regular.</li>
+                </ul>
+            </article>
+
+            <article class="card-tipo">
+                <h3>🔄 Gastos variáveis</h3>
+                <p>
+                    São despesas que podem mudar de valor ou frequência
+                    conforme suas escolhas e necessidades.
+                </p>
+                <ul>
+                    <li>Lanches e passeios.</li>
+                    <li>Compras de roupas.</li>
+                    <li>Jogos e entretenimento.</li>
+                </ul>
+            </article>
+        </div>
+
+        <div class="aviso">
+            <strong>Atenção:</strong>
+            <p>
+                Gastos pequenos também merecem atenção. Comprar um lanche
+                todos os dias pode parecer pouco, mas a soma dessas
+                compras pode representar uma quantia significativa
+                ao longo do mês.
+            </p>
+        </div>
+    </section>
+
+    <section class="secao">
+        <h2>3. Como organizar seu dinheiro?</h2>
+
+        <p class="introducao">
+            Você pode seguir quatro etapas simples para começar
+            a controlar melhor suas finanças.
+        </p>
 
         <div class="passo">
             <span>01</span>
             <div>
                 <h3>Anote seus ganhos</h3>
-                <p>Registre quanto dinheiro você recebe.</p>
+                <p>
+                    Registre todo o dinheiro que recebe durante o mês.
+                    Assim, você saberá exatamente quanto tem disponível.
+                </p>
             </div>
         </div>
 
@@ -80,7 +160,11 @@
             <span>02</span>
             <div>
                 <h3>Registre seus gastos</h3>
-                <p>Anote suas compras e despesas do dia a dia.</p>
+                <p>
+                    Anote suas compras e despesas, mesmo aquelas
+                    que parecem pequenas. Isso ajuda a identificar
+                    para onde o dinheiro está indo.
+                </p>
             </div>
         </div>
 
@@ -88,7 +172,11 @@
             <span>03</span>
             <div>
                 <h3>Separe uma parte para economizar</h3>
-                <p>Planeje quanto consegue guardar sem deixar de atender suas necessidades.</p>
+                <p>
+                    Planeje quanto consegue guardar sem deixar
+                    de atender suas necessidades. Começar com
+                    pequenas quantias já é válido.
+                </p>
             </div>
         </div>
 
@@ -96,16 +184,66 @@
             <span>04</span>
             <div>
                 <h3>Acompanhe seus resultados</h3>
-                <p>Revise seus registros e veja se está seguindo seu planejamento.</p>
+                <p>
+                    Revise seus registros e compare o que planejou
+                    com o que realmente gastou. Se necessário,
+                    ajuste seu planejamento.
+                </p>
             </div>
         </div>
     </section>
 
+    <section class="secao">
+        <h2>4. Planejamento financeiro na prática</h2>
+
+        <p>
+            Um planejamento financeiro é uma maneira de decidir
+            antecipadamente como seu dinheiro será utilizado.
+            Ele ajuda a evitar gastos desnecessários e permite
+            reservar dinheiro para seus objetivos.
+        </p>
+
+        <p>
+            Uma estratégia é separar o dinheiro por finalidade:
+            necessidades, desejos e economias.
+        </p>
+
+        <div class="cards">
+            <article class="card">
+                <span>🏠</span>
+                <h3>Necessidades</h3>
+                <p>
+                    Despesas importantes, como alimentação,
+                    transporte e materiais escolares.
+                </p>
+            </article>
+
+            <article class="card">
+                <span>🎮</span>
+                <h3>Desejos</h3>
+                <p>
+                    Compras e atividades que você gostaria de realizar,
+                    mas que podem ser planejadas.
+                </p>
+            </article>
+
+            <article class="card">
+                <span>🎯</span>
+                <h3>Objetivos</h3>
+                <p>
+                    Dinheiro separado para alcançar metas,
+                    como comprar um produto ou guardar para o futuro.
+                </p>
+            </article>
+        </div>
+    </section>
+
     <section class="exemplo">
-        <h2>Exemplo prático</h2>
+        <h2>5. Exemplo prático: organizando R$ 100</h2>
+
         <p>
             Imagine que você recebeu R$ 100 durante o mês.
-            Veja uma possibilidade de organização:
+            Uma possibilidade de organização seria:
         </p>
 
         <div class="valores">
@@ -125,22 +263,151 @@
             </div>
         </div>
 
+        <p>
+            Nesse exemplo, os R$ 100 foram distribuídos entre
+            despesas, economias e uma reserva. Dessa forma,
+            todo o dinheiro possui uma finalidade.
+        </p>
+
         <p class="observacao">
             Esse é apenas um exemplo. A divisão pode mudar
             conforme suas necessidades e sua realidade.
         </p>
     </section>
 
-    <section class="dica">
-        <h2>💡 Dica StartFin</h2>
+    <section class="secao">
+        <h2>6. Como evitar gastos por impulso?</h2>
+
         <p>
-            Antes de comprar alguma coisa, pense:
-            eu realmente preciso disso agora? Essa compra
-            cabe no meu planejamento?
+            Gastar por impulso acontece quando compramos algo
+            sem pensar se realmente precisamos ou se aquela
+            compra cabe no nosso planejamento.
+        </p>
+
+        <p>
+            Antes de comprar, vale a pena comparar preços,
+            pensar na importância do produto e avaliar
+            se o dinheiro poderia ser utilizado em outra prioridade.
+        </p>
+
+        <div class="dica-lista">
+            <h3>Antes de realizar uma compra, pergunte:</h3>
+            <ul>
+                <li>Eu realmente preciso desse produto?</li>
+                <li>Essa compra cabe no meu orçamento?</li>
+                <li>Já tenho alguma prioridade mais importante?</li>
+                <li>Posso esperar e pesquisar outros preços?</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="desafio">
+        <h2>🧠 Desafio StartFin</h2>
+
+        <p>
+            Imagine que você recebeu R$ 200. Durante o mês,
+            gastou R$ 60 com transporte, R$ 40 com alimentação
+            e R$ 30 com lazer.
+        </p>
+
+        <p>
+            Depois de pagar essas despesas, quanto dinheiro
+            ainda sobrou?
+        </p>
+
+        <div class="resposta-desafio">
+            <strong>Faça as contas:</strong>
+            <p>R$ 200 - R$ 60 - R$ 40 - R$ 30 = R$ 70</p>
+        </div>
+
+        <p>
+            Isso significa que você ainda possui R$ 70,
+            que podem ser destinados a economias, objetivos
+            ou outras necessidades.
         </p>
     </section>
 
+    <section class="dica">
+        <h2>💡 Dica StartFin</h2>
+        <p>
+            Não é necessário guardar grandes quantias de uma vez.
+            O mais importante é criar o hábito de acompanhar seus
+            ganhos e gastos e manter um planejamento que faça
+            sentido para sua realidade.
+        </p>
+    </section>
+
+    <section class="area-quiz">
+        <h2>Teste o que você aprendeu!</h2>
+
+        <p>
+            Agora que você aprendeu a organizar seus ganhos,
+            controlar seus gastos e planejar suas economias,
+            chegou a hora de testar seus conhecimentos.
+        </p>
+
+        <a href="/educacao-financeira/quiz/organize-seu-dinheiro"
+           class="botao-quiz">
+            Fazer o quiz →
+        </a>
+
+        <button class="botao-resultado" @onclick="MostrarUltimoResultado">
+            📊 Ver último resultado
+        </button>
+
+        @if (ExibindoResultado)
+        {
+            <div class="resultado-anterior">
+                @if (UltimoResultado == null)
+                {
+                    <p>Você ainda não concluiu este quiz.</p>
+                }
+                else
+                {
+                    <h3>Seu último resultado</h3>
+
+                    <p>
+                        <strong>Pontuação:</strong>
+                        @UltimoResultado.Pontos de @UltimoResultado.TotalPerguntas
+                    </p>
+
+                    <p>
+                        <strong>Data:</strong>
+                        @UltimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                }
+            </div>
+        }
+    </section>
+
 </div>
+
+@code {
+    private ResultadoQuiz? UltimoResultado;
+    private bool ExibindoResultado;
+
+    private async Task MostrarUltimoResultado()
+    {
+        ExibindoResultado = true;
+
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        var usuario = estado.User;
+
+        var usuarioId = usuario.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(usuarioId))
+        {
+            UltimoResultado = null;
+            return;
+        }
+
+        UltimoResultado = await Context.ResultadosQuiz
+            .Where(r => r.UsuarioId == usuarioId &&
+                        r.IdentificadorQuiz == "organize-seu-dinheiro")
+            .OrderByDescending(r => r.DataConclusao)
+            .FirstOrDefaultAsync();
+    }
+}
 
 <style>
 .pagina-organizacao {
@@ -167,7 +434,6 @@
     text-decoration: none;
     font-weight: 700;
     transition: 0.2s;
-    margin-top: 0;
 }
 
 .botao-voltar:hover {
@@ -192,7 +458,9 @@
 .card p,
 .passo p,
 .exemplo p,
-.dica p {
+.dica p,
+.secao p,
+.desafio p {
     color: #647da8;
     line-height: 1.7;
 }
@@ -207,7 +475,9 @@
 
 .destaque h2,
 .exemplo h2,
-.dica h2 {
+.dica h2,
+.desafio h2,
+.area-quiz h2 {
     margin-top: 0;
     font-size: 22px;
 }
@@ -218,6 +488,10 @@
 
 .secao h2 {
     font-size: 22px;
+    margin-bottom: 15px;
+}
+
+.introducao {
     margin-bottom: 18px;
 }
 
@@ -227,7 +501,8 @@
     gap: 15px;
 }
 
-.card {
+.card,
+.card-tipo {
     background: #f4f7fd;
     border: 1px solid #e5eaf5;
     border-radius: 14px;
@@ -239,9 +514,34 @@
 }
 
 .card h3,
-.passo h3 {
+.passo h3,
+.card-tipo h3 {
     color: #172b65;
     margin-bottom: 8px;
+}
+
+.duas-colunas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.card-tipo li,
+.dica-lista li {
+    color: #647da8;
+    line-height: 1.8;
+}
+
+.aviso {
+    background: #fff8e8;
+    border-radius: 12px;
+    padding: 18px;
+    margin-top: 18px;
+    color: #946b1d;
+}
+
+.aviso p {
+    margin-bottom: 0;
 }
 
 .passo {
@@ -296,23 +596,119 @@
     font-size: 12px;
 }
 
+.dica-lista {
+    background: #f4f7fd;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.dica-lista h3 {
+    color: #172b65;
+}
+
+.desafio {
+    background: #f2edff;
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.resposta-desafio {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
+}
+
+.resposta-desafio p {
+    margin-bottom: 0;
+    font-weight: 700;
+    color: #2455a4;
+}
+
 .dica {
     background: #e4f8ef;
     border-radius: 16px;
     padding: 25px;
+    margin-bottom: 30px;
 }
 
 .dica h2 {
     color: #159b83;
 }
 
+.area-quiz {
+    background: #172b65;
+    color: white;
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+}
+
+.area-quiz p {
+    color: #dce7ff;
+    line-height: 1.7;
+}
+
+.botao-quiz,
+.botao-resultado {
+    display: inline-block;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 20px;
+    margin: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.botao-quiz {
+    background: #16b99a;
+    color: white;
+}
+
+.botao-quiz:hover {
+    background: #119b81;
+}
+
+.botao-resultado {
+    background: white;
+    color: #2455a4;
+}
+
+.botao-resultado:hover {
+    background: #dce7f5;
+}
+
+.resultado-anterior {
+    background: white;
+    color: #172b65;
+    border-radius: 12px;
+    padding: 18px;
+    margin-top: 18px;
+    text-align: left;
+}
+
+.resultado-anterior h3 {
+    margin-top: 0;
+}
+
+.resultado-anterior p {
+    color: #647da8;
+}
+
 @@media (max-width: 650px) {
     .cabecalho {
-    flex-direction: column;
-    align-items: flex-start;
-}
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
     .cards,
-    .valores {
+    .valores,
+    .duas-colunas {
         grid-template-columns: 1fr;
     }
 

@@ -1,4 +1,4 @@
-```razor
+
 @page "/educacao-financeira/quiz/comecando-do-zero"
 
 @using Microsoft.AspNetCore.Components.Authorization
@@ -366,133 +366,133 @@
     private List<Pergunta> Perguntas = new()
     {
         new(
-            "Lucas recebe R$ 400 por mês. Ele gasta R$ 120 com transporte, R$ 80 com alimentação e R$ 70 com lazer. Quanto sobra depois dessas despesas?",
+            "Lucas começou a receber mesada e percebeu que o dinheiro acabava antes do fim do mês. Qual deve ser sua primeira atitude?",
             new()
             {
-                "R$ 100",
-                "R$ 130",
-                "R$ 150",
-                "R$ 170"
+                "Gastar o dinheiro conforme sentir vontade.",
+                "Anotar quanto recebe e identificar onde está gastando.",
+                "Deixar de acompanhar seus gastos.",
+                "Pedir mais dinheiro sempre que acabar."
             },
-            "As despesas somam R$ 270. Subtraindo R$ 270 de R$ 400, sobram R$ 130.",
-            "R$ 130"
+            "Registrar os ganhos e os gastos ajuda Lucas a entender para onde o dinheiro está indo e a organizar melhor suas escolhas.",
+            "Anotar quanto recebe e identificar onde está gastando."
         ),
 
         new(
-            "Mariana quer comprar um fone de R$ 240. Ela consegue guardar R$ 40 por mês. Sem considerar juros ou outros depósitos, em quanto tempo conseguirá juntar o valor?",
+            "Mariana quer comprar um celular novo, mas ainda não tem dinheiro suficiente. Qual atitude demonstra planejamento financeiro?",
             new()
             {
-                "4 meses",
-                "5 meses",
-                "6 meses",
-                "8 meses"
+                "Comprar imediatamente usando qualquer empréstimo disponível.",
+                "Desistir de organizar o próprio dinheiro.",
+                "Definir uma meta e guardar dinheiro aos poucos.",
+                "Gastar toda a mesada e esperar receber mais."
             },
-            "Dividindo R$ 240 por R$ 40, temos 6. Portanto, Mariana precisará de 6 meses.",
-            "6 meses"
+            "Uma meta financeira ajuda a definir o que se deseja alcançar e permite economizar de forma planejada.",
+            "Definir uma meta e guardar dinheiro aos poucos."
         ),
 
         new(
-            "Pedro recebe R$ 300 de mesada. Ele decide guardar 20% desse valor todos os meses. Quanto será guardado em um mês?",
+            "Pedro recebeu dinheiro de presente e está pensando em gastar tudo em jogos. O que ele deveria considerar antes de decidir?",
             new()
             {
-                "R$ 30",
-                "R$ 40",
-                "R$ 50",
-                "R$ 60"
+                "Seus objetivos, suas necessidades e suas prioridades.",
+                "Apenas o produto mais caro que consegue comprar.",
+                "O que os amigos estão comprando.",
+                "Como gastar todo o dinheiro rapidamente."
             },
-            "20% de R$ 300 corresponde a R$ 60. Uma forma de calcular é dividir 300 por 100 e multiplicar por 20.",
-            "R$ 60"
+            "Antes de gastar, é importante avaliar as prioridades e pensar se aquela compra combina com seus objetivos.",
+            "Seus objetivos, suas necessidades e suas prioridades."
         ),
 
         new(
-            "Ana tem R$ 150 disponíveis. Ela precisa comprar material escolar por R$ 65 e também quer comprar um acessório de R$ 100. Qual decisão demonstra melhor planejamento financeiro?",
+            "Ana deseja organizar suas finanças, mas não sabe por onde começar. Qual opção apresenta uma boa forma de iniciar?",
             new()
             {
-                "Comprar o acessório e deixar o material para depois.",
-                "Comprar o material e avaliar se o acessório pode esperar.",
-                "Gastar os R$ 150 sem comparar prioridades.",
-                "Pedir dinheiro emprestado para comprar os dois imediatamente."
+                "Evitar pensar sobre dinheiro.",
+                "Comprar primeiro e organizar depois.",
+                "Controlar somente os gastos maiores.",
+                "Registrar todos os ganhos e gastos, inclusive os pequenos."
             },
-            "O material escolar representa uma necessidade importante. Ana deve priorizá-lo e avaliar o acessório sem comprometer seu orçamento.",
-            "Comprar o material e avaliar se o acessório pode esperar."
+            "Até mesmo pequenas compras podem comprometer o orçamento. Registrar todas as despesas oferece uma visão mais completa.",
+            "Registrar todos os ganhos e gastos, inclusive os pequenos."
         ),
 
         new(
-            "Uma loja vende um produto por R$ 120. Outra loja vende o mesmo produto por R$ 105, mas cobra R$ 12 de entrega. Qual opção apresenta o menor custo total?",
+            "Rafael quer comprar um tênis novo, mas também precisa guardar dinheiro para uma despesa importante. Como ele pode tomar uma decisão consciente?",
             new()
             {
-                "A primeira loja, por R$ 120.",
-                "A segunda loja, por R$ 117.",
-                "As duas lojas têm o mesmo custo.",
-                "A segunda loja, por R$ 105."
+                "Comprar o tênis sem considerar a outra despesa.",
+                "Avaliar o que é prioridade e verificar se a compra cabe no orçamento.",
+                "Usar todo o dinheiro disponível na compra.",
+                "Ignorar a despesa importante."
             },
-            "Na segunda loja, o total é R$ 105 + R$ 12 = R$ 117. Portanto, ela custa R$ 3 a menos que a primeira.",
-            "A segunda loja, por R$ 117."
+            "Uma decisão financeira consciente considera as necessidades, as prioridades e o dinheiro realmente disponível.",
+            "Avaliar o que é prioridade e verificar se a compra cabe no orçamento."
         ),
 
         new(
-            "João recebe R$ 500 e termina o mês com R$ 50. Qual porcentagem da renda ele conseguiu economizar?",
+            "Beatriz percebeu que costuma comprar coisas por impulso quando sai com os amigos. Qual atitude pode ajudá-la a mudar esse hábito?",
             new()
             {
-                "5%",
-                "10%",
-                "15%",
-                "20%"
+                "Continuar comprando sem pensar.",
+                "Evitar anotar as compras.",
+                "Pensar antes de comprar e estabelecer limites para esses gastos.",
+                "Gastar primeiro e verificar o saldo depois."
             },
-            "R$ 50 representa 10% de R$ 500, pois 50 dividido por 500 é igual a 0,10.",
-            "10%"
+            "Pensar antes de comprar e estabelecer limites ajuda a evitar decisões impulsivas e manter o controle financeiro.",
+            "Pensar antes de comprar e estabelecer limites para esses gastos."
         ),
 
         new(
-            "Beatriz recebe R$ 350. Suas despesas são: R$ 100 com transporte, R$ 90 com alimentação e R$ 60 com outras necessidades. Ela quer guardar R$ 70. Quanto restará para outros gastos depois de separar tudo isso?",
+            "João está economizando para comprar um computador. Um amigo o convida para fazer uma compra que não estava planejada. Qual atitude é mais adequada?",
             new()
             {
-                "R$ 20",
-                "R$ 30",
-                "R$ 40",
-                "R$ 50"
+                "Considerar se a compra é realmente necessária e se prejudica sua meta.",
+                "Abandonar imediatamente seu objetivo.",
+                "Gastar o dinheiro guardado sem avaliar as consequências.",
+                "Comprar apenas porque o amigo também vai comprar."
             },
-            "As despesas e a economia somam R$ 320. Subtraindo de R$ 350, restam R$ 30.",
-            "R$ 30"
+            "Antes de realizar uma compra, João deve avaliar se ela compromete o dinheiro reservado para seu objetivo.",
+            "Considerar se a compra é realmente necessária e se prejudica sua meta."
         ),
 
         new(
-            "Rafael anotou seus gastos durante o mês e percebeu que gastou R$ 90 em compras por impulso. Qual seria a atitude mais adequada para melhorar seu planejamento no mês seguinte?",
+            "Camila recebe dinheiro todos os meses, mas nunca consegue guardar uma parte. O que pode ajudá-la a melhorar essa situação?",
             new()
             {
-                "Ignorar os gastos porque já aconteceram.",
-                "Aumentar as compras para aproveitar o dinheiro.",
-                "Identificar esses gastos e estabelecer um limite para compras não planejadas.",
-                "Deixar de registrar as despesas menores."
+                "Esperar que sobre dinheiro por acaso.",
+                "Parar de acompanhar suas despesas.",
+                "Aumentar os gastos sempre que receber.",
+                "Planejar os gastos e separar uma quantia para economizar."
             },
-            "Analisar os gastos permite identificar hábitos que podem ser melhorados e estabelecer limites mais conscientes.",
-            "Identificar esses gastos e estabelecer um limite para compras não planejadas."
+            "Incluir a economia no planejamento mensal ajuda a criar o hábito de guardar dinheiro, em vez de depender apenas do que sobrar.",
+            "Planejar os gastos e separar uma quantia para economizar."
         ),
 
         new(
-            "Camila quer comprar um tablet de R$ 900. Ela já tem R$ 300 guardados e consegue economizar R$ 100 por mês. Em quantos meses terá o valor necessário?",
+            "Eduardo comprou um produto sem pesquisar preços e depois descobriu que poderia ter encontrado uma opção melhor. O que ele pode aprender com essa situação?",
             new()
             {
-                "4 meses",
-                "5 meses",
-                "6 meses",
-                "9 meses"
+                "Pesquisar preços não faz diferença.",
+                "Comparar opções antes da compra pode ajudar a economizar e escolher melhor.",
+                "O primeiro produto encontrado é sempre a melhor escolha.",
+                "O preço deve ser ignorado na hora de comprar."
             },
-            "Faltam R$ 600 para chegar aos R$ 900. Guardando R$ 100 por mês, Camila precisará de mais 6 meses.",
-            "6 meses"
+            "Pesquisar e comparar produtos permite avaliar preços, qualidade e condições antes de tomar uma decisão.",
+            "Comparar opções antes da compra pode ajudar a economizar e escolher melhor."
         ),
 
         new(
-            "Uma pessoa recebe R$ 600 por mês. Ela gasta R$ 250 com necessidades, R$ 180 com desejos e guarda R$ 100. No mês seguinte, surge uma despesa inesperada de R$ 50. Qual análise está correta?",
+            "Sofia quer ter uma vida financeira mais organizada. Qual conjunto de atitudes representa um bom começo?",
             new()
             {
-                "Ela não tem dinheiro suficiente, pois já gastou toda a renda.",
-                "Ela ainda tem R$ 20 disponíveis após os gastos e a despesa inesperada.",
-                "Ela tem R$ 70 disponíveis porque a economia não deve ser considerada.",
-                "Ela ficou com saldo negativo de R$ 50."
+                "Gastar sem planejamento e evitar guardar dinheiro.",
+                "Comprar por impulso e ignorar as despesas.",
+                "Registrar gastos, definir prioridades, estabelecer metas e economizar.",
+                "Usar todo o dinheiro recebido antes de pensar no futuro."
             },
-            "Os gastos e a economia somam R$ 530. Com a despesa inesperada de R$ 50, o total chega a R$ 580. Portanto, restam R$ 20.",
-            "Ela ainda tem R$ 20 disponíveis após os gastos e a despesa inesperada."
+            "Organizar as finanças envolve acompanhar o dinheiro, definir prioridades, estabelecer objetivos e desenvolver o hábito de economizar.",
+            "Registrar gastos, definir prioridades, estabelecer metas e economizar."
         )
     };
 
@@ -611,4 +611,3 @@
         }
     }
 }
-```
