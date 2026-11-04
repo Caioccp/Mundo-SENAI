@@ -6,6 +6,7 @@
 
 @inject IConfiguration Configuration
 @inject AuthenticationStateProvider AuthStateProvider
+@inject StartFin.Servicos.CarteiraServico CarteiraServico
 
 <PageTitle>Minhas metas | StartFin</PageTitle>
 
@@ -61,26 +62,49 @@
 else
 {
     @foreach (var meta in metas)
-    {
-        <section class="card p-3 mb-3" @key="meta.Id">
-            <h3>@meta.Nome</h3>
+{
+    <section class="card p-3 mb-3" @key="meta.Id">
+        <h3>@meta.Nome</h3>
 
-            <p>
-                Guardado: @meta.ValorGuardado.ToString("C2", cultura)
-                de @meta.ValorObjetivo.ToString("C2", cultura)
-            </p>
+        <p>
+            Guardado: @meta.ValorGuardado.ToString("C2", cultura)
+            de @meta.ValorObjetivo.ToString("C2", cultura)
+        </p>
 
-            <progress value="@meta.ValorGuardado"
-                      max="@meta.ValorObjetivo"
-                      style="width: 100%">
-            </progress>
+        <progress value="@meta.ValorGuardado"
+                  max="@meta.ValorObjetivo"
+                  style="width: 100%">
+        </progress>
 
-            <button class="btn btn-danger mt-3"
-                    @onclick="() => ExcluirMeta(meta.Id)">
-                Excluir
-            </button>
-        </section>
-    }
+        @if (meta.ValorGuardado < meta.ValorObjetivo)
+        {
+            <div class="mt-3">
+                <label class="form-label">Quanto deseja guardar? (R$)</label>
+
+                <input type="number"
+                       class="form-control"
+                       min="0.01"
+                       max="@(meta.ValorObjetivo - meta.ValorGuardado)"
+                       step="0.01"
+                       @bind="meta.ValorParaGuardar" />
+
+                <button class="btn btn-success mt-2"
+                        @onclick="() => GuardarDinheiro(meta.Id, meta.ValorParaGuardar)">
+                    Guardar dinheiro
+                </button>
+            </div>
+        }
+        else
+        {
+            <p class="text-success mt-3">Meta concluída! 🎉</p>
+        }
+
+        <button class="btn btn-danger mt-3"
+                @onclick="() => ExcluirMeta(meta.Id)">
+            Excluir
+        </button>
+    </section>
+}
 }
 
 @code {
@@ -265,11 +289,31 @@ else
         }
     }
 
+    private async Task GuardarDinheiro(int metaId, decimal valor)
+{
+    try
+    {
+        await CarteiraServico.GuardarNaMetaAsync(usuarioId, metaId, valor);
+
+        await using var conexao = new NpgsqlConnection(ConnectionString);
+        await conexao.OpenAsync();
+
+        await CarregarMetas(conexao);
+
+        mensagem = "Dinheiro guardado na meta com sucesso!";
+    }
+    catch (Exception ex)
+    {
+        mensagem = ex.Message;
+    }
+}
+
     private class MetaEconomia
     {
         public int Id { get; set; }
         public string Nome { get; set; } = "";
         public decimal ValorObjetivo { get; set; }
         public decimal ValorGuardado { get; set; }
+        public decimal ValorParaGuardar { get; set; }
     }
 }
