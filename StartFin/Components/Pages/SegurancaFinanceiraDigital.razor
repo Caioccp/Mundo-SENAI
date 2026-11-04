@@ -1,0 +1,547 @@
+```razor
+@page "/educacao-financeira/seguranca-financeira-digital"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using StartFin.Dados
+@using StartFin.Modelos
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Segurança Financeira Digital | StartFin</PageTitle>
+
+<div class="aula-container">
+
+    <a href="/educacao-financeira" class="voltar">
+        ← Voltar para Educação Financeira
+    </a>
+
+    <header class="cabecalho">
+        <span class="etiqueta">STARTFIN • EDUCAÇÃO FINANCEIRA</span>
+        <h1>Segurança Financeira Digital</h1>
+        <p>
+            Aprenda a proteger seu dinheiro, reconhecer golpes e utilizar
+            serviços financeiros digitais com mais segurança.
+        </p>
+        <span class="nivel">Conteúdo educativo • Proteção digital</span>
+    </header>
+
+    <section class="destaque">
+        <h2>🔐 Seu dinheiro também precisa de proteção!</h2>
+        <p>
+            Atualmente, muitas operações financeiras acontecem pela internet.
+            Podemos consultar saldos, realizar pagamentos e fazer transferências
+            pelo celular. Por isso, é importante conhecer os riscos e aprender
+            a proteger nossas informações.
+        </p>
+    </section>
+
+    <section class="conteudo">
+        <h2>1. O que é segurança financeira digital?</h2>
+
+        <p>
+            Segurança financeira digital é o conjunto de cuidados utilizados
+            para proteger contas bancárias, informações pessoais e operações
+            realizadas pela internet.
+        </p>
+
+        <p>
+            Esses cuidados ajudam a evitar acessos não autorizados, golpes,
+            fraudes e situações que podem causar prejuízos financeiros.
+        </p>
+
+        <div class="info-card">
+            <strong>Exemplo:</strong>
+            <p>
+                Ao utilizar um aplicativo bancário, é importante proteger o
+                acesso à conta e conferir os dados antes de confirmar uma
+                transferência.
+            </p>
+        </div>
+    </section>
+
+    <section class="conteudo">
+        <h2>2. Conheça os principais golpes digitais</h2>
+
+        <p>
+            Existem diferentes tipos de golpes que tentam enganar as pessoas
+            para conseguir dinheiro ou informações pessoais.
+        </p>
+
+        <div class="golpe-card">
+            <h3>📩 Mensagens falsas</h3>
+            <p>
+                Criminosos podem enviar mensagens fingindo ser bancos, lojas
+                ou empresas conhecidas. Elas podem informar sobre supostos
+                problemas na conta ou oferecer benefícios inexistentes.
+            </p>
+        </div>
+
+        <div class="golpe-card">
+            <h3>🔗 Links suspeitos</h3>
+            <p>
+                Alguns links direcionam para páginas falsas que tentam
+                coletar senhas, dados pessoais ou informações financeiras.
+            </p>
+        </div>
+
+        <div class="golpe-card">
+            <h3>💸 Falsas solicitações de Pix</h3>
+            <p>
+                Uma pessoa pode se passar por um conhecido e pedir dinheiro
+                por mensagem, alegando estar em uma situação urgente.
+            </p>
+        </div>
+
+        <div class="golpe-card">
+            <h3>🛍️ Lojas falsas</h3>
+            <p>
+                Sites e anúncios podem oferecer produtos com preços muito
+                atrativos, mas não entregar o que foi comprado.
+            </p>
+        </div>
+    </section>
+
+    <section class="conteudo">
+        <h2>3. Como proteger suas informações?</h2>
+
+        <p>
+            Algumas atitudes simples ajudam a aumentar a segurança durante
+            o uso de aplicativos e serviços financeiros.
+        </p>
+
+        <div class="lista-cuidados">
+            <div class="cuidado">
+                <span>🔑</span>
+                <div>
+                    <h3>Proteja suas senhas</h3>
+                    <p>
+                        Utilize senhas fortes, diferentes para cada serviço
+                        e não compartilhe seus dados de acesso.
+                    </p>
+                </div>
+            </div>
+
+            <div class="cuidado">
+                <span>📱</span>
+                <div>
+                    <h3>Utilize aplicativos oficiais</h3>
+                    <p>
+                        Baixe aplicativos pelas lojas oficiais e confira
+                        se está utilizando o serviço verdadeiro.
+                    </p>
+                </div>
+            </div>
+
+            <div class="cuidado">
+                <span>🔍</span>
+                <div>
+                    <h3>Confira antes de confirmar</h3>
+                    <p>
+                        Verifique o nome do destinatário, os dados e o valor
+                        antes de realizar um Pix ou pagamento.
+                    </p>
+                </div>
+            </div>
+
+            <div class="cuidado">
+                <span>🛡️</span>
+                <div>
+                    <h3>Ative a proteção adicional</h3>
+                    <p>
+                        Quando disponível, utilize a autenticação em duas
+                        etapas para aumentar a proteção das suas contas.
+                    </p>
+                </div>
+            </div>
+
+            <div class="cuidado">
+                <span>🚫</span>
+                <div>
+                    <h3>Não compartilhe códigos</h3>
+                    <p>
+                        Nunca informe códigos de confirmação, senhas ou
+                        códigos recebidos por mensagem a outras pessoas.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="conteudo">
+        <h2>4. Cuidados ao realizar um Pix</h2>
+
+        <p>
+            O Pix facilita transferências e pagamentos, mas exige atenção
+            para evitar erros e fraudes.
+        </p>
+
+        <ul>
+            <li>Confira o nome da pessoa ou empresa que receberá o dinheiro.</li>
+            <li>Verifique o valor antes de confirmar a operação.</li>
+            <li>Desconfie de pedidos urgentes e inesperados de transferência.</li>
+            <li>Confirme solicitações de dinheiro por outro canal de comunicação.</li>
+            <li>Guarde o comprovante da operação.</li>
+        </ul>
+
+        <div class="alerta-card">
+            <strong>⚠️ Atenção!</strong>
+            <p>
+                Se alguém conhecido pedir dinheiro por mensagem, confirme
+                diretamente com essa pessoa antes de realizar a transferência.
+            </p>
+        </div>
+    </section>
+
+    <section class="conteudo">
+        <h2>5. O que fazer ao perceber um golpe?</h2>
+
+        <p>
+            Caso você perceba uma tentativa de golpe ou suspeite que seus
+            dados foram utilizados indevidamente, é importante agir com
+            cuidado e procurar ajuda.
+        </p>
+
+        <ol>
+            <li>Não continue a conversa com o possível golpista.</li>
+            <li>Entre em contato com o banco pelos canais oficiais.</li>
+            <li>Informe o ocorrido e siga as orientações da instituição.</li>
+            <li>Troque senhas que possam ter sido comprometidas.</li>
+            <li>Guarde mensagens, comprovantes e outras informações relevantes.</li>
+            <li>Converse com um responsável de confiança, especialmente se precisar de ajuda.</li>
+        </ol>
+
+        <p>
+            Se uma transferência via Pix foi realizada em uma situação de
+            fraude, entre em contato com o banco o quanto antes para verificar
+            as medidas disponíveis, como o Mecanismo Especial de Devolução (MED).
+        </p>
+    </section>
+
+    <section class="resumo">
+        <h2>📚 Resumo da aula</h2>
+
+        <p>Para proteger seu dinheiro no ambiente digital, lembre-se:</p>
+
+        <ul>
+            <li>Não compartilhe senhas ou códigos de confirmação.</li>
+            <li>Desconfie de mensagens e ofertas suspeitas.</li>
+            <li>Utilize aplicativos e canais oficiais.</li>
+            <li>Confira os dados antes de realizar transferências.</li>
+            <li>Procure ajuda rapidamente ao identificar uma fraude.</li>
+        </ul>
+    </section>
+
+    <section class="area-quiz">
+        <h2>🎯 Vamos testar seus conhecimentos?</h2>
+        <p>
+            Agora que você aprendeu a proteger suas informações e reconhecer
+            golpes digitais, chegou a hora de colocar seus conhecimentos em prática!
+        </p>
+
+        <a href="/educacao-financeira/quiz/seguranca-financeira-digital"
+           class="botao-quiz">
+            Fazer o quarto quiz →
+        </a>
+
+        <button class="botao-resultado" @onclick="ConsultarResultado">
+            📊 Ver último resultado
+        </button>
+
+        @if (MostrarResultado)
+        {
+            <div class="resultado-anterior">
+                @if (Carregando)
+                {
+                    <p>Consultando seu resultado...</p>
+                }
+                else if (UltimoResultado != null)
+                {
+                    <h3>Seu último resultado</h3>
+                    <p>
+                        Pontuação:
+                        <strong>
+                            @UltimoResultado.Pontos /
+                            @UltimoResultado.TotalPerguntas
+                        </strong>
+                    </p>
+                    <p>
+                        Concluído em:
+                        @UltimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                }
+                else
+                {
+                    <p>@MensagemResultado</p>
+                }
+            </div>
+        }
+    </section>
+
+</div>
+
+<style>
+    .aula-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px 20px 60px;
+        color: #26364d;
+    }
+
+    .voltar {
+        display: inline-block;
+        margin-bottom: 28px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        background: #edf2f7;
+        color: #2455a4;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .cabecalho {
+        margin-bottom: 30px;
+    }
+
+    .etiqueta {
+        display: block;
+        color: #26866a;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .cabecalho h1 {
+        color: #172b4d;
+        font-size: 34px;
+        font-weight: 800;
+        margin: 10px 0;
+    }
+
+    .cabecalho p {
+        color: #718096;
+        line-height: 1.7;
+    }
+
+    .nivel {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 13px;
+        border-radius: 20px;
+        background: #eaf8f1;
+        color: #218665;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .destaque, .conteudo, .resumo, .area-quiz {
+        margin-top: 24px;
+        padding: 26px;
+        border: 1px solid #e5eaf1;
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 5px 20px rgba(23, 43, 77, 0.04);
+    }
+
+    .destaque {
+        background: #eff8f4;
+        border-color: #d5eee2;
+    }
+
+    .destaque h2, .conteudo h2, .resumo h2, .area-quiz h2 {
+        color: #172b4d;
+        font-size: 22px;
+        margin: 0 0 15px;
+    }
+
+    .conteudo p, .destaque p, .resumo p, .area-quiz p {
+        color: #596b82;
+        line-height: 1.8;
+        font-size: 15px;
+    }
+
+    .conteudo ul, .conteudo ol, .resumo ul {
+        padding-left: 24px;
+        color: #596b82;
+        line-height: 2;
+    }
+
+    .info-card, .alerta-card {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 12px;
+        background: #f0f6fb;
+    }
+
+    .info-card strong {
+        color: #2455a4;
+    }
+
+    .golpe-card {
+        margin-top: 15px;
+        padding: 18px;
+        border: 1px solid #e5eaf1;
+        border-radius: 12px;
+        background: #fbfcfe;
+    }
+
+    .golpe-card h3 {
+        color: #2455a4;
+        margin: 0 0 8px;
+        font-size: 17px;
+    }
+
+    .golpe-card p {
+        margin: 0;
+    }
+
+    .lista-cuidados {
+        display: grid;
+        gap: 14px;
+    }
+
+    .cuidado {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 16px;
+        border-radius: 12px;
+        background: #f6f9fc;
+    }
+
+    .cuidado > span {
+        font-size: 25px;
+    }
+
+    .cuidado h3 {
+        margin: 0 0 5px;
+        color: #2455a4;
+        font-size: 16px;
+    }
+
+    .cuidado p {
+        margin: 0;
+    }
+
+    .alerta-card {
+        background: #fff6e9;
+        border: 1px solid #f5dfb8;
+    }
+
+    .alerta-card strong {
+        color: #a15c12;
+    }
+
+    .resumo {
+        background: #eff8f4;
+        border-color: #d5eee2;
+    }
+
+    .area-quiz {
+        text-align: center;
+        background: #f6f9fc;
+    }
+
+    .botao-quiz, .botao-resultado {
+        display: block;
+        width: 100%;
+        margin-top: 16px;
+        padding: 15px;
+        border: none;
+        border-radius: 11px;
+        background: #218665;
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .botao-quiz:hover, .botao-resultado:hover {
+        background: #176b4b;
+    }
+
+    .botao-resultado {
+        background: #2455a4;
+    }
+
+    .resultado-anterior {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 12px;
+        background: white;
+        border: 1px solid #dce5ee;
+        text-align: left;
+    }
+
+    .resultado-anterior h3 {
+        color: #218665;
+        margin-top: 0;
+    }
+
+    @@media (max-width: 600px) {
+        .cabecalho h1 {
+            font-size: 28px;
+        }
+
+        .destaque, .conteudo, .resumo, .area-quiz {
+            padding: 20px;
+        }
+
+        .destaque h2, .conteudo h2, .resumo h2, .area-quiz h2 {
+            font-size: 20px;
+        }
+    }
+</style>
+
+@code {
+    private bool MostrarResultado = false;
+    private bool Carregando = false;
+
+    private ResultadoQuiz? UltimoResultado;
+    private string MensagemResultado = "";
+
+    private async Task ConsultarResultado()
+    {
+        MostrarResultado = true;
+        Carregando = true;
+        UltimoResultado = null;
+        MensagemResultado = "";
+
+        try
+        {
+            var estado = await AuthProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                MensagemResultado = "Entre na sua conta para consultar seu resultado.";
+                return;
+            }
+
+            UltimoResultado = await Context.ResultadosQuiz
+                .Where(r => r.UsuarioId == usuarioId &&
+                            r.IdentificadorQuiz == "seguranca-financeira-digital")
+                .OrderByDescending(r => r.DataConclusao)
+                .FirstOrDefaultAsync();
+
+            if (UltimoResultado == null)
+            {
+                MensagemResultado = "Você ainda não concluiu este quiz.";
+            }
+        }
+        catch
+        {
+            MensagemResultado = "Não foi possível consultar seu resultado.";
+        }
+        finally
+        {
+            Carregando = false;
+        }
+    }
+}
+```

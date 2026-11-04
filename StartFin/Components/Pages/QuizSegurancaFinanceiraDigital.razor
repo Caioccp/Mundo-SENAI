@@ -1,0 +1,614 @@
+```razor
+@page "/educacao-financeira/quiz/seguranca-financeira-digital"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+@using StartFin.Modelos
+@using System.Security.Claims
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Quiz - Segurança Financeira Digital | StartFin</PageTitle>
+
+<div class="quiz-container">
+
+    <a href="/educacao-financeira/seguranca-financeira-digital" class="voltar">
+        ← Voltar para a aula
+    </a>
+
+    <div class="cabecalho">
+        <span class="etiqueta">STARTFIN • EDUCAÇÃO FINANCEIRA</span>
+        <h1>Quiz: Segurança Financeira Digital</h1>
+        <p>
+            Teste seus conhecimentos sobre golpes digitais,
+            proteção de informações e segurança nas operações financeiras.
+        </p>
+        <span class="nivel">Nível intermediário • 10 questões</span>
+    </div>
+
+    @if (!Finalizado)
+    {
+        <div class="progresso">
+            <div class="progresso-texto">
+                <span>Pergunta @(Indice + 1) de @Perguntas.Count</span>
+                <span>@Pontos pontos</span>
+            </div>
+
+            <div class="barra">
+                <div class="barra-preenchida"
+                     style="width: @(((Indice + 1) * 100.0 / Perguntas.Count).ToString(System.Globalization.CultureInfo.InvariantCulture))%">
+                </div>
+            </div>
+        </div>
+
+        <section class="pergunta-card">
+
+            <span class="numero">QUESTÃO @(Indice + 1)</span>
+
+            <h2>@Perguntas[Indice].Enunciado</h2>
+
+            <div class="opcoes">
+                @foreach (var opcao in Perguntas[Indice].Opcoes)
+                {
+                    <button class="opcao @(Selecionada == opcao ? "selecionada" : "")"
+                            disabled="@Respondida"
+                            @onclick="() => Selecionar(opcao)">
+                        @opcao
+                    </button>
+                }
+            </div>
+
+            @if (Respondida)
+            {
+                <div class="feedback @(Acertou ? "correto" : "incorreto")">
+                    <strong>
+                        @(Acertou ? "Resposta correta!" : "Resposta incorreta!")
+                    </strong>
+                    <p>@Perguntas[Indice].Explicacao</p>
+                </div>
+            }
+
+            <div class="acoes">
+                @if (!Respondida)
+                {
+                    <button class="botao-principal"
+                            disabled="@string.IsNullOrEmpty(Selecionada)"
+                            @onclick="ConfirmarResposta">
+                        Confirmar resposta
+                    </button>
+                }
+                else
+                {
+                    <button class="botao-principal" @onclick="Proxima">
+                        @(Indice == Perguntas.Count - 1
+                            ? "Ver resultado"
+                            : "Próxima pergunta")
+                    </button>
+                }
+            </div>
+
+        </section>
+    }
+    else
+    {
+        <section class="resultado-card">
+
+            <span class="etiqueta">QUIZ CONCLUÍDO</span>
+            <h2>Você terminou!</h2>
+
+            <div class="pontuacao">
+                @Pontos <small>/ @Perguntas.Count</small>
+            </div>
+
+            <p>Você acertou @Pontos de @Perguntas.Count perguntas.</p>
+
+            <p class="mensagem">@MensagemResultado</p>
+
+            @if (ResultadoSalvo)
+            {
+                <p class="salvo">
+                    ✓ Seu resultado foi salvo na sua conta!
+                </p>
+            }
+            else
+            {
+                <p class="aviso">@MensagemSalvamento</p>
+            }
+
+            <button class="botao-principal" @onclick="Reiniciar">
+                Refazer quiz
+            </button>
+
+            <a href="/educacao-financeira/seguranca-financeira-digital" class="link-aula">
+                Voltar para a aula
+            </a>
+
+        </section>
+    }
+
+</div>
+
+<style>
+    .quiz-container {
+        max-width: 850px;
+        margin: 35px auto;
+        padding: 20px;
+        color: #172033;
+    }
+
+    .voltar, .link-aula {
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .cabecalho {
+        margin: 30px 0;
+    }
+
+    .etiqueta, .numero {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .cabecalho h1 {
+        font-size: 32px;
+        margin: 10px 0;
+    }
+
+    .cabecalho p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .nivel {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 7px 12px;
+        background: #ecfdf5;
+        color: #087f5b;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .progresso {
+        margin-bottom: 20px;
+    }
+
+    .progresso-texto {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .barra {
+        height: 9px;
+        background: #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .barra-preenchida {
+        height: 100%;
+        background: #10b981;
+        border-radius: 20px;
+        transition: width .3s;
+    }
+
+    .pergunta-card, .resultado-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 5px 20px #00000008;
+    }
+
+    .pergunta-card h2 {
+        font-size: 22px;
+        line-height: 1.6;
+        margin: 15px 0 25px;
+    }
+
+    .opcoes {
+        display: grid;
+        gap: 12px;
+    }
+
+    .opcao {
+        width: 100%;
+        text-align: left;
+        padding: 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        background: white;
+        color: #172033;
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1.5;
+        transition: .2s;
+    }
+
+    .opcao:hover:not(:disabled) {
+        border-color: #10b981;
+        background: #f0fdf4;
+    }
+
+    .opcao.selecionada {
+        border: 2px solid #059669;
+        background: #ecfdf5;
+    }
+
+    .opcao:disabled {
+        cursor: default;
+        opacity: 1;
+    }
+
+    .feedback {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 12px;
+        line-height: 1.6;
+    }
+
+    .feedback p {
+        margin-bottom: 0;
+    }
+
+    .correto {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .incorreto {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .acoes {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .botao-principal {
+        border: none;
+        border-radius: 10px;
+        padding: 14px 24px;
+        background: #087f5b;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .botao-principal:hover {
+        background: #066849;
+    }
+
+    .botao-principal:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .resultado-card {
+        text-align: center;
+        padding: 45px 25px;
+    }
+
+    .resultado-card h2 {
+        font-size: 28px;
+    }
+
+    .pontuacao {
+        font-size: 65px;
+        font-weight: 800;
+        color: #087f5b;
+        margin: 15px 0;
+    }
+
+    .pontuacao small {
+        font-size: 25px;
+        color: #64748b;
+    }
+
+    .mensagem {
+        margin: 20px 0;
+        color: #475569;
+    }
+
+    .salvo {
+        color: #087f5b;
+        font-weight: 700;
+    }
+
+    .aviso {
+        color: #b45309;
+    }
+
+    .resultado-card .botao-principal {
+        display: block;
+        margin: 25px auto 15px;
+    }
+
+    @@media (max-width: 600px) {
+        .cabecalho h1 {
+            font-size: 26px;
+        }
+
+        .pergunta-card {
+            padding: 20px;
+        }
+
+        .pergunta-card h2 {
+            font-size: 19px;
+        }
+    }
+</style>
+
+@code {
+    private int Indice = 0;
+    private int Pontos = 0;
+
+    private bool Respondida = false;
+    private bool Acertou = false;
+    private bool Finalizado = false;
+    private bool ResultadoSalvo = false;
+
+    private string Selecionada = string.Empty;
+    private string MensagemResultado = string.Empty;
+    private string MensagemSalvamento = string.Empty;
+
+    private List<Pergunta> Perguntas = new()
+    {
+        new(
+            "Você recebe uma mensagem dizendo que sua conta bancária será bloqueada e que precisa clicar em um link para resolver o problema. O que deve fazer?",
+            new()
+            {
+                "Clicar imediatamente para evitar o bloqueio.",
+                "Informar sua senha para confirmar sua identidade.",
+                "Não clicar e verificar a informação pelos canais oficiais do banco.",
+                "Encaminhar a mensagem para todos os seus contatos."
+            },
+            "Mensagens que criam urgência podem ser tentativas de golpe. Procure o aplicativo ou site oficial do banco para verificar qualquer aviso.",
+            "Não clicar e verificar a informação pelos canais oficiais do banco."
+        ),
+
+        new(
+            "Um amigo envia uma mensagem pedindo dinheiro por Pix, dizendo que está com muita urgência. Qual é a atitude mais segura?",
+            new()
+            {
+                "Transferir imediatamente porque conhece a pessoa.",
+                "Confirmar o pedido diretamente com o amigo por outro meio de comunicação.",
+                "Enviar o dinheiro e perguntar depois.",
+                "Compartilhar seus dados bancários para ajudar."
+            },
+            "Contas podem ser utilizadas por terceiros. Confirmar o pedido diretamente com a pessoa ajuda a evitar transferências para golpistas.",
+            "Confirmar o pedido diretamente com o amigo por outro meio de comunicação."
+        ),
+
+        new(
+            "Por que é importante utilizar senhas diferentes em serviços financeiros e outros aplicativos?",
+            new()
+            {
+                "Porque facilita que outras pessoas descubram suas senhas.",
+                "Porque elimina a necessidade de proteger o celular.",
+                "Porque impede qualquer tentativa de fraude.",
+                "Porque reduz o risco de uma senha descoberta dar acesso a várias contas."
+            },
+            "Se uma senha for descoberta, utilizar senhas diferentes dificulta que terceiros acessem outras contas com a mesma informação.",
+            "Porque reduz o risco de uma senha descoberta dar acesso a várias contas."
+        ),
+
+        new(
+            "Ao realizar um Pix, qual informação deve ser conferida antes de confirmar a operação?",
+            new()
+            {
+                "Somente a cor do aplicativo.",
+                "A quantidade de contatos salvos no celular.",
+                "O nome do destinatário e o valor da transferência.",
+                "A marca do aparelho utilizado."
+            },
+            "Conferir o destinatário e o valor ajuda a evitar transferências incorretas e pagamentos para pessoas desconhecidas.",
+            "O nome do destinatário e o valor da transferência."
+        ),
+
+        new(
+            "Uma loja desconhecida oferece um celular por um preço muito abaixo do valor normalmente praticado. O que é mais adequado fazer?",
+            new()
+            {
+                "Pesquisar a reputação da loja e verificar se o site é confiável antes de comprar.",
+                "Comprar imediatamente para aproveitar a oportunidade.",
+                "Informar todos os dados pessoais sem verificar o site.",
+                "Realizar o pagamento sem guardar o comprovante."
+            },
+            "Preços muito atrativos podem ser utilizados para chamar atenção em lojas falsas. Pesquisar a reputação e verificar a loja ajuda a evitar fraudes.",
+            "Pesquisar a reputação da loja e verificar se o site é confiável antes de comprar."
+        ),
+
+        new(
+            "O que é a autenticação em duas etapas?",
+            new()
+            {
+                "Uma forma de compartilhar a senha com duas pessoas.",
+                "Uma proteção adicional que exige uma segunda confirmação de identidade.",
+                "Um aplicativo que elimina todas as fraudes.",
+                "Uma maneira de utilizar a mesma senha em várias contas."
+            },
+            "A autenticação em duas etapas acrescenta uma verificação além da senha, dificultando acessos não autorizados.",
+            "Uma proteção adicional que exige uma segunda confirmação de identidade."
+        ),
+
+        new(
+            "Uma pessoa desconhecida pede o código de confirmação recebido no celular, dizendo que precisa dele para liberar um benefício. O que você deve fazer?",
+            new()
+            {
+                "Enviar o código para receber o benefício.",
+                "Compartilhar também sua senha para agilizar o processo.",
+                "Publicar o código em uma rede social.",
+                "Não compartilhar o código com ninguém."
+            },
+            "Códigos de confirmação são informações de segurança. Compartilhá-los pode permitir que terceiros acessem suas contas.",
+            "Não compartilhar o código com ninguém."
+        ),
+
+        new(
+            "Você percebe uma movimentação financeira que não reconhece em sua conta. Qual deve ser sua primeira atitude?",
+            new()
+            {
+                "Ignorar a movimentação.",
+                "Publicar seus dados bancários na internet.",
+                "Entrar em contato com o banco pelos canais oficiais e informar o ocorrido.",
+                "Enviar sua senha para alguém verificar."
+            },
+            "Ao identificar uma movimentação desconhecida, entre em contato com o banco pelos canais oficiais o quanto antes para receber orientações.",
+            "Entrar em contato com o banco pelos canais oficiais e informar o ocorrido."
+        ),
+
+        new(
+            "Por que é importante baixar aplicativos bancários somente de lojas oficiais?",
+            new()
+            {
+                "Porque isso ajuda a reduzir o risco de instalar aplicativos falsos ou modificados.",
+                "Porque todos os aplicativos oficiais são gratuitos.",
+                "Porque aplicativos de lojas oficiais nunca apresentam problemas.",
+                "Porque assim não é necessário utilizar senhas."
+            },
+            "Lojas oficiais oferecem mecanismos de verificação que ajudam a reduzir o risco de instalar aplicativos falsos. Ainda assim, é importante conferir o desenvolvedor.",
+            "Porque isso ajuda a reduzir o risco de instalar aplicativos falsos ou modificados."
+        ),
+
+        new(
+            "Qual conjunto de atitudes representa um comportamento seguro ao utilizar serviços financeiros digitais?",
+            new()
+            {
+                "Compartilhar senhas, clicar em qualquer link e ignorar avisos.",
+                "Utilizar aplicativos oficiais, proteger senhas e conferir transferências antes de confirmar.",
+                "Aceitar pedidos urgentes de dinheiro sem verificar a identidade.",
+                "Informar códigos de confirmação para pessoas desconhecidas."
+            },
+            "A segurança digital depende de vários cuidados: proteger informações, utilizar serviços confiáveis e conferir as operações financeiras.",
+            "Utilizar aplicativos oficiais, proteger senhas e conferir transferências antes de confirmar."
+        )
+    };
+
+    private void Selecionar(string opcao)
+    {
+        if (!Respondida)
+        {
+            Selecionada = opcao;
+        }
+    }
+
+    private void ConfirmarResposta()
+    {
+        if (string.IsNullOrEmpty(Selecionada) || Respondida)
+            return;
+
+        Acertou = Selecionada == Perguntas[Indice].RespostaCorreta;
+
+        if (Acertou)
+            Pontos++;
+
+        Respondida = true;
+    }
+
+    private async Task Proxima()
+    {
+        if (Indice < Perguntas.Count - 1)
+        {
+            Indice++;
+            Selecionada = string.Empty;
+            Respondida = false;
+            Acertou = false;
+        }
+        else
+        {
+            Finalizado = true;
+
+            MensagemResultado = Pontos switch
+            {
+                10 => "Excelente! Você demonstrou domínio sobre segurança financeira digital.",
+                >= 8 => "Muito bom! Você sabe como proteger suas informações e reconhecer golpes.",
+                >= 6 => "Bom esforço! Você já conhece vários cuidados importantes, mas ainda pode melhorar.",
+                _ => "Continue praticando! Revise a aula e tente novamente para fortalecer seus conhecimentos."
+            };
+
+            await SalvarResultadoAsync();
+        }
+    }
+
+    private async Task SalvarResultadoAsync()
+    {
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
+                return;
+            }
+
+            var resultado = new ResultadoQuiz
+            {
+                UsuarioId = usuarioId,
+                IdentificadorQuiz = "seguranca-financeira-digital",
+                Pontos = Pontos,
+                TotalPerguntas = Perguntas.Count,
+                DataConclusao = DateTime.UtcNow
+            };
+
+            Context.ResultadosQuiz.Add(resultado);
+            await Context.SaveChangesAsync();
+
+            ResultadoSalvo = true;
+        }
+        catch
+        {
+            MensagemSalvamento = "Não foi possível salvar o resultado. Tente novamente mais tarde.";
+        }
+    }
+
+    private void Reiniciar()
+    {
+        Indice = 0;
+        Pontos = 0;
+        Respondida = false;
+        Acertou = false;
+        Finalizado = false;
+        ResultadoSalvo = false;
+
+        Selecionada = string.Empty;
+        MensagemResultado = string.Empty;
+        MensagemSalvamento = string.Empty;
+    }
+
+    private class Pergunta
+    {
+        public string Enunciado { get; set; }
+        public List<string> Opcoes { get; set; }
+        public string Explicacao { get; set; }
+        public string RespostaCorreta { get; set; }
+
+        public Pergunta(
+            string enunciado,
+            List<string> opcoes,
+            string explicacao,
+            string respostaCorreta)
+        {
+            Enunciado = enunciado;
+            Opcoes = opcoes;
+            Explicacao = explicacao;
+            RespostaCorreta = respostaCorreta;
+        }
+    }
+}
+```
