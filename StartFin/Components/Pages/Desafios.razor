@@ -1,41 +1,153 @@
 @page "/desafios"
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@using StartFin.Dados
+@using StartFin.Modelos
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject StartFinContext Context
 
 <PageTitle>Desafios | StartFin</PageTitle>
 
 <div class="container mt-4">
     <h1>🏆 Desafios</h1>
+    <p>Complete pequenas tarefas e ganhe pontos enquanto aprende a cuidar do seu dinheiro!</p>
 
-    <p>
-        Aprenda a cuidar melhor do seu dinheiro
-        cumprindo pequenos desafios!
-    </p>
+    @if (!string.IsNullOrWhiteSpace(mensagem))
+    {
+        <div class="alert alert-info">@mensagem</div>
+    }
 
-    <div class="row g-3 mt-3">
+    <div class="card p-3 mb-4">
+        <h2>⭐ Minha pontuação</h2>
+        <h3>@pontuacao pontos</h3>
+    </div>
 
-        <div class="col-md-6">
-            <div class="card p-3 h-100">
-                <h3>🌞 Desafios diários</h3>
-                <p>Pequenas tarefas para cumprir todos os dias.</p>
+    <h2>📋 Seus desafios</h2>
+
+    @if (carregando)
+    {
+        <p>Carregando desafios...</p>
+    }
+    else if (desafios.Count == 0)
+    {
+        <p>Nenhum desafio disponível no momento.</p>
+    }
+    else
+    {
+        @foreach (var desafio in desafios)
+        {
+            <div class="card p-3 mb-3" @key="desafio.Id">
+                <h3>@desafio.Titulo</h3>
+                <p>@desafio.Descricao</p>
+                <p>⭐ @desafio.Pontos pontos</p>
+
+                @if (desafio.Concluido)
+                {
+                    <span class="text-success">Desafio concluído! ✓</span>
+                }
+                else
+                {
+                    <button class="btn btn-success"
+                            @onclick="() => ConcluirDesafio(desafio)">
+                        Concluir desafio
+                    </button>
+                }
             </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card p-3 h-100">
-                <h3>📅 Desafios semanais</h3>
-                <p>Objetivos para completar durante a semana.</p>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="card p-4 mt-4">
-        <h2>⭐ Suas recompensas</h2>
-        <h3>0 pontos</h3>
-        <p>Conclua desafios para ganhar pontos!</p>
-    </div>
-
-    <div class="card p-4 mt-3">
-        <h2>📋 Seus desafios</h2>
-        <p>Em breve, seus desafios aparecerão aqui.</p>
-    </div>
+        }
+    }
 </div>
+
+@code {
+    private List<Desafio> desafios = new();
+    private string usuarioId = "";
+    private string? mensagem;
+    private int pontuacao;
+    private bool carregando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var estado = await AuthStateProvider.GetAuthenticationStateAsync();
+            usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+
+            if (string.IsNullOrWhiteSpace(usuarioId))
+            {
+                mensagem = "Faça login para visualizar seus desafios.";
+                return;
+            }
+
+            await CarregarDesafios();
+        }
+        catch
+        {
+            mensagem = "Não foi possível carregar os desafios.";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private async Task CarregarDesafios()
+    {
+        if (!await Context.Desafios.AnyAsync(d => d.UsuarioId == usuarioId))
+        {
+            Context.Desafios.AddRange(
+                new Desafio
+                {
+                    Titulo = "Conheça sua carteira",
+                    Descricao = "Confira seu saldo disponível.",
+                    Tipo = "Diário",
+                    Pontos = 10,
+                    UsuarioId = usuarioId
+                },
+                new Desafio
+                {
+                    Titulo = "Aprenda algo novo",
+                    Descricao = "Acesse uma lição de educação financeira.",
+                    Tipo = "Diário",
+                    Pontos = 15,
+                    UsuarioId = usuarioId
+                },
+                new Desafio
+                {
+                    Titulo = "Planeje seu futuro",
+                    Descricao = "Confira suas metas de economia.",
+                    Tipo = "Semanal",
+                    Pontos = 20,
+                    UsuarioId = usuarioId
+                }
+            );
+
+            await Context.SaveChangesAsync();
+        }
+
+        desafios = await Context.Desafios
+            .Where(d => d.UsuarioId == usuarioId)
+            .OrderBy(d => d.Concluido)
+            .ThenBy(d => d.Id)
+            .ToListAsync();
+
+        pontuacao = desafios
+            .Where(d => d.Concluido)
+            .Sum(d => d.Pontos);
+    }
+
+    private async Task ConcluirDesafio(Desafio desafio)
+    {
+        if (desafio.Concluido)
+            return;
+
+        desafio.Concluido = true;
+        desafio.DataConclusao = DateTime.UtcNow;
+
+        await Context.SaveChangesAsync();
+
+        await CarregarDesafios();
+
+        mensagem = $"Desafio concluído! Você ganhou {desafio.Pontos} pontos! 🎉";
+    }
+}

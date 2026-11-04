@@ -21,4 +21,6 @@ public class StartFinContext : IdentityDbContext<Usuario>
     public DbSet<Carteira> Carteiras => Set<Carteira>();
 
     public DbSet<Movimentacao> Movimentacoes => Set<Movimentacao>();
+
+    public DbSet<Desafio> Desafios => Set<Desafio>();
 }
