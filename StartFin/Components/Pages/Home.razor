@@ -1,7 +1,14 @@
 ﻿@page "/"
 @using Npgsql
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using StartFin.Servicos
+@using StartFin.Modelos
 @inject IConfiguration Configuration
+@inject CarteiraServico CarteiraServico
+@inject AuthenticationStateProvider AuthProvider
+
 <PageTitle>StartFin | Início</PageTitle>
 <div class="inicio">
     <header class="cabecalho">
@@ -14,10 +21,14 @@
         <p>Aprenda a organizar suas finanças de um jeito simples.</p>
     </section>
     <section class="saldo">
-        <p>Seu saldo fictício</p>
-        <h2>R$ 1.250,00</h2>
-        <span>Saldo demonstrativo para aprendizado</span>
-    </section>
+    <p>Seu saldo fictício</p>
+    <h2>@Saldo.ToString("C2", cultura)</h2>
+    <span>Saldo atualizado com suas movimentações</span>
+
+    <a href="/movimentacoes" class="link-movimentacoes">
+        Ver movimentações →
+    </a>
+</section>
     <section class="secao">
         <div class="titulo-secao">
             <h2>Suas metas</h2>
@@ -90,6 +101,7 @@
     </footer>
 </div>
 @code {
+    private decimal Saldo = 0;
     private readonly System.Globalization.CultureInfo cultura =
         System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
     private List<MetaResumo> metas = new();
@@ -97,6 +109,18 @@
     {
         try
         {
+            var estado = await AuthProvider.GetAuthenticationStateAsync();
+
+var usuarioId = estado.User.FindFirst(
+    ClaimTypes.NameIdentifier)?.Value;
+
+if (!string.IsNullOrEmpty(usuarioId))
+{
+    var carteira = await CarteiraServico
+        .ObterOuCriarCarteiraAsync(usuarioId);
+
+    Saldo = carteira.SaldoDisponivel;
+}
             var connectionString =
                 Configuration.GetConnectionString("DefaultConnection");
             await using var conexao =
@@ -132,6 +156,20 @@
     }
 }
 <style>
+
+    .link-movimentacoes {
+    display: inline-block;
+    margin-top: 14px;
+    color: #28c99a;
+    font-size: 13px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.link-movimentacoes:hover {
+    text-decoration: underline;
+}
+
     .inicio {
         --azul: #142d70;
         --verde: #28c99a;
