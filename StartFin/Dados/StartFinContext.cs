@@ -17,4 +17,6 @@ public class StartFinContext : IdentityDbContext<Usuario>
     public DbSet<PreferenciasNotificacao> PreferenciasNotificacoes => Set<PreferenciasNotificacao>();
 
     public DbSet<ResultadoQuiz> ResultadosQuiz => Set<ResultadoQuiz>();
+
+    public DbSet<Carteira> Carteiras => Set<Carteira>();
 }
