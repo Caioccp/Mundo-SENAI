@@ -42,7 +42,10 @@ else
         Navigation.ToBaseRelativePath(Navigation.Uri)
             .Split('?')[0]
             .Trim('/')
-            .ToLower() is "entrar" or "cadastro";
+            .ToLower() is "entrar"
+                or "cadastro"
+                or "recuperar-senha"
+                or "nova-senha";
 
     private void AtualizarMenu(bool aberto)
     {
