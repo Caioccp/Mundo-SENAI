@@ -23,46 +23,46 @@
         </div>
 
         <div class="mb-3">
-    <label class="form-label">Data de nascimento *</label>
+            <label class="form-label">Data de nascimento *</label>
 
-    <div class="row g-2">
-        <div class="col-4">
-            <select class="form-select" 
-            @bind="diaNascimento"
-            @bind:after="AtualizarDataNascimento">
-                <option value="">Dia</option>
-                @for (int dia = 1; dia <= DiasNoMes; dia++)
-{
-    <option value="@dia">@dia.ToString("D2")</option>
-}
-            </select>
-        </div>
+            <div class="row g-2">
+                <div class="col-4">
+                    <select class="form-select"
+                            @bind="diaNascimento"
+                            @bind:after="AtualizarDataNascimento">
+                        <option value="">Dia</option>
+                        @for (int dia = 1; dia <= DiasNoMes; dia++)
+                        {
+                            <option value="@dia">@dia.ToString("D2")</option>
+                        }
+                    </select>
+                </div>
 
-        <div class="col-4">
-            <select class="form-select" 
-            @bind="mesNascimento"
-            @bind:after="AtualizarDataNascimento">
-                <option value="">Mês</option>
-                @for (int mes = 1; mes <= 12; mes++)
-                {
-                    <option value="@mes">@System.Globalization.CultureInfo.GetCultureInfo("pt-BR").DateTimeFormat.GetMonthName(mes)</option>
-                }
-            </select>
-        </div>
+                <div class="col-4">
+                    <select class="form-select"
+                            @bind="mesNascimento"
+                            @bind:after="AtualizarDataNascimento">
+                        <option value="">Mês</option>
+                        @for (int mes = 1; mes <= 12; mes++)
+                        {
+                            <option value="@mes">@System.Globalization.CultureInfo.GetCultureInfo("pt-BR").DateTimeFormat.GetMonthName(mes)</option>
+                        }
+                    </select>
+                </div>
 
-        <div class="col-4">
-            <select class="form-select" 
-            @bind="anoNascimento"
-            @bind:after="AtualizarDataNascimento">
-                <option value="">Ano</option>
-                @for (int ano = DateTime.Today.Year; ano >= 1900; ano--)
-                {
-                    <option value="@ano">@ano</option>
-                }
-            </select>
+                <div class="col-4">
+                    <select class="form-select"
+                            @bind="anoNascimento"
+                            @bind:after="AtualizarDataNascimento">
+                        <option value="">Ano</option>
+                        @for (int ano = DateTime.Today.Year; ano >= 1900; ano--)
+                        {
+                            <option value="@ano">@ano</option>
+                        }
+                    </select>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
         @if (IdadeCadastro.HasValue && IdadeCadastro.Value < 18)
         {
@@ -111,16 +111,96 @@
 
         <div class="mb-3">
             <label class="form-label">Senha</label>
-            <InputText class="form-control"
-                       type="password"
-                       @bind-Value="senha" />
+
+            <div class="input-group">
+                <InputText class="form-control"
+                           type="@TipoSenha"
+                           @bind-Value="senha" />
+
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        @onclick="AlternarSenha"
+                        aria-label="@(MostrarSenha ? "Ocultar senha" : "Mostrar senha")"
+                        title="@(MostrarSenha ? "Ocultar senha" : "Mostrar senha")">
+                    @if (MostrarSenha)
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="20" height="20"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M3 3l18 18" />
+                            <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                            <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 9 7 9 7a15.5 15.5 0 0 1-3 3.8" />
+                            <path d="M6.6 6.6C4.1 8.2 3 12 3 12s4 7 9 7a10 10 0 0 0 4-.8" />
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="20" height="20"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    }
+                </button>
+            </div>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Confirmar senha</label>
-            <InputText class="form-control"
-                       type="password"
-                       @bind-Value="confirmarSenha" />
+
+            <div class="input-group">
+                <InputText class="form-control"
+                           type="@TipoConfirmarSenha"
+                           @bind-Value="confirmarSenha" />
+
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        @onclick="AlternarConfirmarSenha"
+                        aria-label="@(MostrarConfirmarSenha ? "Ocultar confirmação da senha" : "Mostrar confirmação da senha")"
+                        title="@(MostrarConfirmarSenha ? "Ocultar confirmação da senha" : "Mostrar confirmação da senha")">
+                    @if (MostrarConfirmarSenha)
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="20" height="20"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M3 3l18 18" />
+                            <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                            <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 9 7 9 7a15.5 15.5 0 0 1-3 3.8" />
+                            <path d="M6.6 6.6C4.1 8.2 3 12 3 12s4 7 9 7a10 10 0 0 0 4-.8" />
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="20" height="20"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    }
+                </button>
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">
@@ -143,38 +223,34 @@
 
 @code {
     private int? diaNascimento;
-private int? mesNascimento;
-private int? anoNascimento;
+    private int? mesNascimento;
+    private int? anoNascimento;
 
-private void AtualizarDataNascimento()
-{
-    novoUsuario.DataNascimento = null;
-
-    // Ainda não escolheu mês ou ano.
-    if (!mesNascimento.HasValue || !anoNascimento.HasValue)
-        return;
-
-    // Verifica quantos dias existem no mês escolhido.
-    int diasNoMes = DateTime.DaysInMonth(
-        anoNascimento.Value,
-        mesNascimento.Value);
-
-    // Se o dia escolhido não existir nesse mês, limpa a seleção.
-    if (diaNascimento.HasValue && diaNascimento.Value > diasNoMes)
+    private void AtualizarDataNascimento()
     {
-        diaNascimento = null;
-        return;
+        novoUsuario.DataNascimento = null;
+
+        if (!mesNascimento.HasValue || !anoNascimento.HasValue)
+            return;
+
+        int diasNoMes = DateTime.DaysInMonth(
+            anoNascimento.Value,
+            mesNascimento.Value);
+
+        if (diaNascimento.HasValue && diaNascimento.Value > diasNoMes)
+        {
+            diaNascimento = null;
+            return;
+        }
+
+        if (!diaNascimento.HasValue)
+            return;
+
+        novoUsuario.DataNascimento = new DateTime(
+            anoNascimento.Value,
+            mesNascimento.Value,
+            diaNascimento.Value);
     }
-
-    // Só monta a data quando os três campos estiverem preenchidos.
-    if (!diaNascimento.HasValue)
-        return;
-
-    novoUsuario.DataNascimento = new DateTime(
-        anoNascimento.Value,
-        mesNascimento.Value,
-        diaNascimento.Value);
-}
 
     private Usuario novoUsuario = new();
     private string nomeUsuario = "";
@@ -184,21 +260,36 @@ private void AtualizarDataNascimento()
     private string mensagem = "";
     private string classeMensagem = "alert-danger";
 
-    private int DiasNoMes
-{
-    get
+    private bool MostrarSenha { get; set; }
+    private bool MostrarConfirmarSenha { get; set; }
+
+    private string TipoSenha => MostrarSenha ? "text" : "password";
+    private string TipoConfirmarSenha => MostrarConfirmarSenha ? "text" : "password";
+
+    private void AlternarSenha()
     {
-        if (!mesNascimento.HasValue)
-            return 31;
-
-        // Se ainda não escolheu o ano, considera um ano bissexto.
-        int ano = anoNascimento ?? 2000;
-
-        return DateTime.DaysInMonth(
-            ano,
-            mesNascimento.Value);
+        MostrarSenha = !MostrarSenha;
     }
-}
+
+    private void AlternarConfirmarSenha()
+    {
+        MostrarConfirmarSenha = !MostrarConfirmarSenha;
+    }
+
+    private int DiasNoMes
+    {
+        get
+        {
+            if (!mesNascimento.HasValue)
+                return 31;
+
+            int ano = anoNascimento ?? 2000;
+
+            return DateTime.DaysInMonth(
+                ano,
+                mesNascimento.Value);
+        }
+    }
 
     private int? IdadeCadastro
     {
@@ -247,7 +338,6 @@ private void AtualizarDataNascimento()
 
         int idade = CalcularIdade(novoUsuario.DataNascimento.Value);
 
-        // Verifica o código familiar para menores de 18 anos.
         if (idade < 18)
         {
             if (idade < 16 && string.IsNullOrWhiteSpace(codigoFamiliar))
@@ -307,7 +397,6 @@ private void AtualizarDataNascimento()
         novoUsuario.UserName = nomeUsuario;
         novoUsuario.Email = null;
 
-        // Converte a data de nascimento para UTC antes de salvar.
         novoUsuario.DataNascimento = DateTime.SpecifyKind(
             novoUsuario.DataNascimento.Value,
             DateTimeKind.Utc);
