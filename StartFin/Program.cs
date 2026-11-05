@@ -49,6 +49,97 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
+// Configuração da conta exclusiva de Desenvolvedor
+{
+    const string nomeFuncao = "Desenvolvedor";
+
+    var nomeUsuario = app.Configuration["Developer:Username"];
+    var senha = app.Configuration["Developer:Password"];
+
+    if (string.IsNullOrWhiteSpace(nomeUsuario) ||
+        string.IsNullOrWhiteSpace(senha))
+    {
+        throw new InvalidOperationException(
+            "Configure os dados da conta Desenvolvedor nos User Secrets.");
+    }
+
+    using var scope = app.Services.CreateScope();
+
+    var gerenciadorUsuarios = scope.ServiceProvider
+        .GetRequiredService<UserManager<Usuario>>();
+
+    var gerenciadorFuncoes = scope.ServiceProvider
+        .GetRequiredService<RoleManager<IdentityRole>>();
+
+    if (!await gerenciadorFuncoes.RoleExistsAsync(nomeFuncao))
+    {
+        var resultadoFuncao = await gerenciadorFuncoes.CreateAsync(
+            new IdentityRole(nomeFuncao));
+
+        if (!resultadoFuncao.Succeeded)
+        {
+            throw new InvalidOperationException(
+                "Não foi possível criar a função Desenvolvedor.");
+        }
+    }
+
+    var usuario = await gerenciadorUsuarios.FindByNameAsync(nomeUsuario);
+
+    var desenvolvedores = await gerenciadorUsuarios
+        .GetUsersInRoleAsync(nomeFuncao);
+
+    if (usuario == null)
+    {
+        if (desenvolvedores.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "Já existe uma conta de Desenvolvedor.");
+        }
+
+        usuario = new Usuario
+        {
+            UserName = nomeUsuario,
+            NomeCompleto = "Desenvolvedor"
+        };
+
+        var resultadoCriacao = await gerenciadorUsuarios
+            .CreateAsync(usuario, senha);
+
+        if (!resultadoCriacao.Succeeded)
+        {
+            var erros = string.Join(
+                "; ",
+                resultadoCriacao.Errors.Select(e => e.Description));
+
+            throw new InvalidOperationException(
+                "Erro ao criar a conta Desenvolvedor: " + erros);
+        }
+    }
+    else if (!await gerenciadorUsuarios.IsInRoleAsync(usuario, nomeFuncao))
+    {
+        throw new InvalidOperationException(
+            "Esse nome de usuário já pertence a outra conta. Escolha outro.");
+    }
+
+    if (desenvolvedores.Any(d => d.Id != usuario.Id))
+    {
+        throw new InvalidOperationException(
+            "Já existe outra conta de Desenvolvedor.");
+    }
+
+    if (!await gerenciadorUsuarios.IsInRoleAsync(usuario, nomeFuncao))
+    {
+        var resultadoFuncaoUsuario = await gerenciadorUsuarios
+            .AddToRoleAsync(usuario, nomeFuncao);
+
+        if (!resultadoFuncaoUsuario.Succeeded)
+        {
+            throw new InvalidOperationException(
+                "Não foi possível atribuir a função Desenvolvedor.");
+        }
+    }
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);

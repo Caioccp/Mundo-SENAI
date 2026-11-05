@@ -1,0 +1,302 @@
+
+@page "/desenvolvedor"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Modelos
+@using StartFin.Dados
+@using System.Security.Claims
+
+@attribute [Authorize(Roles = "Desenvolvedor")]
+
+@inject UserManager<Usuario> GerenciadorUsuarios
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Painel do Desenvolvedor | StartFin</PageTitle>
+
+<div class="painel-desenvolvedor">
+
+    <header>
+        <h1>Painel do Desenvolvedor</h1>
+        <p>Gerenciamento de contas do StartFin</p>
+    </header>
+
+    <section>
+        <h2>Usuários cadastrados</h2>
+
+        @if (carregando)
+        {
+            <p>Carregando usuários...</p>
+        }
+        else
+        {
+            <p>Total de contas: @usuarios.Count</p>
+
+            @if (!string.IsNullOrWhiteSpace(mensagem))
+            {
+                <p>@mensagem</p>
+            }
+
+            <div class="tabela-usuarios">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Nome completo</th>
+                            <th>Criação</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var usuario in usuarios)
+                        {
+                            var ehDesenvolvedor = desenvolvedorIds.Contains(usuario.Id);
+                            
+                            <tr>
+                                <td>@usuario.UserName</td>
+                                <td>@usuario.NomeCompleto</td>
+                                <td>
+                                    @usuario.DataCriacao.ToLocalTime()
+                                        .ToString("dd/MM/yyyy")
+                                </td>
+                                <td>
+                                    @if (ehDesenvolvedor)
+                                    {
+                                        <strong>Desenvolvedor</strong>
+                                    }
+                                    else
+                                    {
+                                        <button @onclick="() => SelecionarRedefinicao(usuario.Id)">
+                                            Redefinir senha
+                                        </button>
+
+                                        <button @onclick="() => SelecionarExclusao(usuario.Id)">
+                                            Excluir conta
+                                        </button>
+                                    }
+
+                                    @if (usuarioSelecionadoId == usuario.Id)
+                                    {
+                                        <div>
+                                            <input type="password"
+                                                   placeholder="Nova senha"
+                                                   @bind="novaSenha" />
+
+                                            <button @onclick="() => RedefinirSenhaAsync(usuario)">
+                                                Salvar senha
+                                            </button>
+                                        </div>
+                                    }
+
+                                    @if (usuarioExclusaoId == usuario.Id)
+                                    {
+                                        <div>
+                                            <input placeholder="Digite EXCLUIR"
+                                                   @bind="confirmacaoExclusao" />
+
+                                            <button @onclick="() => ExcluirContaAsync(usuario)">
+                                                Confirmar exclusão
+                                            </button>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+</div>
+
+@code {
+    private List<Usuario> usuarios = new();
+    private bool carregando = true;
+
+    private string? mensagem;
+    private string? usuarioSelecionadoId;
+    private string? usuarioExclusaoId;
+    private string novaSenha = "";
+    private string confirmacaoExclusao = "";
+    private string? usuarioAtualId;
+    private HashSet<string> desenvolvedorIds = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+
+        usuarioAtualId = estado.User
+            .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        await CarregarUsuariosAsync();
+    }
+
+    private async Task CarregarUsuariosAsync()
+{
+    usuarios = await GerenciadorUsuarios.Users
+        .OrderByDescending(u => u.DataCriacao)
+        .ToListAsync();
+
+    desenvolvedorIds.Clear();
+
+    foreach (var usuario in usuarios)
+    {
+        if (await GerenciadorUsuarios.IsInRoleAsync(
+            usuario, "Desenvolvedor"))
+        {
+            desenvolvedorIds.Add(usuario.Id);
+        }
+    }
+
+    carregando = false;
+}
+
+    private void SelecionarRedefinicao(string id)
+    {
+        usuarioSelecionadoId = id;
+        usuarioExclusaoId = null;
+        novaSenha = "";
+        mensagem = null;
+    }
+
+    private void SelecionarExclusao(string id)
+    {
+        usuarioExclusaoId = id;
+        usuarioSelecionadoId = null;
+        confirmacaoExclusao = "";
+        mensagem = null;
+    }
+
+    private async Task RedefinirSenhaAsync(Usuario usuario)
+    {
+        if (string.IsNullOrWhiteSpace(novaSenha))
+        {
+            mensagem = "Informe a nova senha.";
+            return;
+        }
+
+        var token = await GerenciadorUsuarios
+            .GeneratePasswordResetTokenAsync(usuario);
+
+        var resultado = await GerenciadorUsuarios
+            .ResetPasswordAsync(usuario, token, novaSenha);
+
+        if (!resultado.Succeeded)
+        {
+            mensagem = string.Join(
+                " | ",
+                resultado.Errors.Select(e => e.Description));
+
+            return;
+        }
+
+        mensagem = "Senha redefinida com sucesso!";
+        usuarioSelecionadoId = null;
+        novaSenha = "";
+    }
+
+    private async Task ExcluirContaAsync(Usuario usuario)
+    {
+        if (usuario.Id == usuarioAtualId)
+        {
+            mensagem = "Você não pode excluir sua própria conta.";
+            return;
+        }
+
+        if (await GerenciadorUsuarios.IsInRoleAsync(
+            usuario, "Desenvolvedor"))
+        {
+            mensagem = "Contas de Desenvolvedor não podem ser excluídas por aqui.";
+            return;
+        }
+
+        if (confirmacaoExclusao != "EXCLUIR")
+        {
+            mensagem = "Digite EXCLUIR para confirmar.";
+            return;
+        }
+
+        await using var transacao =
+            await Context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var dependentes = await Context.Users
+                .Where(u => u.ResponsavelId == usuario.Id)
+                .ToListAsync();
+
+            foreach (var dependente in dependentes)
+                dependente.ResponsavelId = null;
+
+            usuario.ResponsavelId = null;
+
+            await Context.SaveChangesAsync();
+
+            var carteiras = await Context.Carteiras
+                .Where(c => c.UsuarioId == usuario.Id)
+                .ToListAsync();
+
+            var idsCarteiras = carteiras.Select(c => c.Id).ToList();
+
+            Context.Movimentacoes.RemoveRange(
+                await Context.Movimentacoes
+                    .Where(m => idsCarteiras.Contains(m.CarteiraId))
+                    .ToListAsync());
+
+            Context.Carteiras.RemoveRange(carteiras);
+
+            Context.PreferenciasNotificacoes.RemoveRange(
+                await Context.PreferenciasNotificacoes
+                    .Where(p => p.UsuarioId == usuario.Id)
+                    .ToListAsync());
+
+            Context.ResultadosQuiz.RemoveRange(
+                await Context.ResultadosQuiz
+                    .Where(r => r.UsuarioId == usuario.Id)
+                    .ToListAsync());
+
+            Context.Desafios.RemoveRange(
+                await Context.Desafios
+                    .Where(d => d.UsuarioId == usuario.Id)
+                    .ToListAsync());
+
+            Context.Conquistas.RemoveRange(
+                await Context.Conquistas
+                    .Where(c => c.UsuarioId == usuario.Id)
+                    .ToListAsync());
+
+            await Context.Database.ExecuteSqlInterpolatedAsync(
+                $"DELETE FROM metas_economia WHERE usuario_id = {usuario.Id}");
+
+            await Context.SaveChangesAsync();
+
+            var resultado = await GerenciadorUsuarios.DeleteAsync(usuario);
+
+            if (!resultado.Succeeded)
+            {
+                await transacao.RollbackAsync();
+
+                mensagem = "Não foi possível excluir a conta.";
+                return;
+            }
+
+            await transacao.CommitAsync();
+
+            usuarioExclusaoId = null;
+            confirmacaoExclusao = "";
+            mensagem = "Conta excluída com sucesso!";
+
+            await CarregarUsuariosAsync();
+        }
+        catch
+        {
+            await transacao.RollbackAsync();
+            mensagem = "Ocorreu um erro ao excluir a conta.";
+        }
+    }
+}
