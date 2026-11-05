@@ -1,3 +1,4 @@
+
 @page "/desafios"
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
@@ -11,8 +12,13 @@
 <PageTitle>Desafios | StartFin</PageTitle>
 
 <div class="container mt-4">
+
     <h1>🏆 Desafios</h1>
-    <p>Complete pequenas tarefas e ganhe pontos enquanto aprende a cuidar do seu dinheiro!</p>
+
+    <p>
+        Complete pequenas tarefas e ganhe pontos enquanto aprende
+        a cuidar do seu dinheiro!
+    </p>
 
     @if (!string.IsNullOrWhiteSpace(mensagem))
     {
@@ -22,48 +28,91 @@
     <div class="card p-3 mb-4">
         <h2>⭐ Minha pontuação</h2>
         <h3>@pontuacao pontos</h3>
+        <small>Todos os pontos conquistados até hoje.</small>
     </div>
-
-    <h2>📋 Seus desafios</h2>
 
     @if (carregando)
     {
         <p>Carregando desafios...</p>
     }
-    else if (desafios.Count == 0)
+    else if (!string.IsNullOrWhiteSpace(usuarioId))
     {
-        <p>Nenhum desafio disponível no momento.</p>
+        <div class="d-flex gap-2 mb-4 flex-wrap">
+
+            <button class="btn @(categoriaSelecionada == "Diário" ? "btn-success" : "btn-outline-success")"
+                    @onclick='() => SelecionarCategoria("Diário")'>
+                🌞 Desafios diários
+            </button>
+
+            <button class="btn @(categoriaSelecionada == "Semanal" ? "btn-success" : "btn-outline-success")"
+                    @onclick='() => SelecionarCategoria("Semanal")'>
+                📅 Desafios semanais
+            </button>
+
+        </div>
+
+        @if (categoriaSelecionada == "Diário")
+        {
+            <h2>🌞 Desafios diários</h2>
+        }
+        else
+        {
+            <h2>📅 Desafios semanais</h2>
+        }
+
+        @if (!desafios.Any(d => d.Tipo == categoriaSelecionada))
+        {
+            <div class="card p-3">
+                <p>Nenhum desafio disponível nesta categoria.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var desafio in desafios.Where(d => d.Tipo == categoriaSelecionada))
+            {
+                <div class="card p-3 mb-3" @key="desafio.Id">
+
+                    <h3>@desafio.Titulo</h3>
+
+                    <p>@desafio.Descricao</p>
+
+                    <p>⭐ @desafio.Pontos pontos</p>
+
+                    @if (desafio.Concluido)
+                    {
+                        <span class="text-success fw-bold">
+                            Desafio concluído! ✓
+                        </span>
+                    }
+                    else
+                    {
+                        <button class="btn btn-success"
+                                @onclick="() => ConcluirDesafio(desafio)">
+                            Concluir desafio
+                        </button>
+                    }
+
+                </div>
+            }
+        }
     }
     else
     {
-        @foreach (var desafio in desafios)
-        {
-            <div class="card p-3 mb-3" @key="desafio.Id">
-                <h3>@desafio.Titulo</h3>
-                <p>@desafio.Descricao</p>
-                <p>⭐ @desafio.Pontos pontos</p>
-
-                @if (desafio.Concluido)
-                {
-                    <span class="text-success">Desafio concluído! ✓</span>
-                }
-                else
-                {
-                    <button class="btn btn-success"
-                            @onclick="() => ConcluirDesafio(desafio)">
-                        Concluir desafio
-                    </button>
-                }
-            </div>
-        }
+        <p>Faça login para visualizar seus desafios.</p>
     }
+
 </div>
 
 @code {
     private List<Desafio> desafios = new();
+
     private string usuarioId = "";
     private string? mensagem;
+
+    private string categoriaSelecionada = "Diário";
+
     private int pontuacao;
+
     private bool carregando = true;
 
     protected override async Task OnInitializedAsync()
@@ -71,15 +120,14 @@
         try
         {
             var estado = await AuthStateProvider.GetAuthenticationStateAsync();
-            usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
 
-            if (string.IsNullOrWhiteSpace(usuarioId))
+            usuarioId = estado.User
+                .FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+
+            if (!string.IsNullOrWhiteSpace(usuarioId))
             {
-                mensagem = "Faça login para visualizar seus desafios.";
-                return;
+                await CarregarDesafios();
             }
-
-            await CarregarDesafios();
         }
         catch
         {
@@ -91,49 +139,96 @@
         }
     }
 
+    // Alterna entre desafios diários e semanais.
+    private void SelecionarCategoria(string categoria)
+    {
+        categoriaSelecionada = categoria;
+        mensagem = null;
+    }
+
     private async Task CarregarDesafios()
     {
-        if (!await Context.Desafios.AnyAsync(d => d.UsuarioId == usuarioId))
-        {
-            Context.Desafios.AddRange(
-                new Desafio
-                {
-                    Titulo = "Conheça sua carteira",
-                    Descricao = "Confira seu saldo disponível.",
-                    Tipo = "Diário",
-                    Pontos = 10,
-                    UsuarioId = usuarioId
-                },
-                new Desafio
-                {
-                    Titulo = "Aprenda algo novo",
-                    Descricao = "Acesse uma lição de educação financeira.",
-                    Tipo = "Diário",
-                    Pontos = 15,
-                    UsuarioId = usuarioId
-                },
-                new Desafio
-                {
-                    Titulo = "Planeje seu futuro",
-                    Descricao = "Confira suas metas de economia.",
-                    Tipo = "Semanal",
-                    Pontos = 20,
-                    UsuarioId = usuarioId
-                }
-            );
+        var hoje = DateTime.UtcNow.Date;
 
-            await Context.SaveChangesAsync();
+        // Período diário.
+        var inicioDiario = hoje;
+        var fimDiario = inicioDiario.AddDays(1);
+
+        // Período semanal: começa na segunda-feira.
+        var diasDesdeSegunda = ((int)hoje.DayOfWeek + 6) % 7;
+
+        var inicioSemanal = hoje.AddDays(-diasDesdeSegunda);
+        var fimSemanal = inicioSemanal.AddDays(7);
+
+        var modelos = new List<Desafio>
+        {
+            new()
+            {
+                Titulo = "Conheça sua carteira",
+                Descricao = "Confira seu saldo disponível.",
+                Tipo = "Diário",
+                Pontos = 10
+            },
+            new()
+            {
+                Titulo = "Aprenda algo novo",
+                Descricao = "Acesse uma lição de educação financeira.",
+                Tipo = "Diário",
+                Pontos = 15
+            },
+            new()
+            {
+                Titulo = "Planeje seu futuro",
+                Descricao = "Confira suas metas de economia.",
+                Tipo = "Semanal",
+                Pontos = 20
+            }
+        };
+
+        foreach (var modelo in modelos)
+        {
+            var inicio = modelo.Tipo == "Diário"
+                ? inicioDiario
+                : inicioSemanal;
+
+            var fim = modelo.Tipo == "Diário"
+                ? fimDiario
+                : fimSemanal;
+
+            var existe = await Context.Desafios.AnyAsync(d =>
+                d.UsuarioId == usuarioId &&
+                d.Titulo == modelo.Titulo &&
+                d.Tipo == modelo.Tipo &&
+                d.DataInicio == inicio);
+
+            if (!existe)
+            {
+                modelo.UsuarioId = usuarioId;
+                modelo.DataInicio = inicio;
+                modelo.DataFim = fim;
+
+                Context.Desafios.Add(modelo);
+            }
         }
 
+        await Context.SaveChangesAsync();
+
+        // Carrega os desafios dos períodos atuais.
         desafios = await Context.Desafios
-            .Where(d => d.UsuarioId == usuarioId)
+            .Where(d =>
+                d.UsuarioId == usuarioId &&
+                (
+                    (d.Tipo == "Diário" && d.DataInicio == inicioDiario) ||
+                    (d.Tipo == "Semanal" && d.DataInicio == inicioSemanal)
+                ))
             .OrderBy(d => d.Concluido)
             .ThenBy(d => d.Id)
             .ToListAsync();
 
-        pontuacao = desafios
-            .Where(d => d.Concluido)
-            .Sum(d => d.Pontos);
+        // Soma todos os pontos históricos do usuário.
+        pontuacao = await Context.Desafios
+            .Where(d => d.UsuarioId == usuarioId && d.Concluido)
+            .SumAsync(d => (int?)d.Pontos) ?? 0;
     }
 
     private async Task ConcluirDesafio(Desafio desafio)
@@ -148,6 +243,7 @@
 
         await CarregarDesafios();
 
-        mensagem = $"Desafio concluído! Você ganhou {desafio.Pontos} pontos! 🎉";
+        mensagem =
+            $"Desafio concluído! Você ganhou {desafio.Pontos} pontos! 🎉";
     }
 }
