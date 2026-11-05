@@ -23,10 +23,46 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Data de nascimento</label>
-            <InputDate class="form-control"
-                       @bind-Value="novoUsuario.DataNascimento" />
+    <label class="form-label">Data de nascimento *</label>
+
+    <div class="row g-2">
+        <div class="col-4">
+            <select class="form-select" 
+            @bind="diaNascimento"
+            @bind:after="AtualizarDataNascimento">
+                <option value="">Dia</option>
+                @for (int dia = 1; dia <= 31; dia++)
+                {
+                    <option value="@dia">@dia.ToString("D2")</option>
+                }
+            </select>
         </div>
+
+        <div class="col-4">
+            <select class="form-select" 
+            @bind="mesNascimento"
+            @bind:after="AtualizarDataNascimento">
+                <option value="">Mês</option>
+                @for (int mes = 1; mes <= 12; mes++)
+                {
+                    <option value="@mes">@System.Globalization.CultureInfo.GetCultureInfo("pt-BR").DateTimeFormat.GetMonthName(mes)</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-4">
+            <select class="form-select" 
+            @bind="anoNascimento"
+            @bind:after="AtualizarDataNascimento">
+                <option value="">Ano</option>
+                @for (int ano = DateTime.Today.Year; ano >= 1900; ano--)
+                {
+                    <option value="@ano">@ano</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
 
         @if (IdadeCadastro.HasValue && IdadeCadastro.Value < 18)
         {
@@ -106,6 +142,32 @@
 </div>
 
 @code {
+    private int? diaNascimento;
+private int? mesNascimento;
+private int? anoNascimento;
+
+private void AtualizarDataNascimento()
+{
+    novoUsuario.DataNascimento = null;
+
+    if (!diaNascimento.HasValue ||
+        !mesNascimento.HasValue ||
+        !anoNascimento.HasValue)
+        return;
+
+    int diasNoMes = DateTime.DaysInMonth(
+        anoNascimento.Value,
+        mesNascimento.Value);
+
+    if (diaNascimento.Value > diasNoMes)
+        return;
+
+    novoUsuario.DataNascimento = new DateTime(
+        anoNascimento.Value,
+        mesNascimento.Value,
+        diaNascimento.Value);
+}
+
     private Usuario novoUsuario = new();
     private string nomeUsuario = "";
     private string senha = "";
