@@ -221,12 +221,11 @@ app.MapPost("/iniciar-recuperacao", async (
         out var nascimento))
         return falha;
 
-    var usuario = await userManager.FindByNameAsync(nomeUsuario);
+        var usuario = await userManager.FindByNameAsync(nomeUsuario);
 
     if (usuario == null ||
         string.IsNullOrWhiteSpace(usuario.NomeCompleto) ||
-        usuario.DataNascimento == null ||
-        string.IsNullOrWhiteSpace(usuario.CodigoRecuperacaoSenhaHash))
+        usuario.DataNascimento == null)
         return falha;
 
     // Confere nome completo e data de nascimento.
@@ -239,25 +238,63 @@ app.MapPost("/iniciar-recuperacao", async (
     if (usuario.DataNascimento.Value.Date != nascimento.Date)
         return falha;
 
-    // Confere se a pessoa tem pelo menos 18 anos.
+    // Calcula a idade usando a data cadastrada na conta.
     var hoje = DateTime.UtcNow.Date;
-    var idade = hoje.Year - nascimento.Year;
+    var nascimentoConta = usuario.DataNascimento.Value.Date;
 
-    if (nascimento.Date > hoje.AddYears(-idade))
+    if (nascimentoConta > hoje)
+        return falha;
+
+    var idade = hoje.Year - nascimentoConta.Year;
+
+    if (nascimentoConta > hoje.AddYears(-idade))
         idade--;
 
-    if (idade < 18)
-        return falha;
+    // CONTAS DE MAIORES DE 18 ANOS
+    if (idade >= 18)
+    {
+        if (string.IsNullOrWhiteSpace(usuario.CodigoRecuperacaoSenhaHash))
+            return falha;
 
-    // Confere o código secreto.
-    var verificacao = passwordHasher.VerifyHashedPassword(
-        usuario,
-        usuario.CodigoRecuperacaoSenhaHash,
-        codigo);
+        var verificacao = passwordHasher.VerifyHashedPassword(
+            usuario,
+            usuario.CodigoRecuperacaoSenhaHash,
+            codigo);
 
-    if (verificacao == PasswordVerificationResult.Failed)
-        return falha;
+        if (verificacao == PasswordVerificationResult.Failed)
+            return falha;
+    }
+    // CONTAS DE MENORES DE 18 ANOS
+    else
+    {
+        // Verifica se existe um responsável vinculado.
+        if (string.IsNullOrWhiteSpace(usuario.ResponsavelId))
+            return falha;
 
+        var responsavel = await userManager.FindByIdAsync(usuario.ResponsavelId);
+
+        if (responsavel == null ||
+            responsavel.DataNascimento == null ||
+            string.IsNullOrWhiteSpace(responsavel.CodigoVinculoFamiliar))
+            return falha;
+
+        // Confere se o responsável realmente tem 18 anos ou mais.
+        var nascimentoResponsavel = responsavel.DataNascimento.Value.Date;
+        var idadeResponsavel = hoje.Year - nascimentoResponsavel.Year;
+
+        if (nascimentoResponsavel > hoje.AddYears(-idadeResponsavel))
+            idadeResponsavel--;
+
+        if (idadeResponsavel < 18 || nascimentoResponsavel > hoje)
+            return falha;
+
+        // Confere o código familiar do responsável vinculado.
+        if (!string.Equals(
+            responsavel.CodigoVinculoFamiliar,
+            codigo,
+            StringComparison.Ordinal))
+            return falha;
+    }
     // Gera um token temporário aleatório.
     var token = Convert.ToBase64String(
         System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))

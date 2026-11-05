@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Identity;
 
 namespace StartFin.Modelos;
@@ -26,8 +25,8 @@ public class Usuario : IdentityUser
     public string? CodigoRecuperacaoSenhaHash { get; set; }
 
     // Hash do token temporário de redefinição de senha.
-public string? TokenRecuperacaoSenhaHash { get; set; }
+    public string? TokenRecuperacaoSenhaHash { get; set; }
 
-// Data e horário em que o token temporário expira.
-public DateTime? TokenRecuperacaoSenhaExpiraEm { get; set; }
+    // Data e horário em que o token temporário expira.
+    public DateTime? TokenRecuperacaoSenhaExpiraEm { get; set; }
 }
