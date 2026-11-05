@@ -1,13 +1,16 @@
 
 @page "/desafios"
+
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @using Microsoft.EntityFrameworkCore
 @using StartFin.Dados
 @using StartFin.Modelos
+@using StartFin.Servicos
 
 @inject AuthenticationStateProvider AuthStateProvider
 @inject StartFinContext Context
+@inject DesafioServico DesafioServico
 
 <PageTitle>Desafios | StartFin</PageTitle>
 
@@ -49,15 +52,24 @@
                 📅 Desafios semanais
             </button>
 
+            <button class="btn @(categoriaSelecionada == "Mensal" ? "btn-success" : "btn-outline-success")"
+                    @onclick='() => SelecionarCategoria("Mensal")'>
+                🗓️ Desafios mensais
+            </button>
+
         </div>
 
         @if (categoriaSelecionada == "Diário")
         {
             <h2>🌞 Desafios diários</h2>
         }
-        else
+        else if (categoriaSelecionada == "Semanal")
         {
             <h2>📅 Desafios semanais</h2>
+        }
+        else
+        {
+            <h2>🗓️ Desafios mensais</h2>
         }
 
         @if (!desafios.Any(d => d.Tipo == categoriaSelecionada))
@@ -70,13 +82,45 @@
         {
             @foreach (var desafio in desafios.Where(d => d.Tipo == categoriaSelecionada))
             {
+                var percentual = desafio.MetaProgresso > 0
+                    ? Math.Min(100, (double)(desafio.ProgressoAtual / desafio.MetaProgresso * 100))
+                    : 0;
+
                 <div class="card p-3 mb-3" @key="desafio.Id">
 
-                    <h3>@desafio.Titulo</h3>
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+
+                        <h3>@desafio.Titulo</h3>
+
+                        <span class="badge @(desafio.Dificuldade == "Fácil" ? "bg-success" : desafio.Dificuldade == "Médio" ? "bg-warning text-dark" : "bg-danger")">
+                            @desafio.Dificuldade
+                        </span>
+
+                    </div>
 
                     <p>@desafio.Descricao</p>
 
                     <p>⭐ @desafio.Pontos pontos</p>
+
+                    <div class="progress mb-2" style="height: 12px;">
+
+                        <div class="progress-bar bg-success"
+                             role="progressbar"
+                             style="width: @(percentual)%"
+                             aria-valuenow="@percentual"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+
+                    </div>
+
+                    <small class="mb-2">
+                        Progresso:
+                        @desafio.ProgressoAtual.ToString("0.##")
+                        de
+                        @desafio.MetaProgresso.ToString("0.##")
+                        (@percentual.ToString("0")%)
+                    </small>
 
                     @if (desafio.Concluido)
                     {
@@ -86,10 +130,9 @@
                     }
                     else
                     {
-                        <button class="btn btn-success"
-                                @onclick="() => ConcluirDesafio(desafio)">
-                            Concluir desafio
-                        </button>
+                        <span class="text-muted">
+                            Continue realizando as atividades para completar este desafio.
+                        </span>
                     }
 
                 </div>
@@ -139,111 +182,20 @@
         }
     }
 
-    // Alterna entre desafios diários e semanais.
+    // Alterna entre desafios diários, semanais e mensais.
     private void SelecionarCategoria(string categoria)
     {
         categoriaSelecionada = categoria;
         mensagem = null;
     }
 
+    // Carrega os desafios e atualiza a pontuação histórica.
     private async Task CarregarDesafios()
     {
-        var hoje = DateTime.UtcNow.Date;
+        desafios = await DesafioServico.CarregarDesafiosAsync(usuarioId);
 
-        // Período diário.
-        var inicioDiario = hoje;
-        var fimDiario = inicioDiario.AddDays(1);
-
-        // Período semanal: começa na segunda-feira.
-        var diasDesdeSegunda = ((int)hoje.DayOfWeek + 6) % 7;
-
-        var inicioSemanal = hoje.AddDays(-diasDesdeSegunda);
-        var fimSemanal = inicioSemanal.AddDays(7);
-
-        var modelos = new List<Desafio>
-        {
-            new()
-            {
-                Titulo = "Conheça sua carteira",
-                Descricao = "Confira seu saldo disponível.",
-                Tipo = "Diário",
-                Pontos = 10
-            },
-            new()
-            {
-                Titulo = "Aprenda algo novo",
-                Descricao = "Acesse uma lição de educação financeira.",
-                Tipo = "Diário",
-                Pontos = 15
-            },
-            new()
-            {
-                Titulo = "Planeje seu futuro",
-                Descricao = "Confira suas metas de economia.",
-                Tipo = "Semanal",
-                Pontos = 20
-            }
-        };
-
-        foreach (var modelo in modelos)
-        {
-            var inicio = modelo.Tipo == "Diário"
-                ? inicioDiario
-                : inicioSemanal;
-
-            var fim = modelo.Tipo == "Diário"
-                ? fimDiario
-                : fimSemanal;
-
-            var existe = await Context.Desafios.AnyAsync(d =>
-                d.UsuarioId == usuarioId &&
-                d.Titulo == modelo.Titulo &&
-                d.Tipo == modelo.Tipo &&
-                d.DataInicio == inicio);
-
-            if (!existe)
-            {
-                modelo.UsuarioId = usuarioId;
-                modelo.DataInicio = inicio;
-                modelo.DataFim = fim;
-
-                Context.Desafios.Add(modelo);
-            }
-        }
-
-        await Context.SaveChangesAsync();
-
-        // Carrega os desafios dos períodos atuais.
-        desafios = await Context.Desafios
-            .Where(d =>
-                d.UsuarioId == usuarioId &&
-                (
-                    (d.Tipo == "Diário" && d.DataInicio == inicioDiario) ||
-                    (d.Tipo == "Semanal" && d.DataInicio == inicioSemanal)
-                ))
-            .OrderBy(d => d.Concluido)
-            .ThenBy(d => d.Id)
-            .ToListAsync();
-
-        // Soma todos os pontos históricos do usuário.
         pontuacao = await Context.Desafios
             .Where(d => d.UsuarioId == usuarioId && d.Concluido)
             .SumAsync(d => (int?)d.Pontos) ?? 0;
-    }
-
-    private async Task ConcluirDesafio(Desafio desafio)
-    {
-        if (desafio.Concluido)
-            return;
-
-        desafio.Concluido = true;
-        desafio.DataConclusao = DateTime.UtcNow;
-
-        await Context.SaveChangesAsync();
-
-        await CarregarDesafios();
-
-        mensagem =
-            $"Desafio concluído! Você ganhou {desafio.Pontos} pontos! 🎉";
     }
 }
