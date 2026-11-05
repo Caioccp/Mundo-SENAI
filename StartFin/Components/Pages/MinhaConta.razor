@@ -216,6 +216,16 @@
 
             <div class="col-md-6">
                 <div class="conta-card">
+                    <div class="conta-icone">🎂</div>
+                    <span class="conta-label">IDADE</span>
+                    <div class="conta-valor">
+                        @(Idade.HasValue ? $"{Idade} anos" : "Não informada")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="conta-card">
                     <div class="conta-icone">🆔</div>
                     <span class="conta-label">ID DO USUÁRIO</span>
                     <div class="conta-valor">@usuario.Id</div>
@@ -382,6 +392,25 @@
 
 @code {
     private Usuario? usuario;
+
+    private int? Idade
+{
+    get
+    {
+        if (usuario?.DataNascimento == null)
+            return null;
+
+        var hoje = DateTime.Today;
+        var nascimento = usuario.DataNascimento.Value.Date;
+
+        int idade = hoje.Year - nascimento.Year;
+
+        if (nascimento.Date > hoje.AddYears(-idade))
+            idade--;
+
+        return idade;
+    }
+}
     private PreferenciasNotificacao? preferencias;
 
     private bool salvandoPreferencias = false;
