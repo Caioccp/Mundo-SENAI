@@ -363,137 +363,137 @@
     private string MensagemSalvamento = string.Empty;
 
     private List<Pergunta> Perguntas = new()
-    {
-        new(
-            "Você recebe uma mensagem dizendo que sua conta bancária será bloqueada e que precisa clicar em um link para resolver o problema. O que deve fazer?",
-            new()
-            {
-                "Clicar imediatamente para evitar o bloqueio.",
-                "Informar sua senha para confirmar sua identidade.",
-                "Não clicar e verificar a informação pelos canais oficiais do banco.",
-                "Encaminhar a mensagem para todos os seus contatos."
-            },
-            "Mensagens que criam urgência podem ser tentativas de golpe. Procure o aplicativo ou site oficial do banco para verificar qualquer aviso.",
-            "Não clicar e verificar a informação pelos canais oficiais do banco."
-        ),
+{
+    new(
+        "Você recebe um e-mail aparentemente enviado pelo banco, informando que houve uma tentativa de acesso à sua conta. A mensagem apresenta um link para verificar a atividade. Qual atitude é mais segura?",
+        new()
+        {
+            "Responder ao e-mail solicitando mais informações sobre o acesso.",
+            "Abrir o link, desde que a mensagem tenha o logotipo do banco.",
+            "Acessar o aplicativo ou site oficial por conta própria e verificar se existe algum alerta.",
+            "Encaminhar o e-mail para conhecidos perguntando se parece verdadeiro."
+        },
+        "Logotipos e nomes conhecidos podem ser utilizados em mensagens falsas. O mais seguro é acessar diretamente os canais oficiais, sem utilizar links recebidos inesperadamente.",
+        "Acessar o aplicativo ou site oficial por conta própria e verificar se existe algum alerta."
+    ),
 
-        new(
-            "Um amigo envia uma mensagem pedindo dinheiro por Pix, dizendo que está com muita urgência. Qual é a atitude mais segura?",
-            new()
-            {
-                "Transferir imediatamente porque conhece a pessoa.",
-                "Confirmar o pedido diretamente com o amigo por outro meio de comunicação.",
-                "Enviar o dinheiro e perguntar depois.",
-                "Compartilhar seus dados bancários para ajudar."
-            },
-            "Contas podem ser utilizadas por terceiros. Confirmar o pedido diretamente com a pessoa ajuda a evitar transferências para golpistas.",
-            "Confirmar o pedido diretamente com o amigo por outro meio de comunicação."
-        ),
+    new(
+        "Um colega informa que recebeu uma ligação de alguém que dizia trabalhar no banco e solicitava um código de confirmação para cancelar uma transferência suspeita. Por que essa situação exige cuidado?",
+        new()
+        {
+            "Porque códigos de confirmação são utilizados apenas para compras presenciais.",
+            "Porque o código pode permitir que outra pessoa confirme operações ou acesse uma conta.",
+            "Porque ligações telefônicas impedem que o banco identifique seus clientes.",
+            "Porque toda transferência suspeita é automaticamente cancelada após uma ligação."
+        },
+        "Códigos de confirmação são informações de segurança. Uma pessoa mal-intencionada pode tentar utilizá-los para autorizar operações ou acessar contas. Nunca compartilhe esses códigos.",
+        "Porque o código pode permitir que outra pessoa confirme operações ou acesse uma conta."
+    ),
 
-        new(
-            "Por que é importante utilizar senhas diferentes em serviços financeiros e outros aplicativos?",
-            new()
-            {
-                "Porque facilita que outras pessoas descubram suas senhas.",
-                "Porque elimina a necessidade de proteger o celular.",
-                "Porque impede qualquer tentativa de fraude.",
-                "Porque reduz o risco de uma senha descoberta dar acesso a várias contas."
-            },
-            "Se uma senha for descoberta, utilizar senhas diferentes dificulta que terceiros acessem outras contas com a mesma informação.",
-            "Porque reduz o risco de uma senha descoberta dar acesso a várias contas."
-        ),
+    new(
+        "Uma pessoa utiliza a mesma senha em seu e-mail e em seu aplicativo financeiro. Caso essa senha seja descoberta em outro serviço, qual pode ser a consequência?",
+        new()
+        {
+            "A senha será automaticamente alterada em todos os aplicativos.",
+            "Somente o serviço em que ocorreu o vazamento poderá ser afetado.",
+            "A autenticação em duas etapas será ativada automaticamente.",
+            "Outras contas que utilizam a mesma senha também poderão ficar vulneráveis."
+        },
+        "Reutilizar senhas aumenta os riscos porque uma senha descoberta em determinado serviço pode ser testada em outras contas. Senhas diferentes ajudam a limitar esse problema.",
+        "Outras contas que utilizam a mesma senha também poderão ficar vulneráveis."
+    ),
 
-        new(
-            "Ao realizar um Pix, qual informação deve ser conferida antes de confirmar a operação?",
-            new()
-            {
-                "Somente a cor do aplicativo.",
-                "A quantidade de contatos salvos no celular.",
-                "O nome do destinatário e o valor da transferência.",
-                "A marca do aparelho utilizado."
-            },
-            "Conferir o destinatário e o valor ajuda a evitar transferências incorretas e pagamentos para pessoas desconhecidas.",
-            "O nome do destinatário e o valor da transferência."
-        ),
+    new(
+        "Antes de confirmar um Pix, Mariana percebe que o nome apresentado na tela não corresponde à pessoa para quem pretendia enviar o dinheiro. O que ela deve fazer?",
+        new()
+        {
+            "Cancelar a operação e verificar novamente os dados do destinatário.",
+            "Confirmar a transferência, pois a chave Pix é suficiente para garantir a identidade.",
+            "Realizar outro Pix com um valor menor para testar.",
+            "Enviar o dinheiro e solicitar a devolução caso esteja incorreto."
+        },
+        "A conferência dos dados do destinatário é essencial. Se houver divergência, Mariana deve interromper a operação e verificar as informações antes de tentar novamente.",
+        "Cancelar a operação e verificar novamente os dados do destinatário."
+    ),
 
-        new(
-            "Uma loja desconhecida oferece um celular por um preço muito abaixo do valor normalmente praticado. O que é mais adequado fazer?",
-            new()
-            {
-                "Pesquisar a reputação da loja e verificar se o site é confiável antes de comprar.",
-                "Comprar imediatamente para aproveitar a oportunidade.",
-                "Informar todos os dados pessoais sem verificar o site.",
-                "Realizar o pagamento sem guardar o comprovante."
-            },
-            "Preços muito atrativos podem ser utilizados para chamar atenção em lojas falsas. Pesquisar a reputação e verificar a loja ajuda a evitar fraudes.",
-            "Pesquisar a reputação da loja e verificar se o site é confiável antes de comprar."
-        ),
+    new(
+        "Pedro precisa acessar sua conta financeira, mas está conectado a uma rede Wi-Fi pública. Qual comportamento demonstra maior cuidado com a segurança?",
+        new()
+        {
+            "Salvar a senha no navegador para facilitar o próximo acesso.",
+            "Compartilhar a conexão com outras pessoas para confirmar que ela funciona.",
+            "Evitar acessar serviços financeiros nessa rede e utilizar uma conexão confiável.",
+            "Desativar as proteções do celular para melhorar a conexão."
+        },
+        "Redes públicas podem apresentar riscos de segurança. Para acessar serviços financeiros, é preferível utilizar uma conexão confiável e manter as proteções do dispositivo ativadas.",
+        "Evitar acessar serviços financeiros nessa rede e utilizar uma conexão confiável."
+    ),
 
-        new(
-            "O que é a autenticação em duas etapas?",
-            new()
-            {
-                "Uma forma de compartilhar a senha com duas pessoas.",
-                "Uma proteção adicional que exige uma segunda confirmação de identidade.",
-                "Um aplicativo que elimina todas as fraudes.",
-                "Uma maneira de utilizar a mesma senha em várias contas."
-            },
-            "A autenticação em duas etapas acrescenta uma verificação além da senha, dificultando acessos não autorizados.",
-            "Uma proteção adicional que exige uma segunda confirmação de identidade."
-        ),
+    new(
+        "Uma loja virtual solicita dados pessoais e informações de pagamento, mas não apresenta identificação clara da empresa nem informações confiáveis sobre sua reputação. Qual análise é mais adequada?",
+        new()
+        {
+            "O preço baixo é suficiente para demonstrar que a loja é confiável.",
+            "É necessário verificar a identidade da loja, sua reputação e as condições da compra antes de fornecer informações.",
+            "A presença de imagens profissionais garante a segurança do site.",
+            "Qualquer loja que aceite Pix pode ser considerada confiável."
+        },
+        "A aparência de um site e as formas de pagamento não comprovam sua legitimidade. Verificar a empresa, sua reputação e as condições da compra ajuda a reduzir riscos.",
+        "É necessário verificar a identidade da loja, sua reputação e as condições da compra antes de fornecer informações."
+    ),
 
-        new(
-            "Uma pessoa desconhecida pede o código de confirmação recebido no celular, dizendo que precisa dele para liberar um benefício. O que você deve fazer?",
-            new()
-            {
-                "Enviar o código para receber o benefício.",
-                "Compartilhar também sua senha para agilizar o processo.",
-                "Publicar o código em uma rede social.",
-                "Não compartilhar o código com ninguém."
-            },
-            "Códigos de confirmação são informações de segurança. Compartilhá-los pode permitir que terceiros acessem suas contas.",
-            "Não compartilhar o código com ninguém."
-        ),
+    new(
+        "Uma pessoa perde o celular que utilizava para acessar seus serviços financeiros. Qual conjunto de medidas é mais adequado?",
+        new()
+        {
+            "Esperar alguns dias para verificar se alguém encontra o aparelho.",
+            "Publicar as senhas nas redes sociais para pedir ajuda.",
+            "Utilizar a mesma senha em outro aparelho para recuperar o acesso.",
+            "Bloquear o aparelho, comunicar o banco pelos canais oficiais e proteger os acessos às contas."
+        },
+        "Em caso de perda do aparelho, é importante agir rapidamente para reduzir riscos: bloquear o dispositivo, comunicar as instituições financeiras e proteger as contas vinculadas.",
+        "Bloquear o aparelho, comunicar o banco pelos canais oficiais e proteger os acessos às contas."
+    ),
 
-        new(
-            "Você percebe uma movimentação financeira que não reconhece em sua conta. Qual deve ser sua primeira atitude?",
-            new()
-            {
-                "Ignorar a movimentação.",
-                "Publicar seus dados bancários na internet.",
-                "Entrar em contato com o banco pelos canais oficiais e informar o ocorrido.",
-                "Enviar sua senha para alguém verificar."
-            },
-            "Ao identificar uma movimentação desconhecida, entre em contato com o banco pelos canais oficiais o quanto antes para receber orientações.",
-            "Entrar em contato com o banco pelos canais oficiais e informar o ocorrido."
-        ),
+    new(
+        "Uma pessoa recebe uma mensagem informando que ganhou um prêmio, mas precisa pagar uma taxa antecipada para liberá-lo. Qual característica pode indicar uma tentativa de fraude?",
+        new()
+        {
+            "A mensagem apresenta o nome completo do destinatário.",
+            "O prêmio é anunciado em uma página que utiliza imagens coloridas.",
+            "A cobrança antecipada é apresentada como condição para receber um benefício inesperado.",
+            "A mensagem informa uma data para divulgação dos resultados."
+        },
+        "Promessas de prêmios inesperados acompanhadas de cobranças antecipadas são um sinal de alerta. É importante verificar a promoção diretamente nos canais oficiais da organização.",
+        "A cobrança antecipada é apresentada como condição para receber um benefício inesperado."
+    ),
 
-        new(
-            "Por que é importante baixar aplicativos bancários somente de lojas oficiais?",
-            new()
-            {
-                "Porque isso ajuda a reduzir o risco de instalar aplicativos falsos ou modificados.",
-                "Porque todos os aplicativos oficiais são gratuitos.",
-                "Porque aplicativos de lojas oficiais nunca apresentam problemas.",
-                "Porque assim não é necessário utilizar senhas."
-            },
-            "Lojas oficiais oferecem mecanismos de verificação que ajudam a reduzir o risco de instalar aplicativos falsos. Ainda assim, é importante conferir o desenvolvedor.",
-            "Porque isso ajuda a reduzir o risco de instalar aplicativos falsos ou modificados."
-        ),
+    new(
+        "Uma pessoa ativa a autenticação em duas etapas em sua conta, mas recebe uma solicitação inesperada para aprovar um acesso que não reconhece. Qual deve ser sua atitude?",
+        new()
+        {
+            "Aprovar a solicitação para evitar o bloqueio da conta.",
+            "Ignorar o aviso e continuar utilizando a conta normalmente.",
+            "Compartilhar a notificação com outra pessoa para que ela aprove.",
+            "Recusar a solicitação e verificar a segurança da conta pelos canais oficiais."
+        },
+        "A autenticação em duas etapas oferece uma camada adicional de proteção, mas depende da atenção do usuário. Solicitações de acesso desconhecidas devem ser recusadas e investigadas.",
+        "Recusar a solicitação e verificar a segurança da conta pelos canais oficiais."
+    ),
 
-        new(
-            "Qual conjunto de atitudes representa um comportamento seguro ao utilizar serviços financeiros digitais?",
-            new()
-            {
-                "Compartilhar senhas, clicar em qualquer link e ignorar avisos.",
-                "Utilizar aplicativos oficiais, proteger senhas e conferir transferências antes de confirmar.",
-                "Aceitar pedidos urgentes de dinheiro sem verificar a identidade.",
-                "Informar códigos de confirmação para pessoas desconhecidas."
-            },
-            "A segurança digital depende de vários cuidados: proteger informações, utilizar serviços confiáveis e conferir as operações financeiras.",
-            "Utilizar aplicativos oficiais, proteger senhas e conferir transferências antes de confirmar."
-        )
-    };
+    new(
+        "Após perceber uma transferência que não reconhece, uma pessoa decide entrar em contato com o banco. Qual procedimento demonstra maior cuidado durante esse atendimento?",
+        new()
+        {
+            "Utilizar os canais oficiais, relatar a movimentação e seguir as orientações de segurança da instituição.",
+            "Enviar a senha completa para o primeiro contato que oferecer ajuda.",
+            "Conversar com perfis desconhecidos que prometem recuperar o dinheiro rapidamente.",
+            "Compartilhar códigos de confirmação para agilizar a análise."
+        },
+        "O contato deve ocorrer pelos canais oficiais da instituição. Senhas e códigos de confirmação não devem ser compartilhados, mesmo durante um atendimento.",
+        "Utilizar os canais oficiais, relatar a movimentação e seguir as orientações de segurança da instituição."
+    )
+};
 
     private void Selecionar(string opcao)
     {
