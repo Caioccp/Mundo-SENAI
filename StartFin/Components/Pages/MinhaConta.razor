@@ -234,6 +234,42 @@
 
         </div>
 
+        <!-- CONTA FAMILIAR -->
+@if (Idade.HasValue && Idade.Value >= 18)
+{
+    <div class="conta-card mb-4">
+        <h5 class="conta-secao">👨‍👩‍👧 Conta familiar</h5>
+
+        <p class="text-muted">
+            Gere um código para permitir que um familiar vincule
+            sua conta à dele.
+        </p>
+
+        @if (!string.IsNullOrWhiteSpace(usuario.CodigoVinculoFamiliar))
+        {
+            <span class="conta-label">SEU CÓDIGO FAMILIAR</span>
+            <div class="conta-valor mb-3">
+                @usuario.CodigoVinculoFamiliar
+            </div>
+        }
+        else
+        {
+            <button class="conta-botao"
+                    @onclick="GerarCodigoFamiliar"
+                    disabled="@gerandoCodigoFamiliar">
+                @(gerandoCodigoFamiliar ? "Gerando..." : "Gerar código familiar")
+            </button>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(mensagemVinculo))
+        {
+            <div class="alert alert-danger mt-3">
+                @mensagemVinculo
+            </div>
+        }
+    </div>
+}
+
         <!-- SEGURANÇA DA CONTA -->
         <div class="conta-card mb-4">
             <h5 class="conta-secao">Segurança da conta</h5>
@@ -394,6 +430,7 @@
     private Usuario? usuario;
 
     private int? Idade
+
 {
     get
     {
@@ -412,6 +449,9 @@
     }
 }
     private PreferenciasNotificacao? preferencias;
+
+    private bool gerandoCodigoFamiliar = false;
+    private string mensagemVinculo = "";
 
     private bool salvandoPreferencias = false;
     private bool sucessoPreferencias = false;
@@ -434,6 +474,36 @@
     private string novaSenha = "";
     private string confirmarNovaSenha = "";
     private string mensagemSenha = "";
+
+    private async Task GerarCodigoFamiliar()
+{
+    if (usuario is null || !Idade.HasValue || Idade.Value < 18)
+        return;
+
+    if (!string.IsNullOrWhiteSpace(usuario.CodigoVinculoFamiliar))
+        return;
+
+    gerandoCodigoFamiliar = true;
+    mensagemVinculo = "";
+
+    try
+    {
+        usuario.CodigoVinculoFamiliar =
+            "SF-" + Guid.NewGuid().ToString("N")[..12].ToUpperInvariant();
+
+        var resultado = await UserManager.UpdateAsync(usuario);
+
+        if (!resultado.Succeeded)
+        {
+            usuario.CodigoVinculoFamiliar = null;
+            mensagemVinculo = "Não foi possível gerar o código. Tente novamente.";
+        }
+    }
+    finally
+    {
+        gerandoCodigoFamiliar = false;
+    }
+}
 
     protected override async Task OnInitializedAsync()
     {

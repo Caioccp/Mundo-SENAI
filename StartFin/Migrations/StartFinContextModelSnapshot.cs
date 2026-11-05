@@ -408,6 +408,9 @@ namespace StartFin.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CodigoVinculoFamiliar")
+                        .HasColumnType("text");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -452,6 +455,9 @@ namespace StartFin.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("ResponsavelId")
+                        .HasColumnType("text");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
@@ -464,12 +470,17 @@ namespace StartFin.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CodigoVinculoFamiliar")
+                        .IsUnique();
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
+
+                    b.HasIndex("ResponsavelId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -578,6 +589,21 @@ namespace StartFin.Migrations
                         .IsRequired();
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("StartFin.Modelos.Usuario", b =>
+                {
+                    b.HasOne("StartFin.Modelos.Usuario", "Responsavel")
+                        .WithMany("Dependentes")
+                        .HasForeignKey("ResponsavelId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Responsavel");
+                });
+
+            modelBuilder.Entity("StartFin.Modelos.Usuario", b =>
+                {
+                    b.Navigation("Dependentes");
                 });
 #pragma warning restore 612, 618
         }

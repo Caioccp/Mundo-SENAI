@@ -2,6 +2,7 @@
 @page "/cadastro"
 @using StartFin.Modelos
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<Usuario> UserManager
 @inject NavigationManager Navigation
 
@@ -24,8 +25,46 @@
         <div class="mb-3">
             <label class="form-label">Data de nascimento</label>
             <InputDate class="form-control"
-                        @bind-Value="novoUsuario.DataNascimento" />
+                       @bind-Value="novoUsuario.DataNascimento" />
         </div>
+
+        @if (IdadeCadastro.HasValue && IdadeCadastro.Value < 18)
+        {
+            <div class="mb-3">
+                <label class="form-label">
+                    Código familiar
+                    @if (IdadeCadastro.Value < 16)
+                    {
+                        <span class="text-danger">*</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">(opcional)</span>
+                    }
+                </label>
+
+                <InputText class="form-control"
+                           @bind-Value="codigoFamiliar"
+                           placeholder="Ex.: SF-XXXXXXXXXXXX" />
+
+                <small class="text-muted">
+                    @if (IdadeCadastro.Value < 16)
+                    {
+                        <span>
+                            Para menores de 16 anos, o código de um responsável
+                            é obrigatório.
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            Para quem tem 16 ou 17 anos, o vínculo familiar
+                            é opcional, mas recomendado.
+                        </span>
+                    }
+                </small>
+            </div>
+        }
 
         <div class="mb-3">
             <label class="form-label">Nome de usuário</label>
@@ -71,8 +110,31 @@
     private string nomeUsuario = "";
     private string senha = "";
     private string confirmarSenha = "";
+    private string codigoFamiliar = "";
     private string mensagem = "";
     private string classeMensagem = "alert-danger";
+
+    private int? IdadeCadastro
+    {
+        get
+        {
+            if (!novoUsuario.DataNascimento.HasValue)
+                return null;
+
+            return CalcularIdade(novoUsuario.DataNascimento.Value);
+        }
+    }
+
+    private int CalcularIdade(DateTime nascimento)
+    {
+        var hoje = DateTime.Today;
+        int idade = hoje.Year - nascimento.Year;
+
+        if (nascimento.Date > hoje.AddYears(-idade))
+            idade--;
+
+        return idade;
+    }
 
     private async Task Cadastrar()
     {
@@ -86,16 +148,47 @@
         }
 
         if (!novoUsuario.DataNascimento.HasValue)
-{
-    mensagem = "Informe sua data de nascimento.";
-    return;
-}
+        {
+            mensagem = "Informe sua data de nascimento.";
+            return;
+        }
 
-if (novoUsuario.DataNascimento.Value.Date > DateTime.Today)
-{
-    mensagem = "A data de nascimento não pode ser futura.";
-    return;
-}
+        if (novoUsuario.DataNascimento.Value.Date > DateTime.Today)
+        {
+            mensagem = "A data de nascimento não pode ser futura.";
+            return;
+        }
+
+        int idade = CalcularIdade(novoUsuario.DataNascimento.Value);
+
+        // Verifica o código familiar para menores de 18 anos.
+        if (idade < 18)
+        {
+            if (idade < 16 && string.IsNullOrWhiteSpace(codigoFamiliar))
+            {
+                mensagem = "O código familiar é obrigatório para menores de 16 anos.";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(codigoFamiliar))
+            {
+                string codigo = codigoFamiliar.Trim().ToUpperInvariant();
+
+                var responsavel = await UserManager.Users
+                    .FirstOrDefaultAsync(u =>
+                        u.CodigoVinculoFamiliar == codigo);
+
+                if (responsavel == null ||
+                    !responsavel.DataNascimento.HasValue ||
+                    CalcularIdade(responsavel.DataNascimento.Value) < 18)
+                {
+                    mensagem = "Código familiar inválido. Confira o código com seu responsável.";
+                    return;
+                }
+
+                novoUsuario.ResponsavelId = responsavel.Id;
+            }
+        }
 
         nomeUsuario = nomeUsuario.Trim();
 
@@ -127,6 +220,11 @@ if (novoUsuario.DataNascimento.Value.Date > DateTime.Today)
 
         novoUsuario.UserName = nomeUsuario;
         novoUsuario.Email = null;
+
+        // Converte a data de nascimento para UTC antes de salvar.
+        novoUsuario.DataNascimento = DateTime.SpecifyKind(
+            novoUsuario.DataNascimento.Value,
+            DateTimeKind.Utc);
 
         var resultado = await UserManager.CreateAsync(novoUsuario, senha);
 

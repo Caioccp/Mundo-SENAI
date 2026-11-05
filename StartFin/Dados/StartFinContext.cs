@@ -33,5 +33,15 @@ public class StartFinContext : IdentityDbContext<Usuario>
         modelBuilder.Entity<Conquista>()
             .HasIndex(c => new { c.UsuarioId, c.Codigo })
             .IsUnique();
+
+        modelBuilder.Entity<Usuario>()
+            .HasOne(u => u.Responsavel)
+            .WithMany(u => u.Dependentes)
+            .HasForeignKey(u => u.ResponsavelId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Usuario>()
+            .HasIndex(u => u.CodigoVinculoFamiliar)
+            .IsUnique();
     }
 }
