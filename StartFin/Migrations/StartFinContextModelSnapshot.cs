@@ -190,6 +190,10 @@ namespace StartFin.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("Concluido")
                         .HasColumnType("boolean");
 
@@ -206,8 +210,18 @@ namespace StartFin.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Dificuldade")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("MetaProgresso")
+                        .HasColumnType("numeric");
+
                     b.Property<int>("Pontos")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("ProgressoAtual")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
