@@ -9,6 +9,8 @@
 @inject UserManager<Usuario> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject PreferenciasNotificacaoServico PreferenciasServico
+@inject NavigationManager Navigation
+
 
 <PageTitle>Minha Conta | StartFin</PageTitle>
 
@@ -421,8 +423,69 @@
     </div>
 </div>
 
+<!-- EXCLUIR CONTA -->
+<div class="conta-card mb-4">
+    <h5 class="conta-secao text-danger">Excluir minha conta</h5>
 
+    <p class="text-muted">
+        Essa ação apagará permanentemente sua conta e os dados
+        associados a ela. Essa operação não poderá ser desfeita.
+    </p>
+
+    @if (!string.IsNullOrWhiteSpace(mensagemExclusao))
+{
+    <div class="alert alert-danger">
+        @mensagemExclusao
+    </div>
+}
+
+    @if (!exibindoExclusao)
+    {
+        <button class="btn btn-danger"
+                @onclick="() => exibindoExclusao = true">
+            🗑️ Excluir minha conta
+        </button>
     }
+    else
+    {
+        <form method="post" action="/excluir-conta">
+            <AntiforgeryToken />
+
+            <div class="alert alert-warning">
+                Para confirmar, informe sua senha atual e digite
+                <strong>EXCLUIR</strong> no campo de confirmação.
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Senha atual</label>
+                <input type="password"
+                       name="senha"
+                       class="form-control"
+                       required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Digite EXCLUIR</label>
+                <input type="text"
+                       name="confirmacao"
+                       class="form-control"
+                       required />
+            </div>
+
+            <button type="submit" class="btn btn-danger">
+                Confirmar exclusão permanente
+            </button>
+
+            <button type="button"
+                    class="conta-cancelar ms-2"
+                    @onclick="() => exibindoExclusao = false">
+                Cancelar
+            </button>
+        </form>
+    }
+</div>
+
+}
 
 </div>
 
@@ -452,6 +515,9 @@
 
     private bool gerandoCodigoFamiliar = false;
     private string mensagemVinculo = "";
+    private string mensagemExclusao = "";
+
+    private bool exibindoExclusao = false;
 
     private bool salvandoPreferencias = false;
     private bool sucessoPreferencias = false;
@@ -509,6 +575,20 @@
     {
         try
         {
+
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(
+    Navigation.ToAbsoluteUri(Navigation.Uri).Query);
+
+if (query.TryGetValue("exclusao", out var status))
+{
+    mensagemExclusao = status.ToString() switch
+    {
+        "senha" => "A senha atual está incorreta.",
+        "confirmacao" => "Confirme digitando EXCLUIR e informe sua senha.",
+        _ => "Não foi possível excluir sua conta. Tente novamente."
+    };
+}
+
             var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             usuario = await UserManager.GetUserAsync(estado.User);
 
