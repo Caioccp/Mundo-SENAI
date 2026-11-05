@@ -55,13 +55,12 @@
                         @foreach (var usuario in usuarios)
                         {
                             var ehDesenvolvedor = desenvolvedorIds.Contains(usuario.Id);
-                            
+
                             <tr>
                                 <td>@usuario.UserName</td>
                                 <td>@usuario.NomeCompleto</td>
                                 <td>
-                                    @usuario.DataCriacao.ToLocalTime()
-                                        .ToString("dd/MM/yyyy")
+                                    @(usuario.DataCriacao.ToLocalTime().ToString("dd/MM/yyyy"))
                                 </td>
                                 <td>
                                     @if (ehDesenvolvedor)
