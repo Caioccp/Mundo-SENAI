@@ -1,0 +1,221 @@
+
+@page "/conquistas"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@using StartFin.Dados
+@using StartFin.Modelos
+@using StartFin.Servicos
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject StartFinContext Context
+@inject ConquistaServico ConquistaServico
+
+<PageTitle>Conquistas | StartFin</PageTitle>
+
+<div class="container mt-4">
+
+    <h1>🏆 Minhas conquistas</h1>
+
+    <p>
+        Complete desafios, economize e aprenda para desbloquear
+        medalhas especiais!
+    </p>
+
+    @if (carregando)
+    {
+        <p>Carregando conquistas...</p>
+    }
+    else if (string.IsNullOrWhiteSpace(usuarioId))
+    {
+        <div class="alert alert-info">
+            Faça login para visualizar suas conquistas.
+        </div>
+    }
+    else
+    {
+        <div class="card p-3 mb-4">
+            <h2>🏅 Meu progresso</h2>
+
+            <h3>@conquistasDesbloqueadas.Count de @todasConquistas.Count</h3>
+
+            <div class="progress mb-2" style="height: 15px;">
+                <div class="progress-bar bg-success"
+                     role="progressbar"
+                     style="width: @(percentual)%"
+                     aria-valuenow="@percentual"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                </div>
+            </div>
+
+            <small>@percentual.ToString("0")% das conquistas desbloqueadas</small>
+        </div>
+
+        <h2 class="mb-3">⭐ Todas as conquistas</h2>
+
+        <div class="row">
+
+            @foreach (var conquista in todasConquistas)
+            {
+                var desbloqueada = conquistasDesbloqueadas
+                    .FirstOrDefault(c => c.Codigo == conquista.Codigo);
+
+                <div class="col-md-6 col-lg-4 mb-3">
+
+                    <div class="card p-3 h-100">
+
+                        <div class="d-flex align-items-center gap-3 mb-3">
+
+                            <span style="font-size: 2.5rem;">
+                                @(desbloqueada != null ? conquista.Icone : "🔒")
+                            </span>
+
+                            <div>
+                                <h3 class="h5 mb-1">
+                                    @conquista.Nome
+                                </h3>
+
+                                @if (desbloqueada != null)
+                                {
+                                    <span class="badge bg-success">
+                                        Desbloqueada
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        Bloqueada
+                                    </span>
+                                }
+                            </div>
+
+                        </div>
+
+                        <p>@conquista.Descricao</p>
+
+                        @if (desbloqueada != null)
+                        {
+                            <small class="text-success mt-auto">
+                                Desbloqueada em:
+                                @desbloqueada.DataDesbloqueio.ToLocalTime().ToString("dd/MM/yyyy")
+                            </small>
+                        }
+                        else
+                        {
+                            <small class="text-muted mt-auto">
+                                Como desbloquear: @conquista.Condicao
+                            </small>
+                        }
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+</div>
+
+@code {
+    private string usuarioId = "";
+    private bool carregando = true;
+
+    private List<Conquista> conquistasDesbloqueadas = new();
+
+    private readonly List<ConquistaExibicao> todasConquistas = new()
+    {
+        new(
+            "primeiros_passos",
+            "Primeiros passos",
+            "Você concluiu seu primeiro desafio!",
+            "🌱",
+            "Concluir pelo menos um desafio."
+        ),
+
+        new(
+            "primeiro_investimento",
+            "Primeiro investimento",
+            "Você já guardou R$ 50 no total!",
+            "💰",
+            "Guardar R$ 50 ou mais nas suas metas."
+        ),
+
+        new(
+            "estudante_dedicado",
+            "Estudante dedicado",
+            "Você concluiu quatro quizzes diferentes!",
+            "🧠",
+            "Concluir quatro quizzes diferentes."
+        ),
+
+        new(
+            "aprendiz",
+            "Aprendiz",
+            "Você alcançou o nível 2!",
+            "⭐",
+            "Acumular 50 XP."
+        ),
+
+        new(
+            "mestre_financeiro",
+            "Mestre financeiro",
+            "Você alcançou o nível máximo!",
+            "👑",
+            "Acumular 500 XP."
+        )
+    };
+
+    private double percentual =>
+        todasConquistas.Count > 0
+            ? (double)conquistasDesbloqueadas.Count /
+              todasConquistas.Count * 100
+            : 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var estado = await AuthStateProvider
+                .GetAuthenticationStateAsync();
+
+            usuarioId = estado.User
+                .FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+
+            if (!string.IsNullOrWhiteSpace(usuarioId))
+            {
+                var pontuacao = await Context.Desafios
+                    .Where(d =>
+                        d.UsuarioId == usuarioId &&
+                        d.Concluido)
+                    .SumAsync(d => (int?)d.Pontos) ?? 0;
+
+                await ConquistaServico.VerificarConquistasAsync(
+                    usuarioId,
+                    pontuacao);
+
+                conquistasDesbloqueadas = await Context.Conquistas
+                    .Where(c => c.UsuarioId == usuarioId)
+                    .OrderBy(c => c.DataDesbloqueio)
+                    .ToListAsync();
+            }
+        }
+        catch
+        {
+            // Evita interromper a página caso ocorra uma falha.
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private record ConquistaExibicao(
+        string Codigo,
+        string Nome,
+        string Descricao,
+        string Icone,
+        string Condicao
+    );
+}

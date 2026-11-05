@@ -182,6 +182,45 @@ namespace StartFin.Migrations
                     b.ToTable("Carteiras");
                 });
 
+            modelBuilder.Entity("StartFin.Modelos.Conquista", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DataDesbloqueio")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Icone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId", "Codigo")
+                        .IsUnique();
+
+                    b.ToTable("Conquistas");
+                });
+
             modelBuilder.Entity("StartFin.Modelos.Desafio", b =>
                 {
                     b.Property<int>("Id")
@@ -484,6 +523,17 @@ namespace StartFin.Migrations
                 });
 
             modelBuilder.Entity("StartFin.Modelos.Carteira", b =>
+                {
+                    b.HasOne("StartFin.Modelos.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("StartFin.Modelos.Conquista", b =>
                 {
                     b.HasOne("StartFin.Modelos.Usuario", "Usuario")
                         .WithMany()

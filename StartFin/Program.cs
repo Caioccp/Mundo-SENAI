@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<CarteiraServico>();
 builder.Services.AddScoped<DesafioServico>();
+builder.Services.AddScoped<ConquistaServico>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

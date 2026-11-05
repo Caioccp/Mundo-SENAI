@@ -11,6 +11,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject StartFinContext Context
 @inject DesafioServico DesafioServico
+@inject ConquistaServico ConquistaServico
 
 <PageTitle>Desafios | StartFin</PageTitle>
 
@@ -299,14 +300,19 @@ private void AtualizarNivel()
     }
 }
 
-    // Carrega os desafios e atualiza a pontuação histórica.
-    private async Task CarregarDesafios()
-    {
-        desafios = await DesafioServico.CarregarDesafiosAsync(usuarioId);
+    // Carrega os desafios, atualiza a pontuação e verifica conquistas.
+private async Task CarregarDesafios()
+{
+    desafios = await DesafioServico.CarregarDesafiosAsync(usuarioId);
 
-        pontuacao = await Context.Desafios
-            .Where(d => d.UsuarioId == usuarioId && d.Concluido)
-            .SumAsync(d => (int?)d.Pontos) ?? 0;
-            AtualizarNivel();
-    }
+    pontuacao = await Context.Desafios
+        .Where(d => d.UsuarioId == usuarioId && d.Concluido)
+        .SumAsync(d => (int?)d.Pontos) ?? 0;
+
+    AtualizarNivel();
+
+    await ConquistaServico.VerificarConquistasAsync(
+        usuarioId,
+        pontuacao);
+}
 }
