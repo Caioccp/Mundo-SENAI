@@ -34,6 +34,58 @@
         <small>Todos os pontos conquistados até hoje.</small>
     </div>
 
+    
+<div class="card p-3 mb-4">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+        <div>
+            <h2>🏅 Meu nível</h2>
+            <h3>Nível @nivel - @nomeNivel</h3>
+        </div>
+
+        <span class="badge bg-success fs-6">
+            @pontuacao XP
+        </span>
+
+    </div>
+
+    @if (pontuacao >= 500)
+    {
+        <p class="text-success fw-bold mt-3">
+            🎉 Você alcançou o nível máximo!
+        </p>
+    }
+    else
+    {
+        <div class="progress mt-3 mb-2" style="height: 15px;">
+
+            <div class="progress-bar bg-success"
+                 role="progressbar"
+                 style="width: @(progressoNivel)%"
+                 aria-valuenow="@progressoNivel"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+            </div>
+
+        </div>
+
+        <div class="d-flex justify-content-between flex-wrap">
+
+            <small>
+                @xpDentroNivel / @xpNecessarioNivel XP neste nível
+            </small>
+
+            <small>
+                Faltam @xpFaltando XP para evoluir
+            </small>
+
+        </div>
+    }
+
+</div>
+
+
     @if (carregando)
     {
         <p>Carregando desafios...</p>
@@ -158,6 +210,15 @@
 
     private bool carregando = true;
 
+    private int nivel = 1;
+    private string nomeNivel = "Iniciante";
+
+    private int xpDentroNivel;
+    private int xpNecessarioNivel;
+    private int xpFaltando;
+
+    private double progressoNivel;
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -189,6 +250,55 @@
         mensagem = null;
     }
 
+    // Calcula o nível de acordo com a pontuação acumulada.
+private void AtualizarNivel()
+{
+    int[] limites = { 0, 50, 150, 300, 500 };
+
+    string[] nomes =
+    {
+        "Iniciante",
+        "Aprendiz",
+        "Organizado",
+        "Planejador",
+        "Mestre financeiro"
+    };
+
+    if (pontuacao >= 500)
+    {
+        nivel = 5;
+        nomeNivel = nomes[4];
+
+        xpDentroNivel = 500;
+        xpNecessarioNivel = 500;
+        xpFaltando = 0;
+        progressoNivel = 100;
+
+        return;
+    }
+
+    for (int i = 0; i < limites.Length - 1; i++)
+    {
+        if (pontuacao >= limites[i] &&
+            pontuacao < limites[i + 1])
+        {
+            nivel = i + 1;
+            nomeNivel = nomes[i];
+
+            xpDentroNivel = pontuacao - limites[i];
+
+            xpNecessarioNivel = limites[i + 1] - limites[i];
+
+            xpFaltando = limites[i + 1] - pontuacao;
+
+            progressoNivel =
+                (double)xpDentroNivel / xpNecessarioNivel * 100;
+
+            break;
+        }
+    }
+}
+
     // Carrega os desafios e atualiza a pontuação histórica.
     private async Task CarregarDesafios()
     {
@@ -197,5 +307,6 @@
         pontuacao = await Context.Desafios
             .Where(d => d.UsuarioId == usuarioId && d.Concluido)
             .SumAsync(d => (int?)d.Pontos) ?? 0;
+            AtualizarNivel();
     }
 }
