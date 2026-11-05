@@ -196,6 +196,12 @@ namespace StartFin.Migrations
                     b.Property<DateTime?>("DataConclusao")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("DataFim")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DataInicio")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasColumnType("text");

@@ -16,6 +16,10 @@ public class Desafio
 
     public DateTime? DataConclusao { get; set; }
 
+    public DateTime DataInicio { get; set; }
+
+    public DateTime DataFim { get; set; }
+
     public string UsuarioId { get; set; } = string.Empty;
 
     public Usuario? Usuario { get; set; }
