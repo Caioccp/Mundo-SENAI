@@ -24,4 +24,10 @@ public class Usuario : IdentityUser
 
     // Hash do código secreto de recuperação de senha.
     public string? CodigoRecuperacaoSenhaHash { get; set; }
+
+    // Hash do token temporário de redefinição de senha.
+public string? TokenRecuperacaoSenhaHash { get; set; }
+
+// Data e horário em que o token temporário expira.
+public DateTime? TokenRecuperacaoSenhaExpiraEm { get; set; }
 }

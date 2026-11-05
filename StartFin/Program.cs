@@ -108,6 +108,191 @@ app.MapPost("/login", async (
     return Results.Redirect("/entrar?erro=1");
 });
 
+
+ // FINALIZAR RECUPERAÇÃO DE SENHA
+app.MapPost("/finalizar-recuperacao", async (
+    HttpContext context,
+    UserManager<Usuario> userManager,
+    IPasswordHasher<Usuario> passwordHasher,
+    Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery) =>
+{
+    await antiforgery.ValidateRequestAsync(context);
+
+    var falha = Results.Redirect("/nova-senha?erro=1");
+
+    var formulario = await context.Request.ReadFormAsync();
+
+    var novaSenha = formulario["novaSenha"].ToString();
+    var confirmarSenha = formulario["confirmarSenha"].ToString();
+
+    if (string.IsNullOrWhiteSpace(novaSenha) ||
+        novaSenha != confirmarSenha)
+        return falha;
+
+    // Recupera a autorização temporária.
+    var cookie = context.Request.Cookies["StartFinRecuperacao"];
+
+    if (string.IsNullOrWhiteSpace(cookie))
+        return falha;
+
+    var partes = cookie.Split(':', 2);
+
+    if (partes.Length != 2)
+        return falha;
+
+    var usuario = await userManager.FindByIdAsync(partes[0]);
+    var token = partes[1];
+
+    if (usuario == null ||
+        string.IsNullOrWhiteSpace(usuario.TokenRecuperacaoSenhaHash) ||
+        usuario.TokenRecuperacaoSenhaExpiraEm == null)
+        return falha;
+
+    // Confere a validade do token temporário.
+    if (usuario.TokenRecuperacaoSenhaExpiraEm.Value <= DateTime.UtcNow)
+        return falha;
+
+    var verificacao = passwordHasher.VerifyHashedPassword(
+        usuario,
+        usuario.TokenRecuperacaoSenhaHash,
+        token);
+
+    if (verificacao == PasswordVerificationResult.Failed)
+        return falha;
+
+    // Gera o token oficial do Identity para redefinir a senha.
+    var tokenIdentity = await userManager.GeneratePasswordResetTokenAsync(usuario);
+
+    var resultadoSenha = await userManager.ResetPasswordAsync(
+        usuario,
+        tokenIdentity,
+        novaSenha);
+
+    if (!resultadoSenha.Succeeded)
+        return falha;
+
+    // Invalida a autorização temporária após o uso.
+    usuario.TokenRecuperacaoSenhaHash = null;
+    usuario.TokenRecuperacaoSenhaExpiraEm = null;
+
+    await userManager.UpdateAsync(usuario);
+
+    context.Response.Cookies.Delete(
+        "StartFinRecuperacao",
+        new CookieOptions
+        {
+            Path = "/",
+            Secure = context.Request.IsHttps,
+            SameSite = SameSiteMode.Strict
+        });
+
+    return Results.Redirect("/entrar?senhaRedefinida=1");
+});
+
+// INICIAR RECUPERAÇÃO DE SENHA
+app.MapPost("/iniciar-recuperacao", async (
+    HttpContext context,
+    UserManager<Usuario> userManager,
+    IPasswordHasher<Usuario> passwordHasher,
+    Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery) =>
+{
+    await antiforgery.ValidateRequestAsync(context);
+
+    var formulario = await context.Request.ReadFormAsync();
+
+    var nomeUsuario = formulario["usuario"].ToString().Trim();
+    var nomeCompleto = formulario["nomeCompleto"].ToString().Trim();
+    var nascimentoTexto = formulario["dataNascimento"].ToString();
+    var codigo = formulario["codigoRecuperacao"].ToString().Trim();
+
+    // Todas as falhas levam à mesma resposta.
+    var falha = Results.Redirect("/recuperar-senha?erro=1");
+
+    if (string.IsNullOrWhiteSpace(nomeUsuario) ||
+        string.IsNullOrWhiteSpace(nomeCompleto) ||
+        string.IsNullOrWhiteSpace(codigo))
+        return falha;
+
+    if (!DateTime.TryParseExact(
+        nascimentoTexto,
+        "yyyy-MM-dd",
+        System.Globalization.CultureInfo.InvariantCulture,
+        System.Globalization.DateTimeStyles.None,
+        out var nascimento))
+        return falha;
+
+    var usuario = await userManager.FindByNameAsync(nomeUsuario);
+
+    if (usuario == null ||
+        string.IsNullOrWhiteSpace(usuario.NomeCompleto) ||
+        usuario.DataNascimento == null ||
+        string.IsNullOrWhiteSpace(usuario.CodigoRecuperacaoSenhaHash))
+        return falha;
+
+    // Confere nome completo e data de nascimento.
+    if (!string.Equals(
+        usuario.NomeCompleto.Trim(),
+        nomeCompleto,
+        StringComparison.OrdinalIgnoreCase))
+        return falha;
+
+    if (usuario.DataNascimento.Value.Date != nascimento.Date)
+        return falha;
+
+    // Confere se a pessoa tem pelo menos 18 anos.
+    var hoje = DateTime.UtcNow.Date;
+    var idade = hoje.Year - nascimento.Year;
+
+    if (nascimento.Date > hoje.AddYears(-idade))
+        idade--;
+
+    if (idade < 18)
+        return falha;
+
+    // Confere o código secreto.
+    var verificacao = passwordHasher.VerifyHashedPassword(
+        usuario,
+        usuario.CodigoRecuperacaoSenhaHash,
+        codigo);
+
+    if (verificacao == PasswordVerificationResult.Failed)
+        return falha;
+
+    // Gera um token temporário aleatório.
+    var token = Convert.ToBase64String(
+        System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
+        .TrimEnd('=')
+        .Replace('+', '-')
+        .Replace('/', '_');
+
+    usuario.TokenRecuperacaoSenhaHash =
+        passwordHasher.HashPassword(usuario, token);
+
+    usuario.TokenRecuperacaoSenhaExpiraEm =
+        DateTime.UtcNow.AddMinutes(10);
+
+    var resultado = await userManager.UpdateAsync(usuario);
+
+    if (!resultado.Succeeded)
+        return falha;
+
+    // O token original fica somente em um cookie protegido contra JavaScript.
+    context.Response.Cookies.Append(
+        "StartFinRecuperacao",
+        usuario.Id + ":" + token,
+        new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = context.Request.IsHttps,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(10),
+            Path = "/"
+        });
+
+    return Results.Redirect("/nova-senha");
+});
+
+
 // GERENCIAR SESSÃO
 app.MapPost("/logout", async (
     HttpContext context,
