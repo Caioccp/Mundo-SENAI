@@ -188,11 +188,14 @@ private void AtualizarDataNascimento()
 {
     get
     {
-        if (!mesNascimento.HasValue || !anoNascimento.HasValue)
+        if (!mesNascimento.HasValue)
             return 31;
 
+        // Se ainda não escolheu o ano, considera um ano bissexto.
+        int ano = anoNascimento ?? 2000;
+
         return DateTime.DaysInMonth(
-            anoNascimento.Value,
+            ano,
             mesNascimento.Value);
     }
 }
