@@ -363,137 +363,137 @@
     private string MensagemSalvamento = string.Empty;
 
     private List<Pergunta> Perguntas = new()
-    {
-        new(
-            "João deseja comprar um computador no futuro. O que ele deve fazer primeiro?",
-            new()
-            {
-                "Comprar o primeiro computador que encontrar.",
-                "Definir claramente seu objetivo e planejar como alcançá-lo.",
-                "Gastar todo o dinheiro disponível e esperar receber mais.",
-                "Desistir da compra porque ela exige planejamento."
-            },
-            "Uma meta financeira começa com um objetivo definido. Saber o que deseja conquistar ajuda a organizar os próximos passos.",
-            "Definir claramente seu objetivo e planejar como alcançá-lo."
-        ),
+{
+    new(
+        "Marina quer comprar uma bicicleta de R$ 900,00 em 6 meses. Ela já possui R$ 180,00 guardados. Quanto precisa economizar por mês para alcançar a meta?",
+        new()
+        {
+            "R$ 100,00 por mês, considerando o valor que ainda falta.",
+            "R$ 120,00 por mês, considerando o preço total.",
+            "R$ 150,00 por mês, considerando o prazo disponível.",
+            "R$ 180,00 por mês, considerando sua economia atual."
+        },
+        "Marina ainda precisa juntar R$ 720,00. Dividindo esse valor pelos 6 meses disponíveis, ela precisa economizar R$ 120,00 por mês.",
+        "R$ 120,00 por mês, considerando o preço total."
+    ),
 
-        new(
-            "Mariana quer comprar um fone novo, mas não precisa dele imediatamente. Qual atitude pode ajudá-la a alcançar esse objetivo?",
-            new()
-            {
-                "Guardar dinheiro aos poucos e acompanhar seu progresso.",
-                "Comprar por impulso antes de pesquisar.",
-                "Utilizar o dinheiro destinado às despesas importantes.",
-                "Esperar que outra pessoa pague pelo produto."
-            },
-            "Economizar gradualmente e acompanhar o progresso são atitudes que ajudam a alcançar uma meta sem comprometer outras necessidades.",
-            "Guardar dinheiro aos poucos e acompanhar seu progresso."
-        ),
+    new(
+        "Pedro estabeleceu uma meta de economizar R$ 1.200,00 em um ano. Após quatro meses, percebeu que guardou apenas R$ 250,00. Qual atitude seria mais adequada?",
+        new()
+        {
+            "Desistir da meta porque o planejamento inicial não foi cumprido.",
+            "Avaliar suas economias e reorganizar os valores que consegue guardar.",
+            "Utilizar crédito para completar imediatamente o valor planejado.",
+            "Ignorar o progresso e manter o mesmo planejamento."
+        },
+        "Quando uma meta não está avançando como esperado, é importante analisar a situação e ajustar o planejamento à realidade financeira.",
+        "Avaliar suas economias e reorganizar os valores que consegue guardar."
+    ),
 
-        new(
-            "Pedro deseja economizar, mas sempre acaba gastando o dinheiro com compras que não havia planejado. O que pode ajudá-lo?",
-            new()
-            {
-                "Deixar de acompanhar seus gastos.",
-                "Comprar sempre que encontrar uma promoção.",
-                "Estabelecer limites para os gastos e evitar compras por impulso.",
-                "Desistir de qualquer objetivo financeiro."
-            },
-            "Estabelecer limites e pensar antes de comprar ajuda a controlar os impulsos e manter o foco nos objetivos.",
-            "Estabelecer limites para os gastos e evitar compras por impulso."
-        ),
+    new(
+        "Uma pessoa possui R$ 500,00 disponíveis e pretende dividir esse valor entre uma meta de curto prazo e uma reserva para imprevistos. Qual decisão demonstra melhor organização?",
+        new()
+        {
+            "Destinar todo o dinheiro à compra desejada, sem considerar imprevistos.",
+            "Gastar uma parte e deixar o restante sem finalidade definida.",
+            "Escolher a compra mais cara e adiar qualquer economia.",
+            "Definir quanto será destinado a cada objetivo, considerando suas prioridades."
+        },
+        "Dividir o dinheiro de acordo com prioridades permite avançar em diferentes objetivos sem deixar de considerar possíveis necessidades futuras.",
+        "Definir quanto será destinado a cada objetivo, considerando suas prioridades."
+    ),
 
-        new(
-            "Ana está pensando em criar uma meta financeira. Qual característica torna uma meta mais fácil de acompanhar?",
-            new()
-            {
-                "Ser um desejo sem prazo ou objetivo definido.",
-                "Ter um objetivo claro e um planejamento possível de seguir.",
-                "Depender exclusivamente de dinheiro inesperado.",
-                "Não considerar a situação financeira atual."
-            },
-            "Uma meta clara e realista facilita o acompanhamento do progresso e ajuda a manter a motivação.",
-            "Ter um objetivo claro e um planejamento possível de seguir."
-        ),
+    new(
+        "Carlos pretende comprar um notebook de R$ 2.400,00. Ele consegue guardar R$ 200,00 por mês. Qual prazo representa o tempo necessário para atingir a meta, sem considerar rendimentos?",
+        new()
+        {
+            "Em 10 meses, mantendo a economia planejada.",
+            "Em 11 meses, considerando o valor mensal disponível.",
+            "Em 12 meses, mantendo depósitos mensais constantes.",
+            "Em 14 meses, considerando o preço total do produto."
+        },
+        "Dividindo R$ 2.400,00 por R$ 200,00, o resultado é 12 meses de economia.",
+        "Em 12 meses, mantendo depósitos mensais constantes."
+    ),
 
-        new(
-            "Rafael deseja economizar, mas percebe que surgem despesas inesperadas durante o mês. Por que é interessante ter uma reserva para imprevistos?",
-            new()
-            {
-                "Para gastar todo o dinheiro assim que recebê-lo.",
-                "Para conseguir lidar melhor com situações inesperadas sem abandonar todos os seus planos.",
-                "Para substituir permanentemente todas as suas metas.",
-                "Para comprar produtos sem precisar pensar no orçamento."
-            },
-            "Uma reserva para imprevistos ajuda a enfrentar despesas inesperadas e evita comprometer outros objetivos financeiros.",
-            "Para conseguir lidar melhor com situações inesperadas sem abandonar todos os seus planos."
-        ),
+    new(
+        "Juliana guardou R$ 400,00 para uma viagem, mas precisou utilizar R$ 100,00 em uma despesa inesperada. Como deve avaliar essa situação?",
+        new()
+        {
+            "Como uma falha definitiva que invalida todo o planejamento.",
+            "Como um motivo para abandonar todas as metas financeiras.",
+            "Como um imprevisto que exige revisar o prazo e continuar economizando.",
+            "Como uma oportunidade para aumentar os gastos planejados."
+        },
+        "Imprevistos podem acontecer. O mais importante é reorganizar o planejamento e retomar a economia quando possível.",
+        "Como um imprevisto que exige revisar o prazo e continuar economizando."
+    ),
 
-        new(
-            "Beatriz começou a guardar dinheiro, mas ficou desmotivada porque sua meta ainda parece distante. O que pode ajudá-la?",
-            new()
-            {
-                "Abandonar a meta imediatamente.",
-                "Gastar o dinheiro guardado para começar novamente depois.",
-                "Acompanhar pequenas conquistas e reconhecer seu progresso.",
-                "Criar várias metas sem considerar suas prioridades."
-            },
-            "Reconhecer cada avanço ajuda a manter a motivação. Mesmo pequenas quantias podem representar progresso em direção a um objetivo.",
-            "Acompanhar pequenas conquistas e reconhecer seu progresso."
-        ),
+    new(
+        "Uma meta exige R$ 750,00. Até agora, foram economizados R$ 525,00. Qual percentual do objetivo já foi alcançado?",
+        new()
+        {
+            "65%, considerando a parte já economizada.",
+            "70%, considerando o valor guardado em relação à meta.",
+            "75%, considerando o valor que ainda falta.",
+            "80%, considerando o total estabelecido como objetivo."
+        },
+        "Dividindo R$ 525,00 por R$ 750,00 e multiplicando por 100, chegamos a 70% da meta.",
+        "70%, considerando o valor guardado em relação à meta."
+    ),
 
-        new(
-            "Lucas quer economizar, mas seus amigos frequentemente o convidam para passeios e compras. Como ele pode equilibrar essas situações?",
-            new()
-            {
-                "Aceitar todos os convites, mesmo comprometendo suas metas.",
-                "Nunca mais participar de atividades com os amigos.",
-                "Planejar os momentos de lazer considerando o dinheiro disponível e suas prioridades.",
-                "Utilizar todo o dinheiro guardado para acompanhar os amigos."
-            },
-            "Economizar não significa deixar de aproveitar a vida. O importante é equilibrar o lazer com as prioridades e os objetivos financeiros.",
-            "Planejar os momentos de lazer considerando o dinheiro disponível e suas prioridades."
-        ),
+    new(
+        "Fernanda possui duas metas: comprar um livro em dois meses e juntar dinheiro para um computador em dois anos. Como esses objetivos podem ser classificados?",
+        new()
+        {
+            "Ambos são objetivos de curto prazo, pois envolvem compras.",
+            "O livro é de longo prazo e o computador é de médio prazo.",
+            "Ambos são objetivos de longo prazo, pois exigem economia.",
+            "O livro é de curto prazo e o computador é de longo prazo."
+        },
+        "O prazo de dois meses caracteriza uma meta de curto prazo, enquanto dois anos representam uma meta de longo prazo.",
+        "O livro é de curto prazo e o computador é de longo prazo."
+    ),
 
-        new(
-            "Camila está economizando para uma viagem, mas percebeu que escolheu um objetivo muito difícil de alcançar no momento. O que seria mais adequado?",
-            new()
-            {
-                "Ignorar sua situação financeira e continuar sem planejamento.",
-                "Reavaliar a meta e adaptá-la à sua realidade financeira.",
-                "Desistir de economizar para qualquer objetivo.",
-                "Gastar suas economias em compras não planejadas."
-            },
-            "Uma meta precisa ser compatível com a realidade financeira. Ajustar o objetivo pode tornar a conquista mais possível.",
-            "Reavaliar a meta e adaptá-la à sua realidade financeira."
-        ),
+    new(
+        "André consegue economizar R$ 80,00 por mês, mas deseja atingir uma meta de R$ 600,00 em apenas seis meses. Qual análise está correta?",
+        new()
+        {
+            "Ele alcançará a meta, pois economizará R$ 600,00 no período.",
+            "Ele ultrapassará a meta, pois juntará R$ 680,00.",
+            "Ele juntará R$ 480,00 e precisará ajustar o valor mensal ou o prazo.",
+            "Ele precisará economizar apenas R$ 20,00 por mês."
+        },
+        "Economizando R$ 80,00 durante seis meses, André acumulará R$ 480,00. Faltarão R$ 120,00 para alcançar a meta.",
+        "Ele juntará R$ 480,00 e precisará ajustar o valor mensal ou o prazo."
+    ),
 
-        new(
-            "Eduardo conseguiu juntar dinheiro para alcançar uma meta. Antes de realizar a compra, o que ele deve considerar?",
-            new()
-            {
-                "Se o produto ainda atende ao seu objetivo e se a compra continua fazendo sentido.",
-                "Se consegue gastar ainda mais dinheiro em outros produtos.",
-                "Se deve abandonar todas as outras prioridades financeiras.",
-                "Se pode comprar sem avaliar as características do produto."
-            },
-            "Antes de realizar uma compra planejada, é importante verificar se ela continua sendo necessária e adequada ao objetivo.",
-            "Se o produto ainda atende ao seu objetivo e se a compra continua fazendo sentido."
-        ),
+    new(
+        "Uma pessoa acompanha suas metas mensalmente e percebe que está economizando mais do que havia planejado. Qual pode ser uma boa decisão?",
+        new()
+        {
+            "Aumentar todas as metas imediatamente, sem avaliar suas prioridades.",
+            "Reavaliar o planejamento e verificar se é possível antecipar algum objetivo.",
+            "Interromper os registros porque a economia está funcionando.",
+            "Gastar o valor excedente sem considerar outros objetivos."
+        },
+        "Acompanhar o progresso permite identificar oportunidades de ajuste. Se houver condições, antecipar uma meta pode ser uma boa decisão.",
+        "Reavaliar o planejamento e verificar se é possível antecipar algum objetivo."
+    ),
 
-        new(
-            "Sofia deseja organizar sua vida financeira. Qual conjunto de atitudes demonstra um bom planejamento de metas e economia?",
-            new()
-            {
-                "Comprar por impulso, ignorar despesas e deixar de acompanhar o dinheiro.",
-                "Criar objetivos sem considerar suas necessidades e prioridades.",
-                "Definir metas, acompanhar economias, controlar gastos e reservar dinheiro para imprevistos.",
-                "Guardar dinheiro somente quando sobrar, sem acompanhar o progresso."
-            },
-            "Um bom planejamento envolve objetivos claros, acompanhamento das economias, controle dos gastos e preparação para imprevistos.",
-            "Definir metas, acompanhar economias, controlar gastos e reservar dinheiro para imprevistos."
-        )
-    };
+    new(
+        "Sofia deseja economizar para três objetivos diferentes, mas possui uma quantia limitada disponível por mês. Qual estratégia pode ajudá-la a manter um planejamento sustentável?",
+        new()
+        {
+            "Dividir o dinheiro igualmente entre todas as metas, independentemente dos prazos.",
+            "Priorizar apenas a meta mais cara e ignorar as demais.",
+            "Definir prioridades, considerar os prazos e distribuir valores compatíveis com seu orçamento.",
+            "Guardar valores diferentes a cada mês sem acompanhar os resultados."
+        },
+        "Um planejamento sustentável considera os prazos, a importância de cada objetivo e o dinheiro realmente disponível para economizar.",
+        "Definir prioridades, considerar os prazos e distribuir valores compatíveis com seu orçamento."
+    )
+};
 
     private void Selecionar(string opcao)
     {
