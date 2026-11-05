@@ -92,6 +92,8 @@ app.MapPost("/login", async (
     var usuario = formulario["usuario"].ToString().Trim();
     var senha = formulario["senha"].ToString();
 
+    await signInManager.SignOutAsync();
+    
     var resultado = await signInManager.PasswordSignInAsync(
         usuario,
         senha,

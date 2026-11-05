@@ -112,8 +112,8 @@
             var estado = await AuthProvider.GetAuthenticationStateAsync();
 
 var usuarioId = estado.User.FindFirst(
-    ClaimTypes.NameIdentifier)?.Value;
-
+    ClaimTypes.NameIdentifier)?.Value ?? "";
+    
 if (!string.IsNullOrEmpty(usuarioId))
 {
     var carteira = await CarteiraServico
@@ -127,10 +127,13 @@ if (!string.IsNullOrEmpty(usuarioId))
                 new NpgsqlConnection(connectionString);
             await conexao.OpenAsync();
             await using var comando = new NpgsqlCommand(
-                @"SELECT nome, valor_objetivo, valor_guardado
-                  FROM metas_economia
-                  ORDER BY id DESC;",
-                conexao);
+    @"SELECT nome, valor_objetivo, valor_guardado
+      FROM metas_economia
+      WHERE usuario_id = @usuarioId
+      ORDER BY id DESC;",
+    conexao);
+
+comando.Parameters.AddWithValue("@usuarioId", usuarioId);
             await using var leitor = await comando.ExecuteReaderAsync();
             while (await leitor.ReadAsync())
             {
