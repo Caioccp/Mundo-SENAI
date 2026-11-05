@@ -86,13 +86,13 @@
         <p>Aprenda a cuidar do seu dinheiro.</p>
     </div>
 </a>
-            <article class="atalho">
-                <span>🏆</span>
-                <div>
-                    <h3>Desafios</h3>
-                    <p>Aprenda enquanto acumula pontos.</p>
-                </div>
-            </article>
+            <a class="atalho" href="/desafios">
+    <span>🏆</span>
+    <div>
+        <h3>Desafios</h3>
+        <p>Aprenda enquanto acumula pontos.</p>
+    </div>
+</a>
         </div>
     </section>
     <footer>
@@ -113,7 +113,7 @@
 
 var usuarioId = estado.User.FindFirst(
     ClaimTypes.NameIdentifier)?.Value ?? "";
-    
+
 if (!string.IsNullOrEmpty(usuarioId))
 {
     var carteira = await CarteiraServico
