@@ -124,7 +124,6 @@ else
             var estado = await AuthStateProvider.GetAuthenticationStateAsync();
 
             usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
-            mensagem = $"ID da conta conectada: {usuarioId}";
 
             if (string.IsNullOrWhiteSpace(usuarioId))
             {
