@@ -1,0 +1,100 @@
+
+.painel-desenvolvedor {
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 35px 30px;
+    color: #102d68;
+}
+
+.painel-desenvolvedor header {
+    margin-bottom: 30px;
+}
+
+.painel-desenvolvedor h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #102d68;
+}
+
+.painel-desenvolvedor header p {
+    color: #71809b;
+    font-size: 1rem;
+}
+
+.painel-desenvolvedor section {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 30px rgba(7, 29, 73, 0.08);
+}
+
+.painel-desenvolvedor h2 {
+    color: #102d68;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.painel-desenvolvedor .tabela-usuarios {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.painel-desenvolvedor table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 650px;
+}
+
+.painel-desenvolvedor th {
+    background: #071d49;
+    color: white;
+    padding: 15px;
+    text-align: left;
+}
+
+.painel-desenvolvedor td {
+    padding: 14px 15px;
+    border-bottom: 1px solid #e8edf5;
+    color: #34415c;
+}
+
+.painel-desenvolvedor tr:hover td {
+    background: #f4f8ff;
+}
+
+.painel-desenvolvedor button {
+    border: none;
+    border-radius: 9px;
+    padding: 9px 13px;
+    margin: 3px;
+    background: #e8f0ff;
+    color: #102d68;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.painel-desenvolvedor button:hover {
+    background: #d5e4ff;
+}
+
+.painel-desenvolvedor input {
+    border: 1px solid #d5ddeb;
+    border-radius: 9px;
+    padding: 10px;
+    margin: 5px;
+}
+
+.painel-desenvolvedor strong {
+    color: #00a985;
+}
+
+@media (max-width: 768px) {
+    .painel-desenvolvedor {
+        padding: 20px 12px;
+    }
+
+    .painel-desenvolvedor section {
+        padding: 15px;
+    }
+}
