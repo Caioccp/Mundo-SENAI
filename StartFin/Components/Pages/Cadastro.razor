@@ -31,10 +31,10 @@
             @bind="diaNascimento"
             @bind:after="AtualizarDataNascimento">
                 <option value="">Dia</option>
-                @for (int dia = 1; dia <= 31; dia++)
-                {
-                    <option value="@dia">@dia.ToString("D2")</option>
-                }
+                @for (int dia = 1; dia <= DiasNoMes; dia++)
+{
+    <option value="@dia">@dia.ToString("D2")</option>
+}
             </select>
         </div>
 
@@ -150,16 +150,24 @@ private void AtualizarDataNascimento()
 {
     novoUsuario.DataNascimento = null;
 
-    if (!diaNascimento.HasValue ||
-        !mesNascimento.HasValue ||
-        !anoNascimento.HasValue)
+    // Ainda não escolheu mês ou ano.
+    if (!mesNascimento.HasValue || !anoNascimento.HasValue)
         return;
 
+    // Verifica quantos dias existem no mês escolhido.
     int diasNoMes = DateTime.DaysInMonth(
         anoNascimento.Value,
         mesNascimento.Value);
 
-    if (diaNascimento.Value > diasNoMes)
+    // Se o dia escolhido não existir nesse mês, limpa a seleção.
+    if (diaNascimento.HasValue && diaNascimento.Value > diasNoMes)
+    {
+        diaNascimento = null;
+        return;
+    }
+
+    // Só monta a data quando os três campos estiverem preenchidos.
+    if (!diaNascimento.HasValue)
         return;
 
     novoUsuario.DataNascimento = new DateTime(
@@ -175,6 +183,19 @@ private void AtualizarDataNascimento()
     private string codigoFamiliar = "";
     private string mensagem = "";
     private string classeMensagem = "alert-danger";
+
+    private int DiasNoMes
+{
+    get
+    {
+        if (!mesNascimento.HasValue || !anoNascimento.HasValue)
+            return 31;
+
+        return DateTime.DaysInMonth(
+            anoNascimento.Value,
+            mesNascimento.Value);
+    }
+}
 
     private int? IdadeCadastro
     {
