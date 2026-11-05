@@ -10,6 +10,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject PreferenciasNotificacaoServico PreferenciasServico
 @inject NavigationManager Navigation
+@inject IPasswordHasher<Usuario> PasswordHasher
 
 
 <PageTitle>Minha Conta | StartFin</PageTitle>
@@ -272,6 +273,76 @@
     </div>
 }
 
+        
+        <!-- CÓDIGO DE RECUPERAÇÃO -->
+        @if (Idade.HasValue && Idade.Value >= 18)
+        {
+            <div class="conta-card mb-4">
+                <h5 class="conta-secao">🔐 Código de recuperação</h5>
+
+                <p class="text-muted">
+                    Esse código será necessário para recuperar sua conta
+                    caso você esqueça sua senha. Guarde-o em um lugar seguro
+                    e nunca compartilhe com outras pessoas.
+                </p>
+
+                @if (!string.IsNullOrWhiteSpace(codigoRecuperacaoGerado))
+                {
+                    <div class="alert alert-success">
+                        <strong>Seu novo código de recuperação:</strong>
+                        <div class="fs-5 fw-bold mt-2">
+                            @codigoRecuperacaoGerado
+                        </div>
+                        <p class="mb-0 mt-2">
+                            Copie e guarde esse código agora.
+                            Ele não será exibido novamente.
+                        </p>
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(usuario.CodigoRecuperacaoSenhaHash))
+                {
+                    <div class="alert alert-info">
+                        Você já possui um código de recuperação cadastrado.
+                        Se não o guardou, poderá gerar outro.
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">
+                        Você ainda não possui um código de recuperação.
+                    </p>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Confirme sua senha atual
+                    </label>
+                    <input type="password"
+                           class="form-control"
+                           @bind="senhaParaCodigoRecuperacao"
+                           autocomplete="current-password" />
+                </div>
+
+                <button class="conta-botao"
+                        @onclick="GerarCodigoRecuperacao"
+                        disabled="@gerandoCodigoRecuperacao">
+                    @(gerandoCodigoRecuperacao
+                        ? "Gerando..."
+                        : string.IsNullOrWhiteSpace(usuario.CodigoRecuperacaoSenhaHash)
+                            ? "Gerar código de recuperação"
+                            : "Gerar novo código")
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(mensagemCodigoRecuperacao))
+                {
+                    <div class="alert alert-danger mt-3">
+                        @mensagemCodigoRecuperacao
+                    </div>
+                }
+            </div>
+        }
+
+
         <!-- SEGURANÇA DA CONTA -->
         <div class="conta-card mb-4">
             <h5 class="conta-secao">Segurança da conta</h5>
@@ -519,6 +590,11 @@
 
     private bool exibindoExclusao = false;
 
+    private string senhaParaCodigoRecuperacao = "";
+    private string codigoRecuperacaoGerado = "";
+    private string mensagemCodigoRecuperacao = "";
+    private bool gerandoCodigoRecuperacao = false;
+
     private bool salvandoPreferencias = false;
     private bool sucessoPreferencias = false;
     private string mensagemPreferencias = "";
@@ -570,6 +646,66 @@
         gerandoCodigoFamiliar = false;
     }
 }
+
+    
+private async Task GerarCodigoRecuperacao()
+{
+    mensagemCodigoRecuperacao = "";
+    codigoRecuperacaoGerado = "";
+
+    if (usuario is null || !Idade.HasValue || Idade.Value < 18)
+        return;
+
+    if (string.IsNullOrWhiteSpace(senhaParaCodigoRecuperacao))
+    {
+        mensagemCodigoRecuperacao = "Informe sua senha atual.";
+        return;
+    }
+
+    gerandoCodigoRecuperacao = true;
+
+    try
+    {
+        var senhaCorreta = await UserManager.CheckPasswordAsync(
+            usuario, senhaParaCodigoRecuperacao);
+
+        if (!senhaCorreta)
+        {
+            mensagemCodigoRecuperacao = "A senha atual está incorreta.";
+            return;
+        }
+
+        // Gera um código aleatório de 20 caracteres.
+        var novoCodigo = "SF-" +
+            Convert.ToHexString(
+                System.Security.Cryptography.RandomNumberGenerator.GetBytes(10));
+
+        // Guarda somente o hash no banco.
+        var hashAnterior = usuario.CodigoRecuperacaoSenhaHash;
+
+        usuario.CodigoRecuperacaoSenhaHash =
+            PasswordHasher.HashPassword(usuario, novoCodigo);
+
+        var resultado = await UserManager.UpdateAsync(usuario);
+
+        if (!resultado.Succeeded)
+        {
+            usuario.CodigoRecuperacaoSenhaHash = hashAnterior;
+            mensagemCodigoRecuperacao =
+                "Não foi possível gerar o código. Tente novamente.";
+            return;
+        }
+
+        // Exibe o código somente nesta sessão.
+        codigoRecuperacaoGerado = novoCodigo;
+        senhaParaCodigoRecuperacao = "";
+    }
+    finally
+    {
+        gerandoCodigoRecuperacao = false;
+    }
+}
+
 
     protected override async Task OnInitializedAsync()
     {

@@ -21,4 +21,7 @@ public class Usuario : IdentityUser
 
     // Pessoas vinculadas a esta conta como responsável.
     public ICollection<Usuario> Dependentes { get; set; } = new List<Usuario>();
+
+    // Hash do código secreto de recuperação de senha.
+    public string? CodigoRecuperacaoSenhaHash { get; set; }
 }

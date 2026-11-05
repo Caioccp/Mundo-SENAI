@@ -408,6 +408,9 @@ namespace StartFin.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CodigoRecuperacaoSenhaHash")
+                        .HasColumnType("text");
+
                     b.Property<string>("CodigoVinculoFamiliar")
                         .HasColumnType("text");
 
