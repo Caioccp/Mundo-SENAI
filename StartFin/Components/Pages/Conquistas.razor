@@ -38,7 +38,9 @@
         <div class="card p-3 mb-4">
             <h2>🏅 Meu progresso</h2>
 
-            <h3>@conquistasDesbloqueadas.Count de @todasConquistas.Count</h3>
+            <h3>@conquistasDesbloqueadas.Count(c =>
+                todasConquistas.Any(t => t.Codigo == c.Codigo))
+                de @todasConquistas.Count</h3>
 
             <div class="progress mb-2" style="height: 15px;">
                 <div class="progress-bar bg-success"
@@ -50,7 +52,9 @@
                 </div>
             </div>
 
-            <small>@percentual.ToString("0")% das conquistas desbloqueadas</small>
+            <small>
+                @percentual.ToString("0")% das conquistas desbloqueadas
+            </small>
         </div>
 
         <h2 class="mb-3">⭐ Todas as conquistas</h2>
@@ -99,7 +103,7 @@
                         {
                             <small class="text-success mt-auto">
                                 Desbloqueada em:
-                                @desbloqueada.DataDesbloqueio.ToLocalTime().ToString("dd/MM/yyyy")
+                                @(desbloqueada.DataDesbloqueio.ToLocalTime().ToString("dd/MM/yyyy"))
                             </small>
                         }
                         else
@@ -145,8 +149,24 @@
         new(
             "maratonista_30",
             "Maratonista",
-            "Você concluiu trinta desafios!",
+            "Você concluiu quinze desafios!",
             "🏆",
+            "Concluir 15 desafios."
+        ),
+
+        new(
+            "veterano_desafios",
+            "Veterano dos desafios",
+            "Você concluiu vinte desafios!",
+            "⚔️",
+            "Concluir 20 desafios."
+        ),
+
+        new(
+            "lenda_desafios",
+            "Lenda dos desafios",
+            "Você concluiu todos os trinta desafios!",
+            "🏅",
             "Concluir 30 desafios."
         ),
 
@@ -175,6 +195,22 @@
         ),
 
         new(
+            "economizador_1000",
+            "Economizador de elite",
+            "Você já guardou R$ 1.000 no total!",
+            "💵",
+            "Guardar R$ 1.000 ou mais nas suas metas."
+        ),
+
+        new(
+            "cofre_ouro_2500",
+            "Cofre de ouro",
+            "Você já guardou R$ 2.500 no total!",
+            "🏦",
+            "Guardar R$ 2.500 ou mais nas suas metas."
+        ),
+
+        new(
             "estudante_dedicado",
             "Estudante dedicado",
             "Você concluiu quatro quizzes diferentes!",
@@ -199,6 +235,29 @@
         ),
 
         new(
+            "estudioso_incansavel",
+            "Estudioso incansável",
+            "Você realizou dez tentativas de quiz, podendo repetir os conteúdos!",
+            "✍️",
+            "Realizar 10 tentativas de quiz. Repetir quizzes também conta."
+        ),
+        new(
+            "perfeccionista_5",
+            "Perfeccionista",
+            "Você conseguiu nota máxima em cinco quizzes diferentes!",
+            "🌟",
+            "Conseguir nota máxima em 5 quizzes diferentes."
+        ),
+
+        new(
+            "perfeicao_absoluta",
+            "Perfeição absoluta",
+            "Você conseguiu nota máxima nos oito quizzes diferentes!",
+            "💫",
+            "Conseguir nota máxima nos 8 quizzes diferentes."
+        ),
+
+        new(
             "aprendiz",
             "Aprendiz",
             "Você alcançou 50 XP!",
@@ -220,13 +279,22 @@
             "Você alcançou o nível máximo!",
             "👑",
             "Acumular 500 XP."
+        ),
+
+        new(
+            "lenda_financeira",
+            "Lenda financeira",
+            "Você acumulou 1.000 XP!",
+            "🔱",
+            "Acumular 1.000 XP."
         )
     };
 
     private double percentual =>
         todasConquistas.Count > 0
-            ? (double)conquistasDesbloqueadas.Count /
-              todasConquistas.Count * 100
+            ? (double)conquistasDesbloqueadas.Count(c =>
+                todasConquistas.Any(t => t.Codigo == c.Codigo))
+              / todasConquistas.Count * 100
             : 0;
 
     protected override async Task OnInitializedAsync()

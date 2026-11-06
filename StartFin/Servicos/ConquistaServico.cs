@@ -36,8 +36,21 @@ public class ConquistaServico
                     "Valor guardado na meta:"))
             .SumAsync(m => (decimal?)m.Valor) ?? 0;
 
-        var totalQuizzes = await _context.ResultadosQuiz
-            .Where(r => r.UsuarioId == usuarioId)
+        var resultados = _context.ResultadosQuiz
+            .Where(r => r.UsuarioId == usuarioId);
+
+        var totalQuizzes = await resultados
+            .Select(r => r.IdentificadorQuiz)
+            .Distinct()
+            .CountAsync();
+
+        var totalTentativasQuiz = await resultados
+            .CountAsync();
+
+        var totalQuizzesPerfeitos = await resultados
+            .Where(r =>
+                r.TotalPerguntas > 0 &&
+                r.Pontos == r.TotalPerguntas)
             .Select(r => r.IdentificadorQuiz)
             .Distinct()
             .CountAsync();
@@ -67,7 +80,7 @@ public class ConquistaServico
         }
 
         // MARATONISTA: trinta desafios concluídos.
-        if (totalDesafiosConcluidos >= 30)
+        if (totalDesafiosConcluidos >= 15)
         {
             await DesbloquearAsync(
                 usuarioId,
@@ -75,6 +88,30 @@ public class ConquistaServico
                 "Maratonista",
                 "Você concluiu trinta desafios!",
                 "🏆",
+                conquistasDesbloqueadas);
+        }
+
+        // VETERANO: sessenta desafios concluídos.
+        if (totalDesafiosConcluidos >= 20)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "veterano_desafios",
+                "Veterano dos desafios",
+                "Você concluiu sessenta desafios!",
+                "⚔️",
+                conquistasDesbloqueadas);
+        }
+
+        // LENDA: cem desafios concluídos.
+        if (totalDesafiosConcluidos >= 30)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "lenda_desafios",
+                "Lenda dos desafios",
+                "Você alcançou a marca de cem desafios concluídos!",
+                "🏅",
                 conquistasDesbloqueadas);
         }
 
@@ -114,6 +151,30 @@ public class ConquistaServico
                 conquistasDesbloqueadas);
         }
 
+        // ECONOMIZADOR DE ELITE: mil reais guardados.
+        if (totalGuardado >= 1000)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "economizador_1000",
+                "Economizador de elite",
+                "Você já guardou R$ 1.000 no total!",
+                "💵",
+                conquistasDesbloqueadas);
+        }
+
+        // COFRE DE OURO: dois mil e quinhentos reais guardados.
+        if (totalGuardado >= 2500)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "cofre_ouro_2500",
+                "Cofre de ouro",
+                "Você já guardou R$ 2.500 no total!",
+                "🏦",
+                conquistasDesbloqueadas);
+        }
+
         // ESTUDANTE DEDICADO: quatro quizzes diferentes.
         if (totalQuizzes >= 4)
         {
@@ -150,6 +211,42 @@ public class ConquistaServico
                 conquistasDesbloqueadas);
         }
 
+        // ESTUDIOSO INCANSÁVEL: vinte tentativas de quiz.
+        if (totalTentativasQuiz >= 10)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "estudioso_incansavel",
+                "Estudioso incansável",
+                "Você concluiu vinte quizzes!",
+                "✍️",
+                conquistasDesbloqueadas);
+        }
+
+        // PERFECCIONISTA: cinco quizzes diferentes com nota máxima.
+        if (totalQuizzesPerfeitos >= 5)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "perfeccionista_5",
+                "Perfeccionista",
+                "Você conseguiu nota máxima em cinco quizzes diferentes!",
+                "🌟",
+                conquistasDesbloqueadas);
+        }
+
+        // PERFEIÇÃO ABSOLUTA: oito quizzes diferentes com nota máxima.
+        if (totalQuizzesPerfeitos >= 8)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "perfeicao_absoluta",
+                "Perfeição absoluta",
+                "Você conseguiu nota máxima nos oito quizzes diferentes!",
+                "💫",
+                conquistasDesbloqueadas);
+        }
+
         // APRENDIZ: cinquenta pontos.
         if (pontuacao >= 50)
         {
@@ -183,6 +280,18 @@ public class ConquistaServico
                 "Mestre financeiro",
                 "Você alcançou o nível máximo!",
                 "👑",
+                conquistasDesbloqueadas);
+        }
+
+        // LENDA FINANCEIRA: mil pontos.
+        if (pontuacao >= 1000)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "lenda_financeira",
+                "Lenda financeira",
+                "Você acumulou 1.000 XP!",
+                "🔱",
                 conquistasDesbloqueadas);
         }
     }
