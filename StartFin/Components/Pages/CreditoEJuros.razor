@@ -1,0 +1,352 @@
+
+@page "/educacao-financeira/credito-e-juros"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using StartFin.Dados
+@using StartFin.Modelos
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Crédito e Juros | StartFin</PageTitle>
+
+<div class="aula-container">
+
+    <a href="/educacao-financeira" class="voltar">← Voltar aos conteúdos</a>
+
+    <header class="aula-cabecalho">
+        <span class="etiqueta">EDUCAÇÃO FINANCEIRA • PLANEJAMENTO</span>
+        <h1>Crédito e Juros</h1>
+        <p>Entenda como funciona o crédito, conheça os juros e aprenda a tomar decisões financeiras mais conscientes.</p>
+    </header>
+
+    <section class="conteudo-aula">
+        <h2>1. O que é crédito?</h2>
+        <p>
+            Crédito é uma forma de conseguir dinheiro ou adquirir produtos e serviços
+            com o compromisso de pagar posteriormente.
+        </p>
+        <p>
+            Cartões de crédito, empréstimos e financiamentos são exemplos de operações
+            que envolvem crédito.
+        </p>
+
+        <div class="destaque-aula">
+            <strong>Importante:</strong>
+            Ter crédito disponível não significa que você tem dinheiro sobrando.
+            É necessário avaliar se será possível pagar o valor utilizado.
+        </div>
+    </section>
+
+    <section class="conteudo-aula">
+        <h2>2. O que são juros?</h2>
+        <p>
+            Juros são valores cobrados pelo uso de dinheiro emprestado ou recebidos
+            quando você investe ou deixa seu dinheiro rendendo.
+        </p>
+        <p>
+            Quando você pega um empréstimo, por exemplo, normalmente precisa devolver
+            o valor recebido mais os juros cobrados pela instituição.
+        </p>
+
+        <div class="exemplo-aula">
+            <h3>Exemplo prático</h3>
+            <p>Imagine que uma pessoa pegou R$ 500,00 emprestados.</p>
+            <p>Depois de determinado período, deverá devolver R$ 550,00.</p>
+            <p><strong>R$ 50,00 correspondem aos juros cobrados.</strong></p>
+        </div>
+    </section>
+
+    <section class="conteudo-aula">
+        <h2>3. Juros simples e juros compostos</h2>
+
+        <h3>Juros simples</h3>
+        <p>
+            São calculados sempre sobre o valor inicial. O acréscimo permanece
+            igual em cada período, considerando uma taxa fixa.
+        </p>
+
+        <h3>Juros compostos</h3>
+        <p>
+            São calculados sobre o valor inicial somado aos juros acumulados
+            anteriormente. Por isso, são conhecidos como juros sobre juros.
+        </p>
+
+        <div class="destaque-aula">
+            <strong>Fique atento:</strong>
+            Em dívidas, os juros compostos podem fazer o valor devido crescer
+            bastante ao longo do tempo.
+        </div>
+    </section>
+
+    <section class="conteudo-aula">
+        <h2>4. Cartão de crédito</h2>
+        <p>
+            O cartão de crédito permite realizar compras para pagar posteriormente,
+            geralmente em uma data definida pela fatura.
+        </p>
+        <p>
+            É importante acompanhar os gastos e pagar a fatura integralmente
+            até o vencimento, sempre que possível.
+        </p>
+
+        <ul>
+            <li>Evite gastar mais do que consegue pagar.</li>
+            <li>Acompanhe todas as compras realizadas.</li>
+            <li>Confira o valor total da fatura.</li>
+            <li>Conheça as taxas cobradas pelo cartão.</li>
+        </ul>
+    </section>
+
+    <section class="conteudo-aula">
+        <h2>5. Empréstimos e financiamentos</h2>
+        <p>
+            No empréstimo, uma instituição disponibiliza uma quantia de dinheiro
+            que deverá ser devolvida com os encargos previstos no contrato.
+        </p>
+        <p>
+            No financiamento, o crédito geralmente é destinado à compra de um
+            bem ou serviço, como um imóvel ou veículo.
+        </p>
+        <p>
+            Antes de contratar qualquer operação, compare as condições,
+            os juros, o prazo e o valor total que será pago.
+        </p>
+    </section>
+
+    <section class="conteudo-aula">
+        <h2>6. Cuidado com o endividamento</h2>
+        <p>
+            O endividamento acontece quando uma pessoa assume compromissos
+            financeiros que deverá pagar no futuro. O problema surge quando
+            as dívidas ficam difíceis de administrar.
+        </p>
+
+        <ul>
+            <li>Planeje suas compras antes de utilizar crédito.</li>
+            <li>Não acumule parcelas sem verificar seu orçamento.</li>
+            <li>Leia as condições antes de aceitar uma oferta.</li>
+            <li>Evite contratar empréstimos por impulso.</li>
+            <li>Procure ajuda de um responsável ou profissional de confiança
+                quando tiver dúvidas.</li>
+        </ul>
+    </section>
+
+    <section class="conteudo-aula">
+        <h2>7. Como tomar boas decisões?</h2>
+        <p>Antes de utilizar crédito, faça algumas perguntas:</p>
+
+        <div class="exemplo-aula">
+            <p>✓ Eu realmente preciso dessa compra?</p>
+            <p>✓ Consigo pagar as parcelas?</p>
+            <p>✓ Sei quanto pagarei no total?</p>
+            <p>✓ Comparei as condições disponíveis?</p>
+            <p>✓ Essa decisão pode prejudicar meus outros objetivos?</p>
+        </div>
+    </section>
+
+    <section class="resumo-aula">
+        <h2>Resumo da aula</h2>
+        <p>
+            Crédito permite utilizar dinheiro ou adquirir produtos para pagar
+            posteriormente. Juros são valores relacionados ao uso desse dinheiro.
+            Por isso, conhecer as condições de pagamento, comparar ofertas e
+            planejar os gastos ajuda a evitar dívidas e tomar decisões melhores.
+        </p>
+    </section>
+
+    <section class="quiz-chamada">
+        <h2>Vamos testar seus conhecimentos?</h2>
+        <p>Responda ao quiz e descubra quanto você aprendeu sobre crédito e juros!</p>
+
+        <a href="/educacao-financeira/quiz/credito-e-juros" class="botao-quiz">
+            Fazer quiz
+        </a>
+
+        <div class="ultimo-resultado">
+            <button class="botao-resultado" @onclick="ConsultarResultado">
+                Ver último resultado
+            </button>
+
+            @if (consultando)
+            {
+                <p>Consultando resultado...</p>
+            }
+            else if (ultimoResultado != null)
+            {
+                <div class="resultado-card">
+                    <strong>Seu último resultado</strong>
+                    <p>Pontuação: @ultimoResultado.Pontos de @ultimoResultado.TotalPerguntas</p>
+                    <p>Concluído em: @ultimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+            }
+            else if (consultado)
+            {
+                <p>Você ainda não concluiu este quiz.</p>
+            }
+        </div>
+    </section>
+
+</div>
+
+@code {
+    private ResultadoQuiz? ultimoResultado;
+    private bool consultando;
+    private bool consultado;
+
+    private async Task ConsultarResultado()
+    {
+        consultando = true;
+        consultado = false;
+        ultimoResultado = null;
+
+        try
+        {
+            var estado = await AuthProvider.GetAuthenticationStateAsync();
+            var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(usuarioId))
+            {
+                ultimoResultado = await Context.ResultadosQuiz
+                    .Where(r => r.UsuarioId == usuarioId &&
+                                r.IdentificadorQuiz == "credito-e-juros")
+                    .OrderByDescending(r => r.DataConclusao)
+                    .FirstOrDefaultAsync();
+            }
+        }
+        finally
+        {
+            consultando = false;
+            consultado = true;
+        }
+    }
+}
+
+<style>
+    .aula-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px 20px;
+        color: var(--cor-texto, #222);
+    }
+
+    .voltar {
+        display: inline-block;
+        margin-bottom: 25px;
+        color: #16865b;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .aula-cabecalho {
+        margin-bottom: 35px;
+    }
+
+    .etiqueta {
+        color: #16865b;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .aula-cabecalho h1 {
+        font-size: 36px;
+        margin: 12px 0;
+    }
+
+    .aula-cabecalho p,
+    .conteudo-aula p,
+    .resumo-aula p,
+    .quiz-chamada p {
+        line-height: 1.7;
+    }
+
+    .conteudo-aula,
+    .resumo-aula {
+        margin-bottom: 25px;
+        padding: 25px;
+        border-radius: 14px;
+        background: var(--cor-card, #fff);
+        border: 1px solid var(--cor-borda, #e5e7eb);
+    }
+
+    .conteudo-aula h2,
+    .resumo-aula h2 {
+        color: #16865b;
+        margin-top: 0;
+    }
+
+    .conteudo-aula h3 {
+        margin-top: 22px;
+    }
+
+    .conteudo-aula li {
+        margin-bottom: 10px;
+        line-height: 1.5;
+    }
+
+    .destaque-aula,
+    .exemplo-aula {
+        margin-top: 20px;
+        padding: 18px;
+        border-radius: 10px;
+        background: #eaf7f0;
+        color: #174b35;
+    }
+
+    .exemplo-aula p:last-child {
+        margin-bottom: 0;
+    }
+
+    .quiz-chamada {
+        padding: 30px;
+        text-align: center;
+        border-radius: 16px;
+        background: var(--cor-card, #fff);
+        border: 1px solid var(--cor-borda, #e5e7eb);
+    }
+
+    .botao-quiz,
+    .botao-resultado {
+        display: inline-block;
+        padding: 13px 24px;
+        margin-top: 12px;
+        border: none;
+        border-radius: 9px;
+        background: #16865b;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .botao-resultado {
+        background: #315caa;
+    }
+
+    .ultimo-resultado {
+        margin-top: 20px;
+    }
+
+    .resultado-card {
+        margin-top: 15px;
+        padding: 18px;
+        border-radius: 10px;
+        background: #eaf7f0;
+        color: #174b35;
+    }
+
+    @@media (max-width: 600px) {
+        .aula-cabecalho h1 {
+            font-size: 28px;
+        }
+
+        .conteudo-aula,
+        .resumo-aula,
+        .quiz-chamada {
+            padding: 18px;
+        }
+    }
+</style>

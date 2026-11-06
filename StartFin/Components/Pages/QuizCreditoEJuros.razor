@@ -1,0 +1,695 @@
+
+@page "/educacao-financeira/quiz/credito-e-juros"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+@using StartFin.Modelos
+@using System.Security.Claims
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Quiz - Crédito e Juros | StartFin</PageTitle>
+
+<div class="quiz-container">
+
+    <a href="/educacao-financeira/credito-e-juros" class="voltar">
+        ← Voltar para a aula
+    </a>
+
+    <header class="quiz-cabecalho">
+        <span class="etiqueta">EDUCAÇÃO FINANCEIRA • AULA 7</span>
+        <h1>Quiz: Crédito e Juros 💳</h1>
+        <p>
+            Teste seus conhecimentos sobre crédito, juros, cartão de crédito
+            e decisões financeiras.
+        </p>
+    </header>
+
+    @if (!QuizFinalizado)
+    {
+        <div class="progresso-container">
+            <div class="progresso-texto">
+                <span>Questão @(IndiceAtual + 1) de @Perguntas.Count</span>
+                <span>@(IndiceAtual * 10)% concluído</span>
+            </div>
+
+            <div class="progresso-fundo">
+                <div class="progresso-preenchido"
+                     style="width: @((IndiceAtual + 1) * 10)%">
+                </div>
+            </div>
+        </div>
+
+        <section class="pergunta-card">
+            <span class="numero-pergunta">
+                QUESTÃO @(IndiceAtual + 1)
+            </span>
+
+            <h2>@Perguntas[IndiceAtual].Enunciado</h2>
+
+            <div class="opcoes">
+                @for (int i = 0; i < Perguntas[IndiceAtual].Opcoes.Length; i++)
+                {
+                    int indice = i;
+
+                    <button type="button"
+                            class="opcao @(AlternativaSelecionada == indice ? "selecionada" : "") @(RespostaConfirmada && indice == Perguntas[IndiceAtual].RespostaCorreta ? "correta" : "") @(RespostaConfirmada && AlternativaSelecionada == indice && indice != Perguntas[IndiceAtual].RespostaCorreta ? "incorreta" : "")"
+                            disabled="@RespostaConfirmada"
+                            @onclick="() => Selecionar(indice)">
+
+                        <span class="letra-opcao">
+                            @((char)('A' + indice))
+                        </span>
+
+                        <span>@Perguntas[IndiceAtual].Opcoes[indice]</span>
+                    </button>
+                }
+            </div>
+
+            @if (RespostaConfirmada)
+            {
+                <div class="feedback @(AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta ? "feedback-correto" : "feedback-erro")">
+                    <strong>
+                        @(AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta
+                            ? "Muito bem! Resposta correta!"
+                            : "Não foi dessa vez! Vamos aprender.")
+                    </strong>
+
+                    <p>@Perguntas[IndiceAtual].Explicacao</p>
+                </div>
+            }
+
+            <div class="acoes">
+                @if (!RespostaConfirmada)
+                {
+                    <button class="botao-principal"
+                            disabled="@(AlternativaSelecionada == null)"
+                            @onclick="ConfirmarResposta">
+                        Confirmar resposta
+                    </button>
+                }
+                else
+                {
+                    <button class="botao-principal"
+                            @onclick="Proxima">
+                        @(IndiceAtual == Perguntas.Count - 1
+                            ? "Ver resultado"
+                            : "Próxima questão →")
+                    </button>
+                }
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="resultado-card">
+            <div class="resultado-icone">🏆</div>
+
+            <span class="etiqueta">QUIZ CONCLUÍDO</span>
+            <h2>Você terminou!</h2>
+
+            <div class="pontuacao">
+                @Pontos <span>/ @Perguntas.Count</span>
+            </div>
+
+            <p class="mensagem-resultado">@MensagemResultado</p>
+
+            <div class="resultado-detalhes">
+                <p>
+                    Você acertou <strong>@Pontos</strong>
+                    de <strong>@Perguntas.Count</strong> questões.
+                </p>
+            </div>
+
+            @if (SalvandoResultado)
+            {
+                <p>Salvando seu resultado...</p>
+            }
+            else if (ResultadoSalvo)
+            {
+                <p class="mensagem-salva">
+                    Seu resultado foi salvo na sua conta!
+                </p>
+            }
+            else
+            {
+                <p class="mensagem-aviso">
+                    Não foi possível salvar o resultado.
+                    Verifique se você está conectado à sua conta.
+                </p>
+            }
+
+            <button class="botao-principal" @onclick="Reiniciar">
+                Refazer quiz
+            </button>
+
+            <a href="/educacao-financeira/credito-e-juros"
+               class="botao-secundario">
+                Voltar para a aula
+            </a>
+        </section>
+    }
+
+</div>
+
+@code {
+    private int IndiceAtual = 0;
+    private int? AlternativaSelecionada;
+    private int Pontos = 0;
+
+    private bool RespostaConfirmada = false;
+    private bool QuizFinalizado = false;
+    private bool SalvandoResultado = false;
+    private bool ResultadoSalvo = false;
+
+    private string MensagemResultado = "";
+
+    // Perguntas sobre crédito e juros, organizadas em dificuldade crescente.
+    private List<Pergunta> Perguntas = new()
+    {
+        new Pergunta
+        {
+            Enunciado = "O que significa utilizar crédito em uma compra?",
+            Opcoes = new[]
+            {
+                "Receber dinheiro sem precisar pagar.",
+                "Comprar ou utilizar dinheiro com o compromisso de pagar posteriormente.",
+                "Guardar dinheiro em uma conta poupança.",
+                "Receber um desconto obrigatório em qualquer produto."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "O crédito permite adquirir produtos, serviços ou dinheiro para pagar posteriormente, conforme as condições combinadas."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Uma pessoa pegou R$ 500,00 emprestados e deverá devolver R$ 550,00. Qual valor corresponde aos juros?",
+            Opcoes = new[]
+            {
+                "R$ 500,00.",
+                "R$ 550,00.",
+                "R$ 50,00.",
+                "R$ 1.050,00."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "Os juros são a diferença entre o valor devolvido e o valor inicialmente emprestado: R$ 550,00 - R$ 500,00 = R$ 50,00."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Qual é a principal característica dos juros simples?",
+            Opcoes = new[]
+            {
+                "São calculados sempre sobre o valor inicial.",
+                "São calculados sobre os juros acumulados.",
+                "Diminuem automaticamente com o tempo.",
+                "Não possuem relação com o valor emprestado."
+            },
+            RespostaCorreta = 0,
+            Explicacao = "Nos juros simples, o cálculo considera sempre o capital inicial. Com uma taxa fixa, o valor dos juros por período permanece igual."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "O que diferencia os juros compostos dos juros simples?",
+            Opcoes = new[]
+            {
+                "Os juros compostos nunca aumentam uma dívida.",
+                "Os juros compostos são cobrados somente uma vez.",
+                "Os juros compostos são calculados apenas sobre o valor inicial.",
+                "Os juros compostos também consideram os juros acumulados anteriormente."
+            },
+            RespostaCorreta = 3,
+            Explicacao = "Nos juros compostos, os juros acumulados passam a fazer parte da base de cálculo dos períodos seguintes. É o chamado efeito de juros sobre juros."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Mariana fez compras de R$ 300,00 no cartão de crédito. Quando a fatura chegou, ela tinha condições de pagar o valor integral. Qual atitude é mais adequada?",
+            Opcoes = new[]
+            {
+                "Ignorar a fatura até receber uma cobrança.",
+                "Pagar somente uma pequena parte sem verificar as condições.",
+                "Pagar o valor integral até o vencimento.",
+                "Fazer outro empréstimo para não precisar olhar a fatura."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "Pagar a fatura integralmente até o vencimento, quando possível, ajuda a evitar os encargos associados ao pagamento parcial ou atrasado."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Uma pessoa encontrou um produto parcelado em várias vezes e decidiu comprar sem verificar o valor total. Qual é o principal risco dessa decisão?",
+            Opcoes = new[]
+            {
+                "O produto necessariamente ficará mais barato.",
+                "Ela pode assumir parcelas que comprometem seu orçamento e não perceber o custo total.",
+                "O cartão deixará de funcionar.",
+                "A compra será automaticamente cancelada."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "É importante observar o valor total, as parcelas e os compromissos já existentes. Uma parcela aparentemente pequena também pode comprometer o orçamento."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "João precisa de um empréstimo e encontrou duas propostas. Uma tem parcelas menores, mas prazo muito maior. O que ele deve comparar antes de escolher?",
+            Opcoes = new[]
+            {
+                "Somente o tamanho da parcela.",
+                "Apenas o nome da instituição.",
+                "A quantidade de anúncios de cada proposta.",
+                "As taxas, o prazo, as condições e o valor total a pagar."
+            },
+            RespostaCorreta = 3,
+            Explicacao = "Uma parcela menor não significa necessariamente uma operação mais barata. É necessário comparar as taxas, o prazo e o custo total da contratação."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Uma pessoa está pagando várias compras parceladas e deseja assumir uma nova prestação. Qual análise demonstra maior responsabilidade financeira?",
+            Opcoes = new[]
+            {
+                "Verificar as parcelas existentes, as despesas essenciais e se haverá dinheiro suficiente para o novo compromisso.",
+                "Considerar apenas o limite disponível no cartão.",
+                "Fazer a compra porque a primeira parcela parece pequena.",
+                "Ignorar as despesas que ainda vencerão."
+            },
+            RespostaCorreta = 0,
+            Explicacao = "O limite de crédito não representa dinheiro disponível no orçamento. É necessário considerar todos os compromissos atuais e futuros antes de assumir outra parcela."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Uma instituição oferece um empréstimo com parcelas aparentemente acessíveis, mas não informa claramente todas as taxas e condições. Qual deve ser a atitude do consumidor?",
+            Opcoes = new[]
+            {
+                "Aceitar imediatamente para não perder a oferta.",
+                "Assinar e descobrir os valores depois.",
+                "Solicitar informações completas, verificar o custo total e esclarecer as dúvidas antes de contratar.",
+                "Escolher a proposta porque possui parcelas menores."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "Antes de contratar crédito, é importante conhecer todas as condições, taxas e valores envolvidos. Não se deve assumir uma obrigação financeira sem compreender o contrato."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Uma pessoa deseja comprar um celular, mas já possui despesas mensais e parcelas em andamento. Qual decisão representa melhor educação financeira?",
+            Opcoes = new[]
+            {
+                "Utilizar todo o limite do cartão porque está disponível.",
+                "Avaliar a necessidade da compra, revisar o orçamento, comparar condições e decidir se pode assumir esse compromisso.",
+                "Contratar um empréstimo sem pesquisar outras opções.",
+                "Deixar de pagar despesas importantes para comprar o celular."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Uma decisão consciente considera a necessidade da compra, a situação financeira atual e o custo total. Planejar antes de utilizar crédito ajuda a evitar o endividamento."
+        }
+    };
+
+    private void Selecionar(int indice)
+    {
+        if (!RespostaConfirmada)
+        {
+            AlternativaSelecionada = indice;
+        }
+    }
+
+    private void ConfirmarResposta()
+    {
+        if (AlternativaSelecionada == null || RespostaConfirmada)
+        {
+            return;
+        }
+
+        if (AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta)
+        {
+            Pontos++;
+        }
+
+        RespostaConfirmada = true;
+    }
+
+    private async Task Proxima()
+    {
+        if (IndiceAtual < Perguntas.Count - 1)
+        {
+            IndiceAtual++;
+            AlternativaSelecionada = null;
+            RespostaConfirmada = false;
+        }
+        else
+        {
+            QuizFinalizado = true;
+
+            if (Pontos >= 9)
+            {
+                MensagemResultado = "Excelente! Você demonstrou muito domínio sobre crédito e juros.";
+            }
+            else if (Pontos >= 7)
+            {
+                MensagemResultado = "Muito bem! Você compreendeu os principais conceitos de crédito e juros.";
+            }
+            else if (Pontos >= 5)
+            {
+                MensagemResultado = "Bom trabalho! Revise alguns conceitos e continue praticando.";
+            }
+            else
+            {
+                MensagemResultado = "Continue estudando! Releia a aula e tente novamente para fortalecer seu aprendizado.";
+            }
+
+            await SalvarResultadoAsync();
+        }
+    }
+
+    private async Task SalvarResultadoAsync()
+    {
+        SalvandoResultado = true;
+
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                ResultadoSalvo = false;
+                return;
+            }
+
+            var resultado = new ResultadoQuiz
+            {
+                UsuarioId = usuarioId,
+                IdentificadorQuiz = "credito-e-juros",
+                Pontos = Pontos,
+                TotalPerguntas = Perguntas.Count,
+                DataConclusao = DateTime.UtcNow
+            };
+
+            Context.ResultadosQuiz.Add(resultado);
+            await Context.SaveChangesAsync();
+
+            ResultadoSalvo = true;
+        }
+        catch
+        {
+            ResultadoSalvo = false;
+        }
+        finally
+        {
+            SalvandoResultado = false;
+        }
+    }
+
+    private void Reiniciar()
+    {
+        IndiceAtual = 0;
+        AlternativaSelecionada = null;
+        Pontos = 0;
+
+        RespostaConfirmada = false;
+        QuizFinalizado = false;
+        SalvandoResultado = false;
+        ResultadoSalvo = false;
+
+        MensagemResultado = "";
+    }
+
+    private class Pergunta
+    {
+        public string Enunciado { get; set; } = "";
+        public string[] Opcoes { get; set; } = Array.Empty<string>();
+        public int RespostaCorreta { get; set; }
+        public string Explicacao { get; set; } = "";
+    }
+}
+
+<style>
+    .quiz-container {
+        max-width: 800px;
+        margin: 35px auto;
+        padding: 20px;
+        color: #172033;
+    }
+
+    .voltar {
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .quiz-cabecalho {
+        margin: 30px 0;
+    }
+
+    .etiqueta {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .quiz-cabecalho h1 {
+        color: #172b65;
+        font-size: 30px;
+        margin: 10px 0;
+    }
+
+    .quiz-cabecalho p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .progresso-container {
+        margin-bottom: 20px;
+    }
+
+    .progresso-texto {
+        display: flex;
+        justify-content: space-between;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .progresso-fundo {
+        width: 100%;
+        height: 9px;
+        background: #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .progresso-preenchido {
+        height: 100%;
+        background: #10b981;
+        border-radius: 20px;
+        transition: width 0.3s;
+    }
+
+    .pergunta-card, .resultado-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 5px 20px #00000008;
+    }
+
+    .numero-pergunta {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .pergunta-card h2 {
+        color: #172b65;
+        font-size: 21px;
+        line-height: 1.5;
+        margin: 15px 0 22px;
+    }
+
+    .opcoes {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .opcao {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 15px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: white;
+        color: #334155;
+        text-align: left;
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .opcao:hover:not(:disabled) {
+        border-color: #10b981;
+        background: #f0fdf4;
+    }
+
+    .opcao.selecionada {
+        border: 2px solid #087f5b;
+        background: #ecfdf5;
+    }
+
+    .opcao.correta {
+        border: 2px solid #16a34a;
+        background: #f0fdf4;
+    }
+
+    .opcao.incorreta {
+        border: 2px solid #dc2626;
+        background: #fef2f2;
+    }
+
+    .opcao:disabled {
+        cursor: default;
+        opacity: 1;
+    }
+
+    .letra-opcao {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        color: #172b65;
+        font-weight: 800;
+    }
+
+    .feedback {
+        margin-top: 22px;
+        padding: 17px;
+        border-radius: 10px;
+        line-height: 1.6;
+    }
+
+    .feedback p {
+        margin: 8px 0 0;
+    }
+
+    .feedback-correto {
+        background: #f0fdf4;
+        border-left: 4px solid #16a34a;
+        color: #166534;
+    }
+
+    .feedback-erro {
+        background: #fef2f2;
+        border-left: 4px solid #dc2626;
+        color: #991b1b;
+    }
+
+    .acoes {
+        display: flex;
+        justify-content: center;
+        margin-top: 25px;
+    }
+
+    .botao-principal {
+        display: inline-block;
+        padding: 13px 25px;
+        border: none;
+        border-radius: 10px;
+        background: #087f5b;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .botao-principal:hover:not(:disabled) {
+        background: #066849;
+    }
+
+    .botao-principal:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .resultado-card {
+        text-align: center;
+        padding: 35px;
+    }
+
+    .resultado-icone {
+        font-size: 55px;
+        margin-bottom: 15px;
+    }
+
+    .resultado-card h2 {
+        color: #172b65;
+        margin: 12px 0;
+    }
+
+    .pontuacao {
+        color: #087f5b;
+        font-size: 55px;
+        font-weight: 800;
+        margin: 20px 0;
+    }
+
+    .pontuacao span {
+        color: #64748b;
+        font-size: 25px;
+    }
+
+    .mensagem-resultado {
+        color: #475569;
+        line-height: 1.7;
+    }
+
+    .resultado-detalhes {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f0fdf4;
+        border-radius: 10px;
+        color: #166534;
+    }
+
+    .mensagem-salva {
+        color: #087f5b;
+        font-weight: 700;
+    }
+
+    .mensagem-aviso {
+        color: #b45309;
+    }
+
+    .botao-secundario {
+        display: block;
+        margin-top: 15px;
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 600px) {
+        .quiz-cabecalho h1 {
+            font-size: 25px;
+        }
+
+        .pergunta-card, .resultado-card {
+            padding: 20px;
+        }
+
+        .opcao {
+            font-size: 14px;
+        }
+    }
+</style>
