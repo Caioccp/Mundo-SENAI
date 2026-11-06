@@ -42,7 +42,7 @@ public class ConquistaServico
             .Distinct()
             .CountAsync();
 
-        // Primeiros passos
+        // PRIMEIROS PASSOS: um desafio concluído.
         if (totalDesafiosConcluidos >= 1)
         {
             await DesbloquearAsync(
@@ -54,7 +54,31 @@ public class ConquistaServico
                 conquistasDesbloqueadas);
         }
 
-        // Primeiro investimento
+        // DESAFIANTE: dez desafios concluídos.
+        if (totalDesafiosConcluidos >= 10)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "desafiante_10",
+                "Desafiante",
+                "Você já concluiu dez desafios!",
+                "🎯",
+                conquistasDesbloqueadas);
+        }
+
+        // MARATONISTA: trinta desafios concluídos.
+        if (totalDesafiosConcluidos >= 30)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "maratonista_30",
+                "Maratonista",
+                "Você concluiu trinta desafios!",
+                "🏆",
+                conquistasDesbloqueadas);
+        }
+
+        // PRIMEIRO INVESTIMENTO: cinquenta reais guardados.
         if (totalGuardado >= 50)
         {
             await DesbloquearAsync(
@@ -66,7 +90,31 @@ public class ConquistaServico
                 conquistasDesbloqueadas);
         }
 
-        // Estudante dedicado
+        // POUPADOR: duzentos e cinquenta reais guardados.
+        if (totalGuardado >= 250)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "poupador_250",
+                "Poupador",
+                "Você já guardou R$ 250 no total!",
+                "🐷",
+                conquistasDesbloqueadas);
+        }
+
+        // GRANDE ECONOMIZADOR: quinhentos reais guardados.
+        if (totalGuardado >= 500)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "grande_economizador_500",
+                "Grande economizador",
+                "Você já guardou R$ 500 no total!",
+                "💎",
+                conquistasDesbloqueadas);
+        }
+
+        // ESTUDANTE DEDICADO: quatro quizzes diferentes.
         if (totalQuizzes >= 4)
         {
             await DesbloquearAsync(
@@ -78,19 +126,55 @@ public class ConquistaServico
                 conquistasDesbloqueadas);
         }
 
-        // Aprendiz
+        // CONHECIMENTO AMPLO: seis quizzes diferentes.
+        if (totalQuizzes >= 6)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "conhecimento_amplo",
+                "Conhecimento amplo",
+                "Você concluiu seis quizzes diferentes!",
+                "📚",
+                conquistasDesbloqueadas);
+        }
+
+        // BIBLIOTECA COMPLETA: oito quizzes diferentes.
+        if (totalQuizzes >= 8)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "biblioteca_completa",
+                "Biblioteca completa",
+                "Você concluiu os oito quizzes disponíveis!",
+                "🎓",
+                conquistasDesbloqueadas);
+        }
+
+        // APRENDIZ: cinquenta pontos.
         if (pontuacao >= 50)
         {
             await DesbloquearAsync(
                 usuarioId,
                 "aprendiz",
                 "Aprendiz",
-                "Você alcançou o nível 2!",
+                "Você alcançou 50 XP!",
                 "⭐",
                 conquistasDesbloqueadas);
         }
 
-        // Mestre financeiro
+        // ORGANIZADO: cento e cinquenta pontos.
+        if (pontuacao >= 150)
+        {
+            await DesbloquearAsync(
+                usuarioId,
+                "organizado",
+                "Organizado",
+                "Você alcançou 150 XP!",
+                "🥇",
+                conquistasDesbloqueadas);
+        }
+
+        // MESTRE FINANCEIRO: quinhentos pontos.
         if (pontuacao >= 500)
         {
             await DesbloquearAsync(
