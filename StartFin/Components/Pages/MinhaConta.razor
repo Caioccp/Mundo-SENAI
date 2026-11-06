@@ -220,6 +220,18 @@
             <div class="col-md-6">
                 <div class="conta-card">
                     <div class="conta-icone">🎂</div>
+                    <span class="conta-label">DATA DE NASCIMENTO</span>
+                    <div class="conta-valor">
+                        @(usuario.DataNascimento.HasValue
+                            ? usuario.DataNascimento.Value.ToString("dd/MM/yyyy")
+                            : "Não informada")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="conta-card">
+                    <div class="conta-icone">🧑‍🎓</div>
                     <span class="conta-label">IDADE</span>
                     <div class="conta-valor">
                         @(Idade.HasValue ? $"{Idade} anos" : "Não informada")

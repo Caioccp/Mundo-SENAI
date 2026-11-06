@@ -1,0 +1,620 @@
+@page "/educacao-financeira/quiz/consumo-consciente"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+@using StartFin.Modelos
+@using System.Security.Claims
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Quiz - Consumo consciente | StartFin</PageTitle>
+
+<div class="quiz-container">
+
+    <a href="/educacao-financeira/consumo-consciente" class="voltar">
+        ← Voltar para a aula
+    </a>
+
+    <div class="cabecalho">
+        <span class="etiqueta">STARTFIN • EDUCAÇÃO FINANCEIRA</span>
+        <h1>Quiz: Consumo consciente</h1>
+        <p>
+            Analise as situações, pense nas consequências de cada escolha
+            e descubra como aplicar o consumo consciente no dia a dia.
+        </p>
+        <span class="nivel">Dificuldade progressiva • 10 questões</span>
+    </div>
+
+    @if (!Finalizado)
+    {
+        <div class="progresso">
+            <div class="progresso-texto">
+                <span>Pergunta @(Indice + 1) de @Perguntas.Count</span>
+                <span>@Pontos pontos</span>
+            </div>
+
+            <div class="barra">
+                <div class="barra-preenchida"
+                     style="width: @(((Indice + 1) * 100.0 / Perguntas.Count).ToString(System.Globalization.CultureInfo.InvariantCulture))%">
+                </div>
+            </div>
+        </div>
+
+        <section class="pergunta-card">
+
+            <span class="numero">QUESTÃO @(Indice + 1)</span>
+
+            <h2>@Perguntas[Indice].Enunciado</h2>
+
+            <div class="opcoes">
+                @foreach (var opcao in Perguntas[Indice].Opcoes)
+                {
+                    <button class="opcao @(Selecionada == opcao ? "selecionada" : "")"
+                            disabled="@Respondida"
+                            @onclick="() => Selecionar(opcao)">
+                        @opcao
+                    </button>
+                }
+            </div>
+
+            @if (Respondida)
+            {
+                <div class="feedback @(Acertou ? "correto" : "incorreto")">
+                    <strong>
+                        @(Acertou ? "Resposta correta!" : "Resposta incorreta!")
+                    </strong>
+                    <p>@Perguntas[Indice].Explicacao</p>
+                </div>
+            }
+
+            <div class="acoes">
+                @if (!Respondida)
+                {
+                    <button class="botao-principal"
+                            disabled="@string.IsNullOrEmpty(Selecionada)"
+                            @onclick="ConfirmarResposta">
+                        Confirmar resposta
+                    </button>
+                }
+                else
+                {
+                    <button class="botao-principal" @onclick="Proxima">
+                        @(Indice == Perguntas.Count - 1
+                            ? "Ver resultado"
+                            : "Próxima pergunta")
+                    </button>
+                }
+            </div>
+
+        </section>
+    }
+    else
+    {
+        <section class="resultado-card">
+
+            <span class="etiqueta">QUIZ CONCLUÍDO</span>
+            <h2>Você terminou!</h2>
+
+            <div class="pontuacao">
+                @Pontos <small>/ @Perguntas.Count</small>
+            </div>
+
+            <p>Você acertou @Pontos de @Perguntas.Count perguntas.</p>
+
+            <p class="mensagem">@MensagemResultado</p>
+
+            @if (ResultadoSalvo)
+            {
+                <p class="salvo">
+                    ✓ Seu resultado foi salvo na sua conta!
+                </p>
+            }
+            else
+            {
+                <p class="aviso">@MensagemSalvamento</p>
+            }
+
+            <button class="botao-principal" @onclick="Reiniciar">
+                Refazer quiz
+            </button>
+
+            <a href="/educacao-financeira/consumo-consciente" class="link-aula">
+                Voltar para a aula
+            </a>
+
+        </section>
+    }
+
+</div>
+
+<style>
+    .quiz-container {
+        max-width: 850px;
+        margin: 35px auto;
+        padding: 20px;
+        color: #172033;
+    }
+
+    .voltar, .link-aula {
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .cabecalho {
+        margin: 30px 0;
+    }
+
+    .etiqueta, .numero {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .cabecalho h1 {
+        font-size: 32px;
+        margin: 10px 0;
+    }
+
+    .cabecalho p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .nivel {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 7px 12px;
+        background: #ecfdf5;
+        color: #087f5b;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .progresso {
+        margin-bottom: 20px;
+    }
+
+    .progresso-texto {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .barra {
+        height: 9px;
+        background: #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .barra-preenchida {
+        height: 100%;
+        background: #10b981;
+        border-radius: 20px;
+        transition: width .3s;
+    }
+
+    .pergunta-card, .resultado-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 5px 20px #00000008;
+    }
+
+    .pergunta-card h2 {
+        font-size: 22px;
+        line-height: 1.6;
+        margin: 15px 0 25px;
+    }
+
+    .opcoes {
+        display: grid;
+        gap: 12px;
+    }
+
+    .opcao {
+        width: 100%;
+        text-align: left;
+        padding: 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        background: white;
+        color: #172033;
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1.5;
+        transition: .2s;
+    }
+
+    .opcao:hover:not(:disabled) {
+        border-color: #10b981;
+        background: #f0fdf4;
+    }
+
+    .opcao.selecionada {
+        border: 2px solid #059669;
+        background: #ecfdf5;
+    }
+
+    .opcao:disabled {
+        cursor: default;
+        opacity: 1;
+    }
+
+    .feedback {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 12px;
+        line-height: 1.6;
+    }
+
+    .feedback p {
+        margin-bottom: 0;
+    }
+
+    .correto {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .incorreto {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .acoes {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .botao-principal {
+        border: none;
+        border-radius: 10px;
+        padding: 14px 24px;
+        background: #087f5b;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .botao-principal:hover {
+        background: #066849;
+    }
+
+    .botao-principal:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .resultado-card {
+        text-align: center;
+        padding: 45px 25px;
+    }
+
+    .resultado-card h2 {
+        font-size: 28px;
+    }
+
+    .pontuacao {
+        font-size: 65px;
+        font-weight: 800;
+        color: #087f5b;
+        margin: 15px 0;
+    }
+
+    .pontuacao small {
+        font-size: 25px;
+        color: #64748b;
+    }
+
+    .mensagem {
+        margin: 20px 0;
+        color: #475569;
+    }
+
+    .salvo {
+        color: #087f5b;
+        font-weight: 700;
+    }
+
+    .aviso {
+        color: #b45309;
+    }
+
+    .resultado-card .botao-principal {
+        display: block;
+        margin: 25px auto 15px;
+    }
+
+    @@media (max-width: 600px) {
+        .cabecalho h1 {
+            font-size: 26px;
+        }
+
+        .pergunta-card {
+            padding: 20px;
+        }
+
+        .pergunta-card h2 {
+            font-size: 19px;
+        }
+    }
+</style>
+
+@code {
+    private int Indice = 0;
+    private int Pontos = 0;
+
+    private bool Respondida = false;
+    private bool Acertou = false;
+    private bool Finalizado = false;
+    private bool ResultadoSalvo = false;
+
+    private string Selecionada = string.Empty;
+    private string MensagemResultado = string.Empty;
+    private string MensagemSalvamento = string.Empty;
+
+    private List<Pergunta> Perguntas = new()
+    {
+        // QUESTÕES 1 A 3 — FUNDAMENTOS E INTERPRETAÇÃO
+
+        new(
+            "Marina foi ao shopping comprar um tênis porque o antigo já estava desconfortável. Ao chegar, viu uma promoção de uma mochila que não estava procurando. Ela tem dinheiro suficiente para os dois produtos, mas comprar ambos atrasaria sua meta de economizar para um curso. Qual decisão demonstra maior consciência de consumo?",
+            new()
+            {
+                "Comprar os dois, pois ter dinheiro disponível significa que a compra é adequada.",
+                "Comprar apenas o tênis necessário e avaliar a mochila em outro momento, considerando sua meta.",
+                "Comprar a mochila primeiro, pois promoções costumam desaparecer rapidamente.",
+                "Desistir do tênis e guardar todo o dinheiro, independentemente de sua necessidade."
+            },
+            "A decisão considera a necessidade real, o planejamento e as consequências da compra. Ter dinheiro disponível não significa que toda aquisição seja uma boa escolha.",
+            "Comprar apenas o tênis necessário e avaliar a mochila em outro momento, considerando sua meta."
+        ),
+
+        new(
+            "Uma propaganda afirma que um celular é indispensável para quem deseja ter sucesso nos estudos. Um estudante possui um aparelho que atende às suas necessidades escolares. Qual análise é mais adequada?",
+            new()
+            {
+                "A propaganda deve ser seguida, pois apresenta uma recomendação de uso do produto.",
+                "Trocar de aparelho é necessário sempre que uma nova versão aparece.",
+                "O estudante deve comprar o celular, desde que consiga parcelar o valor.",
+                "A propaganda utiliza uma associação emocional, e o estudante deve avaliar se a troca realmente traz benefícios necessários."
+            },
+            "A publicidade pode associar produtos a sentimentos e objetivos. É importante analisar a necessidade real, sem confundir desejo estimulado com necessidade.",
+            "A propaganda utiliza uma associação emocional, e o estudante deve avaliar se a troca realmente traz benefícios necessários."
+        ),
+
+        new(
+            "Carlos encontrou um produto por um preço muito baixo, mas as avaliações da loja indicam atrasos frequentes e relatos de produtos diferentes dos anunciados. Outra loja oferece o mesmo produto por um valor um pouco maior, com informações claras e avaliações confiáveis. O que Carlos deve considerar?",
+            new()
+            {
+                "Somente o menor preço, porque economizar significa pagar menos na compra.",
+                "A quantidade de anúncios da primeira loja, pois isso demonstra popularidade.",
+                "O preço junto da confiabilidade da loja, das condições de entrega e da qualidade oferecida.",
+                "Apenas a aparência do produto, pois as condições da loja não interferem na compra."
+            },
+            "O preço é importante, mas não deve ser analisado isoladamente. Confiabilidade, qualidade, entrega e segurança também fazem parte da decisão.",
+            "O preço junto da confiabilidade da loja, das condições de entrega e da qualidade oferecida."
+        ),
+
+        // QUESTÕES 4 A 6 — ANÁLISE DE COMPORTAMENTO E DECISÕES
+
+        new(
+            "Uma loja anuncia: 'Compre agora, restam apenas duas unidades!' Um consumidor não planejava comprar o produto, mas sente que perderá uma oportunidade se não agir imediatamente. Qual atitude ajuda a evitar uma decisão impulsiva?",
+            new()
+            {
+                "Comprar imediatamente para não correr o risco de perder a oferta.",
+                "Avaliar se o produto é necessário, pesquisar outras opções e decidir sem se deixar pressionar pela urgência.",
+                "Comprar e depois tentar reorganizar o orçamento para compensar o gasto.",
+                "Escolher o produto mais caro, pois a quantidade limitada indica maior qualidade."
+            },
+            "Mensagens de urgência podem pressionar o consumidor. Parar, avaliar a necessidade e pesquisar alternativas ajuda a tomar uma decisão mais consciente.",
+            "Avaliar se o produto é necessário, pesquisar outras opções e decidir sem se deixar pressionar pela urgência."
+        ),
+
+        new(
+            "Beatriz comprou uma roupa porque viu vários influenciadores utilizando o mesmo modelo. Depois percebeu que não gostava tanto da peça e que havia deixado de comprar um material de que realmente precisava. Qual fator influenciou principalmente sua decisão?",
+            new()
+            {
+                "A influência social e a comparação com outras pessoas.",
+                "O planejamento de suas necessidades prioritárias.",
+                "A análise das consequências financeiras da compra.",
+                "A avaliação da durabilidade e da utilidade do produto."
+            },
+            "A influência de outras pessoas, especialmente nas redes sociais, pode estimular compras que não correspondem às necessidades ou preferências reais do consumidor.",
+            "A influência social e a comparação com outras pessoas."
+        ),
+
+        new(
+            "Uma família costuma comprar alimentos em grandes quantidades porque alguns produtos possuem desconto por volume. Entretanto, parte dos alimentos acaba vencendo antes de ser utilizada. Qual mudança representa uma atitude mais consciente?",
+            new()
+            {
+                "Continuar comprando grandes quantidades, pois o desconto sempre compensa.",
+                "Comprar ainda mais produtos para aproveitar todas as promoções.",
+                "Evitar qualquer compra promocional, mesmo quando o produto será utilizado.",
+                "Planejar o consumo da família e comparar o desconto com a possibilidade de desperdício."
+            },
+            "Uma promoção só representa vantagem quando o produto pode ser aproveitado. Desperdiçar alimentos pode eliminar qualquer economia obtida no preço.",
+            "Planejar o consumo da família e comparar o desconto com a possibilidade de desperdício."
+        ),
+
+        // QUESTÕES 7 E 8 — SITUAÇÕES COM MAIS DE UM FATOR
+
+        new(
+            "Lucas deseja comprar um fone de ouvido. Ele encontrou três opções: um modelo barato, mas com avaliações negativas; outro de preço intermediário, com boa durabilidade; e um modelo mais caro, com recursos que ele provavelmente não utilizará. Qual escolha tende a ser mais consciente?",
+            new()
+            {
+                "O modelo mais barato, pois o menor preço deve ser sempre a prioridade.",
+                "O modelo mais caro, porque produtos com mais recursos oferecem necessariamente melhor custo-benefício.",
+                "O modelo intermediário, se atender às suas necessidades e oferecer qualidade adequada ao orçamento.",
+                "Nenhum dos modelos, pois comprar qualquer produto que não seja essencial é sempre errado."
+            },
+            "O melhor custo-benefício considera preço, qualidade, utilidade e orçamento. A opção intermediária pode atender às necessidades sem gastos desnecessários.",
+            "O modelo intermediário, se atender às suas necessidades e oferecer qualidade adequada ao orçamento."
+        ),
+
+        new(
+            "Uma estudante percebe que compra materiais escolares repetidos porque não verifica o que já possui. Em uma nova compra, encontra uma promoção de um kit completo, mas ainda tem vários itens em casa. Qual é a melhor atitude?",
+            new()
+            {
+                "Comprar o kit completo, pois ter materiais extras sempre representa economia.",
+                "Verificar o que realmente falta e comprar somente os itens necessários, mesmo que a promoção pareça vantajosa.",
+                "Comprar dois kits para evitar novas compras durante o ano.",
+                "Deixar de comprar qualquer material, inclusive os itens que já acabaram."
+            },
+            "Conhecer o que já possui evita duplicidade e desperdício. A promoção não deve ser o principal motivo para adquirir itens desnecessários.",
+            "Verificar o que realmente falta e comprar somente os itens necessários, mesmo que a promoção pareça vantajosa."
+        ),
+
+        // QUESTÕES 9 E 10 — RACIOCÍNIO MAIS COMPLEXO
+
+        new(
+            "Rafael recebe uma quantia mensal e está economizando para comprar um computador. Durante o mês, surge uma oportunidade de comprar um videogame com desconto. Ele gosta muito do produto, mas já possui um equipamento para jogar e sabe que a compra atrasaria seu objetivo. Qual análise apresenta o melhor raciocínio financeiro?",
+            new()
+            {
+                "O desconto deve ser aproveitado, porque oportunidades de economia são mais importantes que metas pessoais.",
+                "A compra é adequada porque o lazer sempre deve ter prioridade sobre a economia.",
+                "O atraso da meta não importa, desde que Rafael consiga pagar o produto no momento.",
+                "É necessário considerar o custo de oportunidade: o videogame pode trazer satisfação imediata, mas adia a conquista do computador."
+            },
+            "O custo de oportunidade representa aquilo de que abrimos mão ao escolher uma alternativa. Rafael precisa comparar a satisfação imediata com o impacto sobre sua meta.",
+            "É necessário considerar o custo de oportunidade: o videogame pode trazer satisfação imediata, mas adia a conquista do computador."
+        ),
+
+        new(
+            "Uma consumidora pesquisa uma máquina de lavar. Encontra um modelo com desconto significativo, mas que consome mais energia e possui garantia menor. Outro modelo custa um pouco mais, apresenta melhor eficiência energética e garantia maior. Considerando que ela pretende utilizar o equipamento por vários anos, qual decisão é mais coerente?",
+            new()
+            {
+                "Escolher o modelo mais barato, pois o valor pago inicialmente é o único custo relevante.",
+                "Escolher o modelo com mais funções, mesmo que elas não sejam necessárias.",
+                "Comparar o custo total ao longo do uso, considerando preço, consumo de energia, garantia e necessidades reais.",
+                "Comprar os dois modelos para avaliar qual apresenta melhor resultado."
+            },
+            "O consumo consciente considera os custos e benefícios ao longo do tempo. Preço inicial, consumo de energia, durabilidade e garantia podem mudar qual alternativa é mais vantajosa.",
+            "Comparar o custo total ao longo do uso, considerando preço, consumo de energia, garantia e necessidades reais."
+        )
+    };
+
+    private void Selecionar(string opcao)
+    {
+        if (!Respondida)
+        {
+            Selecionada = opcao;
+        }
+    }
+
+    private void ConfirmarResposta()
+    {
+        if (string.IsNullOrEmpty(Selecionada) || Respondida)
+            return;
+
+        Acertou = Selecionada == Perguntas[Indice].RespostaCorreta;
+
+        if (Acertou)
+            Pontos++;
+
+        Respondida = true;
+    }
+
+    private async Task Proxima()
+    {
+        if (Indice < Perguntas.Count - 1)
+        {
+            Indice++;
+            Selecionada = string.Empty;
+            Respondida = false;
+            Acertou = false;
+        }
+        else
+        {
+            Finalizado = true;
+
+            MensagemResultado = Pontos switch
+            {
+                10 => "Excelente! Você demonstrou grande capacidade de analisar situações de consumo e tomar decisões conscientes.",
+                >= 8 => "Muito bom! Você consegue avaliar diferentes fatores antes de tomar decisões de compra.",
+                >= 6 => "Bom trabalho! Você compreendeu vários conceitos, mas ainda pode desenvolver seu raciocínio sobre consumo.",
+                _ => "Continue praticando! Revise a aula, reflita sobre as situações apresentadas e tente novamente."
+            };
+
+            await SalvarResultadoAsync();
+        }
+    }
+
+    private async Task SalvarResultadoAsync()
+    {
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
+                return;
+            }
+
+            var resultado = new ResultadoQuiz
+            {
+                UsuarioId = usuarioId,
+                IdentificadorQuiz = "consumo-consciente",
+                Pontos = Pontos,
+                TotalPerguntas = Perguntas.Count,
+                DataConclusao = DateTime.UtcNow
+            };
+
+            Context.ResultadosQuiz.Add(resultado);
+            await Context.SaveChangesAsync();
+
+            ResultadoSalvo = true;
+        }
+        catch
+        {
+            MensagemSalvamento = "Não foi possível salvar o resultado. Tente novamente mais tarde.";
+        }
+    }
+
+    private void Reiniciar()
+    {
+        Indice = 0;
+        Pontos = 0;
+        Respondida = false;
+        Acertou = false;
+        Finalizado = false;
+        ResultadoSalvo = false;
+
+        Selecionada = string.Empty;
+        MensagemResultado = string.Empty;
+        MensagemSalvamento = string.Empty;
+    }
+
+    private class Pergunta
+    {
+        public string Enunciado { get; set; }
+        public List<string> Opcoes { get; set; }
+        public string Explicacao { get; set; }
+        public string RespostaCorreta { get; set; }
+
+        public Pergunta(
+            string enunciado,
+            List<string> opcoes,
+            string explicacao,
+            string respostaCorreta)
+        {
+            Enunciado = enunciado;
+            Opcoes = opcoes;
+            Explicacao = explicacao;
+            RespostaCorreta = respostaCorreta;
+        }
+    }
+}
