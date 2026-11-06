@@ -1,0 +1,418 @@
+
+@page "/educacao-financeira/orcamento-pessoal"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using StartFin.Dados
+@using StartFin.Modelos
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Orçamento pessoal | StartFin</PageTitle>
+
+<div class="aula-container">
+
+    <a href="/educacao-financeira" class="voltar">← Voltar aos conteúdos</a>
+
+    <header class="aula-cabecalho">
+        <span class="etiqueta">EDUCAÇÃO FINANCEIRA • PLANEJAMENTO</span>
+        <h1>Orçamento pessoal 📊</h1>
+        <p>
+            Aprenda a organizar seu dinheiro, controlar seus gastos
+            e planejar suas escolhas financeiras.
+        </p>
+        <span class="nivel">Nível básico • Aula 6</span>
+    </header>
+
+    <section class="introducao">
+        <h2>O que é um orçamento pessoal?</h2>
+        <p>
+            O orçamento pessoal é uma forma de organizar o dinheiro
+            que recebemos e os gastos que temos durante determinado período.
+        </p>
+        <p>
+            Com ele, conseguimos entender para onde nosso dinheiro está indo,
+            identificar possíveis excessos e planejar objetivos.
+        </p>
+    </section>
+
+    <section class="conteudo-card">
+        <h2>1. Conheça suas receitas</h2>
+        <p>
+            Receitas são todos os valores que recebemos. Elas representam
+            a entrada de dinheiro no nosso orçamento.
+        </p>
+
+        <div class="exemplo">
+            <h3>Exemplos de receitas</h3>
+            <ul>
+                <li>Mesada recebida da família.</li>
+                <li>Dinheiro recebido por trabalhos realizados.</li>
+                <li>Presentes em dinheiro.</li>
+                <li>Bolsa ou auxílio, quando aplicável.</li>
+            </ul>
+        </div>
+
+        <div class="dica">
+            <strong>Dica:</strong>
+            Anote todas as entradas de dinheiro, mesmo quando os valores
+            forem pequenos.
+        </div>
+    </section>
+
+    <section class="conteudo-card">
+        <h2>2. Identifique suas despesas</h2>
+        <p>
+            Despesas são os valores que gastamos. Elas podem ser divididas
+            em diferentes categorias.
+        </p>
+
+        <div class="exemplo">
+            <h3>Despesas fixas</h3>
+            <p>
+                São gastos que costumam acontecer regularmente
+                e possuem valores iguais ou semelhantes.
+            </p>
+            <p>Exemplo: mensalidade de um serviço ou assinatura.</p>
+        </div>
+
+        <div class="exemplo">
+            <h3>Despesas variáveis</h3>
+            <p>
+                São gastos que podem mudar de valor ou frequência
+                dependendo do período.
+            </p>
+            <p>Exemplo: alimentação fora de casa, passeios e compras.</p>
+        </div>
+
+        <div class="dica">
+            <strong>Atenção:</strong>
+            Mesmo os pequenos gastos devem ser registrados.
+            Quando somados, eles podem representar uma parte importante
+            do dinheiro utilizado.
+        </div>
+    </section>
+
+    <section class="conteudo-card">
+        <h2>3. Organize seu orçamento</h2>
+        <p>
+            Depois de identificar suas receitas e despesas, organize
+            essas informações para entender sua situação financeira.
+        </p>
+
+        <div class="exemplo">
+            <h3>Exemplo prático</h3>
+
+            <p><strong>Receita mensal:</strong> R$ 300,00</p>
+            <p><strong>Despesas:</strong></p>
+
+            <ul>
+                <li>Transporte: R$ 60,00</li>
+                <li>Lanche: R$ 50,00</li>
+                <li>Assinatura: R$ 20,00</li>
+            </ul>
+
+            <p><strong>Total de despesas:</strong> R$ 130,00</p>
+            <p><strong>Valor restante:</strong> R$ 170,00</p>
+        </div>
+
+        <p>
+            Nesse exemplo, a pessoa ainda possui R$ 170,00 depois
+            de pagar as despesas registradas. Esse valor pode ser
+            planejado para economias, objetivos ou outros gastos.
+        </p>
+    </section>
+
+    <section class="conteudo-card">
+        <h2>4. Planeje seus gastos</h2>
+        <p>
+            Ter dinheiro disponível não significa que precisamos
+            gastar tudo imediatamente. Planejar ajuda a tomar decisões
+            mais conscientes.
+        </p>
+
+        <ul>
+            <li>Priorize despesas importantes.</li>
+            <li>Defina limites para seus gastos.</li>
+            <li>Reserve uma parte do dinheiro para seus objetivos.</li>
+            <li>Evite comprometer todo o dinheiro antes de recebê-lo.</li>
+            <li>Revise seu planejamento quando sua situação mudar.</li>
+        </ul>
+    </section>
+
+    <section class="conteudo-card">
+        <h2>5. Acompanhe seu orçamento</h2>
+        <p>
+            Organizar o orçamento uma única vez não é suficiente.
+            É importante acompanhar as entradas e saídas de dinheiro
+            para perceber se o planejamento está funcionando.
+        </p>
+
+        <div class="dica">
+            <strong>Uma boa prática:</strong>
+            Anote seus gastos ao longo da semana e reserve um momento
+            para conferir se está seguindo o planejamento.
+        </div>
+
+        <p>
+            Se perceber que está gastando mais do que deveria,
+            procure entender o motivo e ajuste suas escolhas.
+        </p>
+    </section>
+
+    <section class="resumo">
+        <h2>O que aprendemos?</h2>
+        <ul>
+            <li>Orçamento pessoal organiza receitas e despesas.</li>
+            <li>Receitas representam entradas de dinheiro.</li>
+            <li>Despesas representam saídas de dinheiro.</li>
+            <li>Despesas podem ser fixas ou variáveis.</li>
+            <li>Planejar ajuda a controlar os gastos.</li>
+            <li>Acompanhar o orçamento permite fazer ajustes.</li>
+        </ul>
+    </section>
+
+    <section class="quiz-card">
+        <span class="etiqueta">TESTE SEUS CONHECIMENTOS</span>
+        <h2>Hora de praticar! 🧠</h2>
+        <p>
+            Responda a 10 questões sobre orçamento pessoal
+            e descubra quanto você aprendeu nesta aula.
+        </p>
+
+        <a href="/educacao-financeira/quiz/orcamento-pessoal" class="botao-quiz">
+            Fazer quiz →
+        </a>
+
+        <button type="button" class="botao-resultado" @onclick="MostrarUltimoResultado">
+            Ver último resultado
+        </button>
+
+        @if (ExibindoUltimoResultado)
+        {
+            <div class="resultado-ultimo">
+                @if (UltimoResultado != null)
+                {
+                    <h3>Seu último resultado</h3>
+
+                    <p>
+                        Você acertou
+                        <strong>@UltimoResultado.Pontos de @UltimoResultado.TotalPerguntas</strong>
+                        questões.
+                    </p>
+
+                    <p>
+                        Concluído em:
+                        @UltimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                }
+                else
+                {
+                    <p>Você ainda não concluiu este quiz.</p>
+                }
+            </div>
+        }
+    </section>
+
+</div>
+
+@code {
+    private ResultadoQuiz? UltimoResultado;
+    private bool ExibindoUltimoResultado = false;
+
+    private async Task MostrarUltimoResultado()
+    {
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(usuarioId))
+        {
+            UltimoResultado = null;
+            ExibindoUltimoResultado = true;
+            return;
+        }
+
+        UltimoResultado = await Context.ResultadosQuiz
+            .Where(r => r.UsuarioId == usuarioId &&
+                        r.IdentificadorQuiz == "orcamento-pessoal")
+            .OrderByDescending(r => r.DataConclusao)
+            .FirstOrDefaultAsync();
+
+        ExibindoUltimoResultado = true;
+    }
+}
+
+<style>
+    .aula-container {
+        max-width: 850px;
+        margin: 35px auto;
+        padding: 20px;
+        color: #172033;
+    }
+
+    .voltar {
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .aula-cabecalho {
+        margin: 30px 0;
+    }
+
+    .etiqueta {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .aula-cabecalho h1 {
+        font-size: 32px;
+        margin: 10px 0;
+    }
+
+    .aula-cabecalho p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .nivel {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 7px 12px;
+        background: #ecfdf5;
+        color: #087f5b;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .introducao, .conteudo-card, .resumo, .quiz-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px #00000008;
+    }
+
+    .introducao h2, .conteudo-card h2,
+    .resumo h2, .quiz-card h2 {
+        color: #172b65;
+        font-size: 21px;
+        margin-bottom: 14px;
+    }
+
+    .introducao p, .conteudo-card p,
+    .resumo li, .quiz-card p {
+        color: #475569;
+        line-height: 1.7;
+    }
+
+    .exemplo {
+        background: #f0fdf4;
+        border-left: 4px solid #10b981;
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 15px;
+    }
+
+    .exemplo h3 {
+        color: #087f5b;
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .exemplo p {
+        margin-bottom: 8px;
+    }
+
+    .exemplo ul {
+        padding-left: 22px;
+        color: #475569;
+        line-height: 1.8;
+    }
+
+    .dica {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 15px;
+        color: #1e40af;
+        line-height: 1.7;
+    }
+
+    .conteudo-card ul, .resumo ul {
+        padding-left: 22px;
+        line-height: 1.9;
+        color: #475569;
+    }
+
+    .quiz-card {
+        text-align: center;
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+        padding: 30px;
+    }
+
+    .botao-quiz {
+        display: inline-block;
+        margin-top: 15px;
+        padding: 13px 25px;
+        background: #087f5b;
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 700;
+    }
+
+    .botao-quiz:hover {
+        background: #066849;
+        color: white;
+    }
+
+    .botao-resultado {
+        display: block;
+        margin: 15px auto 0;
+        padding: 12px 22px;
+        border: 1px solid #2455a4;
+        border-radius: 10px;
+        background: white;
+        color: #2455a4;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .botao-resultado:hover {
+        background: #eff6ff;
+    }
+
+    .resultado-ultimo {
+        margin-top: 20px;
+        padding: 18px;
+        background: white;
+        border: 1px solid #bbf7d0;
+        border-radius: 12px;
+        color: #475569;
+    }
+
+    .resultado-ultimo h3 {
+        color: #087f5b;
+        margin-bottom: 12px;
+    }
+
+    @@media (max-width: 600px) {
+        .aula-cabecalho h1 {
+            font-size: 26px;
+        }
+
+        .introducao, .conteudo-card,
+        .resumo, .quiz-card {
+            padding: 20px;
+        }
+    }
+</style>

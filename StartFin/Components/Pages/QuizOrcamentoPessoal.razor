@@ -1,0 +1,695 @@
+
+@page "/educacao-financeira/quiz/orcamento-pessoal"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+@using StartFin.Modelos
+@using System.Security.Claims
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Quiz - Orçamento pessoal | StartFin</PageTitle>
+
+<div class="quiz-container">
+
+    <a href="/educacao-financeira/orcamento-pessoal" class="voltar">
+        ← Voltar para a aula
+    </a>
+
+    <header class="quiz-cabecalho">
+        <span class="etiqueta">EDUCAÇÃO FINANCEIRA • AULA 6</span>
+        <h1>Quiz: Orçamento pessoal 📊</h1>
+        <p>
+            Teste seus conhecimentos sobre receitas, despesas
+            e planejamento financeiro.
+        </p>
+    </header>
+
+    @if (!QuizFinalizado)
+    {
+        <div class="progresso-container">
+            <div class="progresso-texto">
+                <span>Questão @(IndiceAtual + 1) de @Perguntas.Count</span>
+                <span>@(IndiceAtual * 10)% concluído</span>
+            </div>
+
+            <div class="progresso-fundo">
+                <div class="progresso-preenchido"
+                     style="width: @((IndiceAtual + 1) * 10)%">
+                </div>
+            </div>
+        </div>
+
+        <section class="pergunta-card">
+            <span class="numero-pergunta">
+                QUESTÃO @(IndiceAtual + 1)
+            </span>
+
+            <h2>@Perguntas[IndiceAtual].Enunciado</h2>
+
+            <div class="opcoes">
+                @for (int i = 0; i < Perguntas[IndiceAtual].Opcoes.Length; i++)
+                {
+                    int indice = i;
+
+                    <button type="button"
+                            class="opcao @(AlternativaSelecionada == indice ? "selecionada" : "") @(RespostaConfirmada && indice == Perguntas[IndiceAtual].RespostaCorreta ? "correta" : "") @(RespostaConfirmada && AlternativaSelecionada == indice && indice != Perguntas[IndiceAtual].RespostaCorreta ? "incorreta" : "")"
+                            disabled="@RespostaConfirmada"
+                            @onclick="() => Selecionar(indice)">
+
+                        <span class="letra-opcao">
+                            @((char)('A' + indice))
+                        </span>
+
+                        <span>@Perguntas[IndiceAtual].Opcoes[indice]</span>
+                    </button>
+                }
+            </div>
+
+            @if (RespostaConfirmada)
+            {
+                <div class="feedback @(AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta ? "feedback-correto" : "feedback-erro")">
+                    <strong>
+                        @(AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta
+                            ? "Muito bem! Resposta correta!"
+                            : "Não foi dessa vez! Vamos aprender.")
+                    </strong>
+
+                    <p>@Perguntas[IndiceAtual].Explicacao</p>
+                </div>
+            }
+
+            <div class="acoes">
+                @if (!RespostaConfirmada)
+                {
+                    <button class="botao-principal"
+                            disabled="@(AlternativaSelecionada == null)"
+                            @onclick="ConfirmarResposta">
+                        Confirmar resposta
+                    </button>
+                }
+                else
+                {
+                    <button class="botao-principal"
+                            @onclick="Proxima">
+                        @(IndiceAtual == Perguntas.Count - 1
+                            ? "Ver resultado"
+                            : "Próxima questão →")
+                    </button>
+                }
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="resultado-card">
+            <div class="resultado-icone">🏆</div>
+
+            <span class="etiqueta">QUIZ CONCLUÍDO</span>
+            <h2>Você terminou!</h2>
+
+            <div class="pontuacao">
+                @Pontos <span>/ @Perguntas.Count</span>
+            </div>
+
+            <p class="mensagem-resultado">@MensagemResultado</p>
+
+            <div class="resultado-detalhes">
+                <p>
+                    Você acertou <strong>@Pontos</strong>
+                    de <strong>@Perguntas.Count</strong> questões.
+                </p>
+            </div>
+
+            @if (SalvandoResultado)
+            {
+                <p>Salvando seu resultado...</p>
+            }
+            else if (ResultadoSalvo)
+            {
+                <p class="mensagem-salva">
+                    Seu resultado foi salvo na sua conta!
+                </p>
+            }
+            else
+            {
+                <p class="mensagem-aviso">
+                    Não foi possível salvar o resultado.
+                    Verifique se você está conectado à sua conta.
+                </p>
+            }
+
+            <button class="botao-principal" @onclick="Reiniciar">
+                Refazer quiz
+            </button>
+
+            <a href="/educacao-financeira/orcamento-pessoal"
+               class="botao-secundario">
+                Voltar para a aula
+            </a>
+        </section>
+    }
+
+</div>
+
+@code {
+    private int IndiceAtual = 0;
+    private int? AlternativaSelecionada;
+    private int Pontos = 0;
+
+    private bool RespostaConfirmada = false;
+    private bool QuizFinalizado = false;
+    private bool SalvandoResultado = false;
+    private bool ResultadoSalvo = false;
+
+    private string MensagemResultado = "";
+
+    // Perguntas sobre orçamento pessoal, organizadas em dificuldade crescente.
+    private List<Pergunta> Perguntas = new()
+    {
+        new Pergunta
+        {
+            Enunciado = "Uma pessoa recebe R$ 400,00 de mesada todos os meses. Como esse dinheiro deve ser classificado no orçamento?",
+            Opcoes = new[]
+            {
+                "Como uma despesa fixa.",
+                "Como uma receita.",
+                "Como uma despesa variável.",
+                "Como uma dívida."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Receitas são as entradas de dinheiro. A mesada representa um valor recebido e, portanto, faz parte das receitas."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Uma estudante paga mensalmente R$ 35,00 por uma assinatura de música. Em qual categoria esse gasto se encaixa melhor?",
+            Opcoes = new[]
+            {
+                "Receita variável.",
+                "Despesa fixa.",
+                "Receita extra.",
+                "Investimento obrigatório."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Uma assinatura que é cobrada regularmente e mantém um valor semelhante pode ser classificada como despesa fixa."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Durante um mês, Pedro gastou mais dinheiro com lanches do que havia planejado. Qual seria a atitude mais adequada?",
+            Opcoes = new[]
+            {
+                "Ignorar os gastos porque são valores pequenos.",
+                "Deixar de registrar os próximos gastos.",
+                "Analisar os registros e ajustar o planejamento.",
+                "Utilizar todo o dinheiro reservado para seus objetivos."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "Acompanhar as despesas permite identificar excessos. Pedro deve entender o motivo do gasto maior e ajustar seu orçamento."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Mariana recebe R$ 500,00 por mês. Suas despesas são R$ 180,00 de transporte, R$ 120,00 de alimentação e R$ 50,00 de assinatura. Qual análise está correta?",
+            Opcoes = new[]
+            {
+                "Ela gastou R$ 350,00 e ainda possui R$ 150,00.",
+                "Ela gastou R$ 300,00 e ainda possui R$ 200,00.",
+                "Ela gastou R$ 500,00 e não possui saldo.",
+                "Ela gastou R$ 400,00 e ainda possui R$ 100,00."
+            },
+            RespostaCorreta = 0,
+            Explicacao = "Somando as despesas: 180 + 120 + 50 = 350. Subtraindo da receita: 500 - 350 = 150. Esse é o valor restante."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Lucas recebe uma quantia variável por trabalhos que realiza. Em alguns meses recebe mais, em outros menos. Como ele deve organizar seu orçamento?",
+            Opcoes = new[]
+            {
+                "Considerar sempre o maior valor que já recebeu.",
+                "Planejar os gastos considerando uma estimativa conservadora de receita.",
+                "Gastar primeiro e registrar apenas o que sobrar.",
+                "Ignorar os meses em que recebe menos."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Quando a renda varia, é prudente planejar com base em um valor mais seguro, evitando comprometer o orçamento contando com dinheiro incerto."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Ana percebeu que possui dinheiro sobrando no fim do mês, mas não consegue explicar onde gastou parte dele. O que está faltando em seu planejamento?",
+            Opcoes = new[]
+            {
+                "Aumentar todas as despesas fixas.",
+                "Registrar e acompanhar as entradas e saídas de dinheiro.",
+                "Gastar o saldo antes do próximo mês.",
+                "Eliminar qualquer objetivo de economia."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Sem registros, fica difícil identificar para onde o dinheiro está indo. Anotar receitas e despesas ajuda a compreender os hábitos financeiros."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Uma pessoa possui uma renda mensal limitada e deseja comprar um computador. Ela também tem despesas importantes durante o mês. Qual estratégia demonstra melhor planejamento?",
+            Opcoes = new[]
+            {
+                "Comprar o computador imediatamente, mesmo sem avaliar as despesas.",
+                "Deixar de pagar despesas importantes para acelerar a compra.",
+                "Calcular quanto sobra após as despesas e definir um valor possível para guardar.",
+                "Contar com dinheiro que talvez receba no futuro."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "Uma meta deve considerar a realidade financeira. Primeiro é necessário avaliar as despesas e depois definir quanto pode ser reservado sem comprometer necessidades importantes."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Durante três meses, Rafael percebeu que suas despesas variáveis aumentam muito nos fins de semana. Qual conclusão é mais útil para melhorar seu orçamento?",
+            Opcoes = new[]
+            {
+                "O orçamento não precisa considerar gastos de fim de semana.",
+                "Os registros revelam um padrão que pode ser analisado e ajustado.",
+                "Despesas variáveis não podem ser planejadas.",
+                "A única solução é aumentar a renda."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Observar padrões de consumo permite identificar situações que aumentam os gastos. Rafael pode estabelecer limites e planejar melhor os fins de semana."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Beatriz tem R$ 250,00 disponíveis. Ela ainda precisa pagar R$ 90,00 de transporte e R$ 80,00 de alimentação. Quer guardar dinheiro para uma meta de longo prazo. Qual decisão é mais responsável?",
+            Opcoes = new[]
+            {
+                "Guardar os R$ 250,00 e ignorar as despesas.",
+                "Gastar os R$ 250,00 porque ainda não chegou o próximo mês.",
+                "Considerar as despesas de R$ 170,00 e planejar a economia com os R$ 80,00 restantes.",
+                "Assumir uma nova despesa mensal sem avaliar o orçamento."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "As despesas importantes somam R$ 170,00. Depois de considerá-las, Beatriz tem R$ 80,00 restantes, que pode planejar entre economia e outros gastos necessários."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "Uma pessoa organiza seu orçamento, mas percebe que frequentemente precisa usar o dinheiro reservado para uma meta porque surgem gastos não planejados. Qual mudança pode tornar seu planejamento mais consistente?",
+            Opcoes = new[]
+            {
+                "Parar de registrar despesas inesperadas.",
+                "Criar uma reserva para imprevistos e revisar o orçamento regularmente.",
+                "Considerar todos os imprevistos como despesas fixas.",
+                "Eliminar a meta sem analisar os motivos."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Uma reserva para imprevistos ajuda a lidar com despesas inesperadas sem precisar retirar constantemente o dinheiro destinado a outros objetivos. Revisar o orçamento também permite fazer ajustes."
+        }
+    };
+
+    private void Selecionar(int indice)
+    {
+        if (!RespostaConfirmada)
+        {
+            AlternativaSelecionada = indice;
+        }
+    }
+
+    private void ConfirmarResposta()
+    {
+        if (AlternativaSelecionada == null || RespostaConfirmada)
+        {
+            return;
+        }
+
+        if (AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta)
+        {
+            Pontos++;
+        }
+
+        RespostaConfirmada = true;
+    }
+
+    private async Task Proxima()
+    {
+        if (IndiceAtual < Perguntas.Count - 1)
+        {
+            IndiceAtual++;
+            AlternativaSelecionada = null;
+            RespostaConfirmada = false;
+        }
+        else
+        {
+            QuizFinalizado = true;
+
+            if (Pontos >= 9)
+            {
+                MensagemResultado = "Excelente! Você demonstrou muito domínio sobre orçamento pessoal.";
+            }
+            else if (Pontos >= 7)
+            {
+                MensagemResultado = "Muito bem! Você compreendeu os principais conceitos de planejamento financeiro.";
+            }
+            else if (Pontos >= 5)
+            {
+                MensagemResultado = "Bom trabalho! Revise alguns conceitos e continue praticando.";
+            }
+            else
+            {
+                MensagemResultado = "Continue estudando! Releia a aula e tente novamente para fortalecer seu aprendizado.";
+            }
+
+            await SalvarResultadoAsync();
+        }
+    }
+
+    private async Task SalvarResultadoAsync()
+    {
+        SalvandoResultado = true;
+
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                ResultadoSalvo = false;
+                return;
+            }
+
+            var resultado = new ResultadoQuiz
+            {
+                UsuarioId = usuarioId,
+                IdentificadorQuiz = "orcamento-pessoal",
+                Pontos = Pontos,
+                TotalPerguntas = Perguntas.Count,
+                DataConclusao = DateTime.UtcNow
+            };
+
+            Context.ResultadosQuiz.Add(resultado);
+            await Context.SaveChangesAsync();
+
+            ResultadoSalvo = true;
+        }
+        catch
+        {
+            ResultadoSalvo = false;
+        }
+        finally
+        {
+            SalvandoResultado = false;
+        }
+    }
+
+    private void Reiniciar()
+    {
+        IndiceAtual = 0;
+        AlternativaSelecionada = null;
+        Pontos = 0;
+
+        RespostaConfirmada = false;
+        QuizFinalizado = false;
+        SalvandoResultado = false;
+        ResultadoSalvo = false;
+
+        MensagemResultado = "";
+    }
+
+    private class Pergunta
+    {
+        public string Enunciado { get; set; } = "";
+        public string[] Opcoes { get; set; } = Array.Empty<string>();
+        public int RespostaCorreta { get; set; }
+        public string Explicacao { get; set; } = "";
+    }
+}
+
+<style>
+    .quiz-container {
+        max-width: 800px;
+        margin: 35px auto;
+        padding: 20px;
+        color: #172033;
+    }
+
+    .voltar {
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .quiz-cabecalho {
+        margin: 30px 0;
+    }
+
+    .etiqueta {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .quiz-cabecalho h1 {
+        color: #172b65;
+        font-size: 30px;
+        margin: 10px 0;
+    }
+
+    .quiz-cabecalho p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .progresso-container {
+        margin-bottom: 20px;
+    }
+
+    .progresso-texto {
+        display: flex;
+        justify-content: space-between;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .progresso-fundo {
+        width: 100%;
+        height: 9px;
+        background: #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .progresso-preenchido {
+        height: 100%;
+        background: #10b981;
+        border-radius: 20px;
+        transition: width 0.3s;
+    }
+
+    .pergunta-card, .resultado-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 5px 20px #00000008;
+    }
+
+    .numero-pergunta {
+        color: #087f5b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .pergunta-card h2 {
+        color: #172b65;
+        font-size: 21px;
+        line-height: 1.5;
+        margin: 15px 0 22px;
+    }
+
+    .opcoes {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .opcao {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 15px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: white;
+        color: #334155;
+        text-align: left;
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .opcao:hover:not(:disabled) {
+        border-color: #10b981;
+        background: #f0fdf4;
+    }
+
+    .opcao.selecionada {
+        border: 2px solid #087f5b;
+        background: #ecfdf5;
+    }
+
+    .opcao.correta {
+        border: 2px solid #16a34a;
+        background: #f0fdf4;
+    }
+
+    .opcao.incorreta {
+        border: 2px solid #dc2626;
+        background: #fef2f2;
+    }
+
+    .opcao:disabled {
+        cursor: default;
+        opacity: 1;
+    }
+
+    .letra-opcao {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        color: #172b65;
+        font-weight: 800;
+    }
+
+    .feedback {
+        margin-top: 22px;
+        padding: 17px;
+        border-radius: 10px;
+        line-height: 1.6;
+    }
+
+    .feedback p {
+        margin: 8px 0 0;
+    }
+
+    .feedback-correto {
+        background: #f0fdf4;
+        border-left: 4px solid #16a34a;
+        color: #166534;
+    }
+
+    .feedback-erro {
+        background: #fef2f2;
+        border-left: 4px solid #dc2626;
+        color: #991b1b;
+    }
+
+    .acoes {
+        display: flex;
+        justify-content: center;
+        margin-top: 25px;
+    }
+
+    .botao-principal {
+        display: inline-block;
+        padding: 13px 25px;
+        border: none;
+        border-radius: 10px;
+        background: #087f5b;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .botao-principal:hover:not(:disabled) {
+        background: #066849;
+    }
+
+    .botao-principal:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    .resultado-card {
+        text-align: center;
+        padding: 35px;
+    }
+
+    .resultado-icone {
+        font-size: 55px;
+        margin-bottom: 15px;
+    }
+
+    .resultado-card h2 {
+        color: #172b65;
+        margin: 12px 0;
+    }
+
+    .pontuacao {
+        color: #087f5b;
+        font-size: 55px;
+        font-weight: 800;
+        margin: 20px 0;
+    }
+
+    .pontuacao span {
+        color: #64748b;
+        font-size: 25px;
+    }
+
+    .mensagem-resultado {
+        color: #475569;
+        line-height: 1.7;
+    }
+
+    .resultado-detalhes {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f0fdf4;
+        border-radius: 10px;
+        color: #166534;
+    }
+
+    .mensagem-salva {
+        color: #087f5b;
+        font-weight: 700;
+    }
+
+    .mensagem-aviso {
+        color: #b45309;
+    }
+
+    .botao-secundario {
+        display: block;
+        margin-top: 15px;
+        color: #087f5b;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 600px) {
+        .quiz-cabecalho h1 {
+            font-size: 25px;
+        }
+
+        .pergunta-card, .resultado-card {
+            padding: 20px;
+        }
+
+        .opcao {
+            font-size: 14px;
+        }
+    }
+</style>
