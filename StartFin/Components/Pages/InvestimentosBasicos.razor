@@ -1,0 +1,448 @@
+
+@page "/educacao-financeira/investimentos-basicos"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using StartFin.Dados
+@using StartFin.Modelos
+@using System.Security.Claims
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Investimentos Básicos | StartFin</PageTitle>
+
+<div class="aula-container">
+
+    <a href="/educacao-financeira" class="voltar">
+        ← Voltar aos conteúdos
+    </a>
+
+    <header class="aula-cabecalho">
+        <span class="etiqueta">EDUCAÇÃO FINANCEIRA • INVESTIMENTOS</span>
+        <h1>Investimentos Básicos</h1>
+        <p>
+            Aprenda como os investimentos funcionam e descubra por que
+            planejar é tão importante para construir seu futuro financeiro.
+        </p>
+    </header>
+
+    <section class="conteudo-aula">
+        <h2>1. O que são investimentos?</h2>
+
+        <p>
+            Investir significa aplicar dinheiro em alguma alternativa
+            financeira com a expectativa de obter um retorno no futuro.
+            Diferentemente de simplesmente guardar dinheiro, um investimento
+            pode fazer seu patrimônio crescer ao longo do tempo.
+        </p>
+
+        <div class="destaque-aula">
+            <strong>Exemplo:</strong>
+            Imagine que uma pessoa tenha um objetivo para daqui a alguns anos.
+            Ela pode estudar diferentes formas de investir e escolher uma
+            alternativa que combine com seu objetivo e com os riscos que
+            consegue compreender e aceitar.
+        </div>
+
+        <h2>2. Por que as pessoas investem?</h2>
+
+        <p>Existem vários motivos para investir, como:</p>
+
+        <ul>
+            <li>Planejar objetivos de longo prazo.</li>
+            <li>Construir uma reserva para situações inesperadas.</li>
+            <li>Preservar o valor do dinheiro ao longo do tempo.</li>
+            <li>Buscar crescimento do patrimônio.</li>
+            <li>Ter mais organização e tranquilidade financeira.</li>
+        </ul>
+
+        <h2>3. Risco e retorno</h2>
+
+        <p>
+            Todo investimento possui características próprias. Duas das
+            mais importantes são o risco e o retorno.
+        </p>
+
+        <div class="exemplo-aula">
+            <h3>Risco</h3>
+            <p>
+                É a possibilidade de o resultado ser diferente do esperado,
+                incluindo a possibilidade de perder parte do dinheiro investido.
+            </p>
+
+            <h3>Retorno</h3>
+            <p>
+                É o resultado obtido com o investimento, que pode representar
+                um ganho ou uma perda.
+            </p>
+        </div>
+
+        <p>
+            É importante entender que uma possibilidade de retorno maior
+            geralmente vem acompanhada de riscos maiores. Nenhum investimento
+            deve ser escolhido apenas pela promessa de ganhar muito dinheiro.
+        </p>
+
+        <h2>4. Liquidez: quando posso retirar meu dinheiro?</h2>
+
+        <p>
+            Liquidez é a facilidade e a velocidade com que um investimento
+            pode ser transformado novamente em dinheiro disponível.
+        </p>
+
+        <div class="destaque-aula">
+            <strong>Exemplo:</strong>
+            Uma aplicação pode permitir o resgate a qualquer momento,
+            enquanto outra pode exigir que a pessoa espere até uma data
+            determinada para retirar o dinheiro nas condições previstas.
+        </div>
+
+        <p>
+            Por isso, antes de investir, é importante verificar quando
+            o dinheiro poderá ser retirado e se existem condições ou custos
+            envolvidos.
+        </p>
+
+        <h2>5. Conhecendo alguns tipos de investimentos</h2>
+
+        <div class="exemplo-aula">
+            <h3>Poupança</h3>
+            <p>
+                É uma forma conhecida de guardar dinheiro em uma instituição
+                financeira. Possui regras próprias de rendimento e
+                funcionamento.
+            </p>
+
+            <h3>CDB</h3>
+            <p>
+                É um título emitido por bancos. Ao aplicar, a pessoa
+                empresta dinheiro à instituição e recebe uma remuneração
+                conforme as condições contratadas.
+            </p>
+
+            <h3>Tesouro Direto</h3>
+            <p>
+                É um programa de investimento em títulos públicos federais.
+                Cada título possui regras de rendimento, prazo e resgate.
+            </p>
+
+            <h3>Fundos de investimento</h3>
+            <p>
+                Reúnem recursos de diferentes investidores, que são
+                administrados conforme uma estratégia definida.
+            </p>
+
+            <h3>Ações</h3>
+            <p>
+                Representam pequenas partes do capital de uma empresa.
+                Seu valor pode subir ou cair, por isso apresentam riscos
+                que precisam ser compreendidos.
+            </p>
+        </div>
+
+        <h2>6. O que é diversificação?</h2>
+
+        <p>
+            Diversificar significa distribuir os recursos entre diferentes
+            tipos de investimentos, em vez de concentrar tudo em apenas um.
+        </p>
+
+        <div class="destaque-aula">
+            <strong>Exemplo:</strong>
+            Imagine alguém que coloca todo o dinheiro em uma única alternativa.
+            Se ela apresentar um resultado ruim, todo o valor poderá ser
+            afetado. A diversificação busca distribuir essa exposição entre
+            alternativas diferentes, mas não elimina os riscos.
+        </div>
+
+        <h2>7. Inflação: por que ela importa?</h2>
+
+        <p>
+            Inflação é o aumento geral dos preços de produtos e serviços
+            ao longo do tempo. Quando os preços sobem, o mesmo valor de
+            dinheiro pode comprar menos coisas.
+        </p>
+
+        <div class="exemplo-aula">
+            <strong>Exemplo:</strong>
+            Se um produto custava R$ 100,00 e, depois de um período,
+            passou a custar R$ 110,00, seu preço aumentou. Isso mostra
+            por que é importante considerar a inflação ao analisar
+            o resultado de um investimento.
+        </div>
+
+        <h2>8. Cuidados antes de investir</h2>
+
+        <ul>
+            <li>Entenda como o investimento funciona.</li>
+            <li>Pesquise os riscos envolvidos.</li>
+            <li>Verifique taxas, prazos e condições de resgate.</li>
+            <li>Desconfie de promessas de lucro garantido e muito elevado.</li>
+            <li>Não tome decisões por pressão de outras pessoas.</li>
+            <li>Compare informações antes de tomar uma decisão.</li>
+        </ul>
+
+        <p>
+            Para quem ainda é menor de idade, qualquer decisão envolvendo
+            investimentos reais deve ser conversada com um responsável
+            e seguir as regras da instituição financeira.
+        </p>
+
+        <h2>9. Investir exige planejamento</h2>
+
+        <p>
+            Antes de pensar em investir, é importante conhecer sua situação
+            financeira, organizar o orçamento e definir objetivos.
+            Também é necessário entender que investimentos não garantem
+            ganhos e podem apresentar perdas.
+        </p>
+
+        <div class="resumo-aula">
+            <h2>Resumo da aula</h2>
+            <ul>
+                <li>Investir é aplicar dinheiro pensando em objetivos futuros.</li>
+                <li>Risco é a possibilidade de resultados diferentes do esperado.</li>
+                <li>Retorno é o resultado obtido com o investimento.</li>
+                <li>Liquidez indica a facilidade de resgatar o dinheiro.</li>
+                <li>Diversificação distribui os recursos entre alternativas diferentes.</li>
+                <li>A inflação reduz o poder de compra do dinheiro.</li>
+                <li>Conhecimento e planejamento devem vir antes de qualquer decisão.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="quiz-chamada">
+        <h2>Hora de testar seus conhecimentos!</h2>
+        <p>
+            Você chegou ao final da última aula de Educação Financeira.
+            Agora, responda ao quiz e coloque em prática o que aprendeu
+            sobre investimentos.
+        </p>
+
+        <a href="/educacao-financeira/quiz/investimentos-basicos"
+           class="botao-quiz">
+            Fazer quiz
+        </a>
+
+        <button class="botao-resultado" @onclick="ConsultarResultado">
+            Ver último resultado
+        </button>
+
+        @if (mostrarResultado)
+        {
+            <div class="resultado-ultimo">
+                @if (ultimoResultado != null)
+                {
+                    <h3>Seu último resultado</h3>
+                    <p>
+                        <strong>Pontuação:</strong> @ultimoResultado.Pontos de
+                        @ultimoResultado.TotalPerguntas
+                    </p>
+                    <p>
+                        <strong>Conclusão:</strong> @ultimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                }
+                else
+                {
+                    <p>Você ainda não possui um resultado salvo neste quiz.</p>
+                }
+            </div>
+        }
+    </section>
+
+</div>
+
+@code {
+    private ResultadoQuiz? ultimoResultado;
+    private bool mostrarResultado;
+
+    private async Task ConsultarResultado()
+    {
+        mostrarResultado = true;
+
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        var usuario = estado.User;
+
+        var usuarioId = usuario.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(usuarioId))
+        {
+            ultimoResultado = null;
+            return;
+        }
+
+        ultimoResultado = await Context.ResultadosQuiz
+            .Where(r => r.UsuarioId == usuarioId &&
+                        r.IdentificadorQuiz == "investimentos-basicos")
+            .OrderByDescending(r => r.DataConclusao)
+            .FirstOrDefaultAsync();
+    }
+}
+
+<style>
+    .aula-container {
+        max-width: 950px;
+        margin: 0 auto;
+        padding: 30px 20px 60px;
+        color: #243247;
+    }
+
+    .voltar {
+        display: inline-block;
+        margin-bottom: 25px;
+        color: #16865b;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .aula-cabecalho {
+        margin-bottom: 35px;
+    }
+
+    .etiqueta {
+        color: #16865b;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .aula-cabecalho h1 {
+        margin: 12px 0;
+        font-size: 36px;
+        color: #173b32;
+    }
+
+    .aula-cabecalho p {
+        color: #657386;
+        font-size: 17px;
+        line-height: 1.7;
+    }
+
+    .conteudo-aula {
+        line-height: 1.8;
+    }
+
+    .conteudo-aula h2 {
+        margin-top: 35px;
+        margin-bottom: 12px;
+        color: #173b32;
+        font-size: 23px;
+    }
+
+    .conteudo-aula h3 {
+        margin-top: 18px;
+        margin-bottom: 5px;
+        color: #16865b;
+    }
+
+    .conteudo-aula p,
+    .conteudo-aula li {
+        color: #526174;
+        font-size: 16px;
+    }
+
+    .conteudo-aula li {
+        margin-bottom: 8px;
+    }
+
+    .destaque-aula,
+    .exemplo-aula {
+        margin: 20px 0;
+        padding: 20px;
+        border-radius: 12px;
+        background: #edf7f1;
+        border-left: 4px solid #16865b;
+    }
+
+    .exemplo-aula {
+        background: #f3f6fa;
+        border-left-color: #315caa;
+    }
+
+    .resumo-aula {
+        margin-top: 40px;
+        padding: 25px;
+        border-radius: 14px;
+        background: #edf7f1;
+    }
+
+    .resumo-aula h2 {
+        margin-top: 0;
+    }
+
+    .quiz-chamada {
+        margin-top: 40px;
+        padding: 30px;
+        border-radius: 16px;
+        background: #f3f6fa;
+        text-align: center;
+    }
+
+    .quiz-chamada h2 {
+        color: #173b32;
+    }
+
+    .quiz-chamada p {
+        color: #657386;
+        line-height: 1.7;
+    }
+
+    .botao-quiz,
+    .botao-resultado {
+        display: inline-block;
+        margin: 12px 6px 0;
+        padding: 13px 22px;
+        border: none;
+        border-radius: 9px;
+        color: white;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .botao-quiz {
+        background: #16865b;
+    }
+
+    .botao-resultado {
+        background: #315caa;
+    }
+
+    .resultado-ultimo {
+        margin-top: 22px;
+        padding: 18px;
+        border-radius: 10px;
+        background: white;
+        text-align: left;
+    }
+
+    .resultado-ultimo h3 {
+        color: #173b32;
+    }
+
+    @@media (max-width: 600px) {
+        .aula-container {
+            padding: 20px 15px 40px;
+        }
+
+        .aula-cabecalho h1 {
+            font-size: 29px;
+        }
+
+        .conteudo-aula h2 {
+            font-size: 21px;
+        }
+
+        .quiz-chamada {
+            padding: 22px 15px;
+        }
+
+        .botao-quiz,
+        .botao-resultado {
+            width: 100%;
+            margin: 8px 0;
+        }
+    }
+</style>

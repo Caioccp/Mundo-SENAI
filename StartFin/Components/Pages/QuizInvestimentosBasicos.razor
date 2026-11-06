@@ -1,0 +1,674 @@
+
+@page "/educacao-financeira/quiz/investimentos-basicos"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using StartFin.Dados
+@using StartFin.Modelos
+@using System.Security.Claims
+
+@inject StartFinContext Context
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Quiz - Investimentos Básicos | StartFin</PageTitle>
+
+<div class="quiz-container">
+
+    <a href="/educacao-financeira/investimentos-basicos" class="voltar">
+        ← Voltar à aula
+    </a>
+
+    @if (!QuizFinalizado)
+    {
+        <header class="quiz-cabecalho">
+            <span class="etiqueta">EDUCAÇÃO FINANCEIRA • QUIZ</span>
+            <h1>Investimentos Básicos</h1>
+            <p>Teste seus conhecimentos sobre investimentos e planejamento financeiro.</p>
+        </header>
+
+        <div class="progresso-info">
+            <span>Pergunta @(IndiceAtual + 1) de @Perguntas.Count</span>
+            <span>@(IndiceAtual * 10)% concluído</span>
+        </div>
+
+        <div class="progresso-barra">
+            <div class="progresso-preenchido"
+                 style="width: @((IndiceAtual + 1) * 10)%">
+            </div>
+        </div>
+
+        <section class="pergunta-card">
+            <h2>@Perguntas[IndiceAtual].Enunciado</h2>
+
+            <div class="opcoes">
+                @for (int i = 0; i < Perguntas[IndiceAtual].Opcoes.Length; i++)
+                {
+                    int indice = i;
+
+                    <button class="opcao
+                        @(AlternativaSelecionada == indice ? "selecionada" : "")
+                        @(RespostaConfirmada && indice == Perguntas[IndiceAtual].RespostaCorreta ? "correta" : "")
+                        @(RespostaConfirmada && AlternativaSelecionada == indice && indice != Perguntas[IndiceAtual].RespostaCorreta ? "incorreta" : "")"
+                        disabled="@RespostaConfirmada"
+                        @onclick="() => Selecionar(indice)">
+                        <span class="letra-opcao">@((char)('A' + indice))</span>
+                        @Perguntas[IndiceAtual].Opcoes[indice]
+                    </button>
+                }
+            </div>
+
+            @if (RespostaConfirmada)
+            {
+                <div class="feedback @(AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta ? "feedback-correto" : "feedback-errado")">
+                    <strong>
+                        @(AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta
+                            ? "Resposta correta!"
+                            : "Não foi dessa vez!")
+                    </strong>
+                    <p>@Perguntas[IndiceAtual].Explicacao</p>
+                </div>
+            }
+
+            <div class="acoes-quiz">
+                @if (!RespostaConfirmada)
+                {
+                    <button class="botao-principal"
+                            disabled="@(AlternativaSelecionada == null)"
+                            @onclick="ConfirmarResposta">
+                        Confirmar resposta
+                    </button>
+                }
+                else
+                {
+                    <button class="botao-principal" @onclick="Proxima">
+                        @(IndiceAtual == Perguntas.Count - 1 ? "Ver resultado" : "Próxima pergunta")
+                    </button>
+                }
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="resultado-card">
+            <span class="etiqueta">QUIZ FINALIZADO</span>
+            <h1>Você concluiu o quiz!</h1>
+
+            <div class="pontuacao">
+                <strong>@Pontos</strong>
+                <span>de @Perguntas.Count pontos</span>
+            </div>
+
+            <h2>@MensagemResultado</h2>
+
+            <p>
+                Você acertou @Pontos de @Perguntas.Count perguntas.
+            </p>
+
+            @if (SalvandoResultado)
+            {
+                <p>Salvando seu resultado...</p>
+            }
+            else if (ResultadoSalvo)
+            {
+                <p class="mensagem-sucesso">
+                    Seu resultado foi salvo com sucesso!
+                </p>
+            }
+            else
+            {
+                <p class="mensagem-erro">
+                    Não foi possível salvar seu resultado.
+                    Você pode tentar novamente.
+                </p>
+                <button class="botao-secundario" @onclick="SalvarResultadoAsync">
+                    Tentar salvar novamente
+                </button>
+            }
+
+            <div class="acoes-resultado">
+                <button class="botao-principal" @onclick="Reiniciar">
+                    Refazer quiz
+                </button>
+
+                <a href="/educacao-financeira/investimentos-basicos"
+                   class="botao-secundario">
+                    Voltar à aula
+                </a>
+            </div>
+        </section>
+    }
+
+</div>
+
+@code {
+    private int IndiceAtual = 0;
+    private int? AlternativaSelecionada = null;
+    private int Pontos = 0;
+
+    private bool RespostaConfirmada = false;
+    private bool QuizFinalizado = false;
+    private bool SalvandoResultado = false;
+    private bool ResultadoSalvo = false;
+
+    private string MensagemResultado = "";
+
+    private List<Pergunta> Perguntas = new()
+    {
+        new Pergunta
+        {
+            Enunciado = "1. Qual é o principal objetivo de um investimento?",
+            Opcoes = new[]
+            {
+                "Garantir que o dinheiro nunca diminua de valor.",
+                "Aplicar dinheiro buscando um retorno futuro.",
+                "Gastar o dinheiro antes que os preços aumentem.",
+                "Receber dinheiro sem assumir nenhuma condição."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Investir significa aplicar recursos buscando resultados futuros. Porém, não existe garantia de lucro em todos os investimentos."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "2. Uma pessoa escolhe um investimento apenas porque ouviu dizer que ele pode render muito. Qual atitude seria mais adequada antes de aplicar?",
+            Opcoes = new[]
+            {
+                "Investir imediatamente para não perder a oportunidade.",
+                "Aplicar todo o dinheiro disponível.",
+                "Pesquisar o funcionamento, os riscos, os custos e as condições.",
+                "Confiar somente na opinião de quem recomendou."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "Antes de investir, é fundamental entender as características da aplicação e avaliar se ela faz sentido para seus objetivos."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "3. O que significa risco em um investimento?",
+            Opcoes = new[]
+            {
+                "A possibilidade de o resultado ser diferente do esperado.",
+                "A certeza de que haverá lucro.",
+                "O valor que a pessoa recebe mensalmente.",
+                "A facilidade de retirar o dinheiro."
+            },
+            RespostaCorreta = 0,
+            Explicacao = "Risco é a possibilidade de resultados diferentes dos esperados, incluindo a possibilidade de perdas."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "4. Uma pessoa pode precisar do dinheiro investido a qualquer momento. Qual característica deve analisar com atenção?",
+            Opcoes = new[]
+            {
+                "Apenas o nome da instituição.",
+                "A quantidade de pessoas que investiram.",
+                "A cor ou a aparência do aplicativo.",
+                "A liquidez e as condições de resgate."
+            },
+            RespostaCorreta = 3,
+            Explicacao = "Liquidez representa a facilidade e a velocidade de transformar um investimento em dinheiro disponível."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "5. Qual alternativa descreve corretamente um CDB?",
+            Opcoes = new[]
+            {
+                "Uma ação que representa parte de uma empresa.",
+                "Um título emitido por um banco, com condições de remuneração.",
+                "Um investimento sem riscos e sem condições.",
+                "Uma conta utilizada exclusivamente para pagamentos."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "No CDB, a pessoa empresta dinheiro à instituição financeira e recebe uma remuneração conforme as condições contratadas."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "6. Uma pessoa concentra todo o seu dinheiro em um único investimento. Qual é uma possível vantagem da diversificação?",
+            Opcoes = new[]
+            {
+                "Eliminar completamente todos os riscos.",
+                "Garantir o maior retorno possível.",
+                "Distribuir os recursos entre alternativas diferentes.",
+                "Impedir que qualquer investimento apresente perdas."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "Diversificar ajuda a distribuir a exposição entre diferentes alternativas, mas não elimina os riscos."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "7. Um investimento apresentou rendimento positivo, mas inferior ao aumento dos preços no mesmo período. O que isso pode indicar?",
+            Opcoes = new[]
+            {
+                "Que o investimento necessariamente deu prejuízo nominal.",
+                "Que a inflação deixou de existir.",
+                "Que o dinheiro passou a comprar mais produtos.",
+                "Que o ganho pode não ter acompanhado a inflação, reduzindo o poder de compra."
+            },
+            RespostaCorreta = 3,
+            Explicacao = "É importante considerar a inflação: um rendimento positivo pode não ser suficiente para preservar o poder de compra."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "8. Duas opções de investimento possuem retornos esperados diferentes. Uma delas apresenta riscos que a pessoa não compreende. Qual seria a atitude mais responsável?",
+            Opcoes = new[]
+            {
+                "Estudar melhor as opções e não escolher algo que não compreende.",
+                "Escolher automaticamente a que promete maior retorno.",
+                "Ignorar os riscos porque eles podem não acontecer.",
+                "Aplicar todo o dinheiro para aumentar os ganhos."
+            },
+            RespostaCorreta = 0,
+            Explicacao = "Compreender os riscos e as condições é essencial. Não é adequado investir apenas com base em promessas de retorno."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "9. Uma pessoa recebeu uma proposta de lucro muito alto e garantido em pouco tempo. O que deve fazer?",
+            Opcoes = new[]
+            {
+                "Aceitar rapidamente antes que a proposta acabe.",
+                "Desconfiar da promessa e verificar cuidadosamente a proposta e a instituição.",
+                "Pedir dinheiro emprestado para aproveitar a oportunidade.",
+                "Indicar a proposta para outras pessoas sem pesquisar."
+            },
+            RespostaCorreta = 1,
+            Explicacao = "Promessas de lucro elevado e garantido podem ser sinais de fraude. É importante pesquisar e verificar as informações."
+        },
+
+        new Pergunta
+        {
+            Enunciado = "10. Uma jovem deseja começar a organizar seu futuro financeiro. Qual sequência demonstra uma atitude mais consciente?",
+            Opcoes = new[]
+            {
+                "Escolher um investimento famoso e depois descobrir como funciona.",
+                "Investir todo o dinheiro disponível sem definir objetivos.",
+                "Organizar o orçamento, definir objetivos, estudar alternativas e conversar com um responsável.",
+                "Escolher a opção com maior retorno anunciado, sem analisar os riscos."
+            },
+            RespostaCorreta = 2,
+            Explicacao = "Planejamento, organização, conhecimento e orientação são etapas importantes antes de qualquer decisão financeira."
+        }
+    };
+
+    private void Selecionar(int indice)
+    {
+        if (!RespostaConfirmada)
+        {
+            AlternativaSelecionada = indice;
+        }
+    }
+
+    private void ConfirmarResposta()
+    {
+        if (AlternativaSelecionada == null || RespostaConfirmada)
+            return;
+
+        RespostaConfirmada = true;
+
+        if (AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta)
+        {
+            Pontos++;
+        }
+    }
+
+    private async Task Proxima()
+    {
+        if (IndiceAtual < Perguntas.Count - 1)
+        {
+            IndiceAtual++;
+            AlternativaSelecionada = null;
+            RespostaConfirmada = false;
+        }
+        else
+        {
+            QuizFinalizado = true;
+
+            if (Pontos >= 9)
+                MensagemResultado = "Excelente! Você domina muito bem o assunto!";
+            else if (Pontos >= 7)
+                MensagemResultado = "Muito bom! Você demonstrou um ótimo conhecimento!";
+            else if (Pontos >= 5)
+                MensagemResultado = "Bom trabalho! Continue estudando para aprender ainda mais!";
+            else
+                MensagemResultado = "Continue aprendendo! Revisar o conteúdo vai ajudar bastante.";
+
+            await SalvarResultadoAsync();
+        }
+    }
+
+    private async Task SalvarResultadoAsync()
+    {
+        SalvandoResultado = true;
+        ResultadoSalvo = false;
+
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var usuario = estado.User;
+
+            var usuarioId = usuario.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+                return;
+
+            var resultado = new ResultadoQuiz
+            {
+                UsuarioId = usuarioId,
+                IdentificadorQuiz = "investimentos-basicos",
+                Pontos = Pontos,
+                TotalPerguntas = Perguntas.Count,
+                DataConclusao = DateTime.UtcNow
+            };
+
+            Context.ResultadosQuiz.Add(resultado);
+            await Context.SaveChangesAsync();
+
+            ResultadoSalvo = true;
+        }
+        catch
+        {
+            ResultadoSalvo = false;
+        }
+        finally
+        {
+            SalvandoResultado = false;
+        }
+    }
+
+    private void Reiniciar()
+    {
+        IndiceAtual = 0;
+        AlternativaSelecionada = null;
+        Pontos = 0;
+
+        RespostaConfirmada = false;
+        QuizFinalizado = false;
+        SalvandoResultado = false;
+        ResultadoSalvo = false;
+
+        MensagemResultado = "";
+    }
+
+    private class Pergunta
+    {
+        public string Enunciado { get; set; } = "";
+        public string[] Opcoes { get; set; } = Array.Empty<string>();
+        public int RespostaCorreta { get; set; }
+        public string Explicacao { get; set; } = "";
+    }
+}
+
+<style>
+    .quiz-container {
+        max-width: 850px;
+        margin: 0 auto;
+        padding: 30px 20px 60px;
+        color: #243247;
+    }
+
+    .voltar {
+        display: inline-block;
+        margin-bottom: 25px;
+        color: #16865b;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .quiz-cabecalho {
+        margin-bottom: 30px;
+    }
+
+    .etiqueta {
+        color: #16865b;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .quiz-cabecalho h1,
+    .resultado-card h1 {
+        margin: 12px 0;
+        color: #173b32;
+        font-size: 32px;
+    }
+
+    .quiz-cabecalho p {
+        color: #657386;
+        line-height: 1.7;
+    }
+
+    .progresso-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 9px;
+        color: #657386;
+        font-size: 14px;
+    }
+
+    .progresso-barra {
+        height: 9px;
+        overflow: hidden;
+        border-radius: 20px;
+        background: #e5ebe8;
+        margin-bottom: 25px;
+    }
+
+    .progresso-preenchido {
+        height: 100%;
+        border-radius: 20px;
+        background: #16865b;
+        transition: width 0.3s ease;
+    }
+
+    .pergunta-card,
+    .resultado-card {
+        padding: 30px;
+        border-radius: 16px;
+        background: #f5f8f7;
+    }
+
+    .pergunta-card h2 {
+        margin-top: 0;
+        margin-bottom: 25px;
+        color: #173b32;
+        font-size: 22px;
+        line-height: 1.5;
+    }
+
+    .opcoes {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .opcao {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e0e7e3;
+        border-radius: 10px;
+        background: white;
+        color: #344255;
+        text-align: left;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .opcao:hover:not(:disabled) {
+        border-color: #16865b;
+    }
+
+    .opcao.selecionada {
+        border-color: #16865b;
+        background: #edf7f1;
+    }
+
+    .opcao.correta {
+        border-color: #16865b;
+        background: #e5f5eb;
+    }
+
+    .opcao.incorreta {
+        border-color: #c94b4b;
+        background: #fff0f0;
+    }
+
+    .opcao:disabled {
+        cursor: default;
+    }
+
+    .letra-opcao {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #edf1ef;
+        color: #315c49;
+        font-weight: 700;
+    }
+
+    .feedback {
+        margin-top: 22px;
+        padding: 18px;
+        border-radius: 10px;
+        line-height: 1.6;
+    }
+
+    .feedback p {
+        margin-bottom: 0;
+    }
+
+    .feedback-correto {
+        background: #e5f5eb;
+        color: #17623e;
+    }
+
+    .feedback-errado {
+        background: #fff0f0;
+        color: #a43d3d;
+    }
+
+    .acoes-quiz {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 25px;
+    }
+
+    .botao-principal,
+    .botao-secundario {
+        display: inline-block;
+        padding: 13px 22px;
+        border: none;
+        border-radius: 9px;
+        background: #16865b;
+        color: white;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .botao-principal:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .botao-secundario {
+        background: #315caa;
+    }
+
+    .resultado-card {
+        text-align: center;
+    }
+
+    .pontuacao {
+        display: flex;
+        flex-direction: column;
+        margin: 25px 0;
+    }
+
+    .pontuacao strong {
+        color: #16865b;
+        font-size: 65px;
+    }
+
+    .pontuacao span {
+        color: #657386;
+    }
+
+    .resultado-card h2 {
+        color: #173b32;
+    }
+
+    .resultado-card p {
+        color: #657386;
+        line-height: 1.6;
+    }
+
+    .mensagem-sucesso {
+        color: #16865b !important;
+        font-weight: 600;
+    }
+
+    .mensagem-erro {
+        color: #b33d3d !important;
+    }
+
+    .acoes-resultado {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    @@media (max-width: 600px) {
+        .quiz-container {
+            padding: 20px 15px 40px;
+        }
+
+        .pergunta-card,
+        .resultado-card {
+            padding: 20px 15px;
+        }
+
+        .quiz-cabecalho h1,
+        .resultado-card h1 {
+            font-size: 27px;
+        }
+
+        .pergunta-card h2 {
+            font-size: 19px;
+        }
+
+        .opcao {
+            font-size: 14px;
+        }
+
+        .acoes-quiz {
+            justify-content: stretch;
+        }
+
+        .acoes-quiz .botao-principal {
+            width: 100%;
+        }
+
+        .acoes-resultado {
+            flex-direction: column;
+        }
+
+        .acoes-resultado .botao-principal,
+        .acoes-resultado .botao-secundario {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
