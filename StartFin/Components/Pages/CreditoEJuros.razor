@@ -179,7 +179,7 @@
                 <div class="resultado-card">
                     <strong>Seu último resultado</strong>
                     <p>Pontuação: @ultimoResultado.Pontos de @ultimoResultado.TotalPerguntas</p>
-                    <p>Concluído em: @ultimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                    <p>Concluído em: @ultimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
                 </div>
             }
             else if (consultado)
@@ -211,7 +211,8 @@
             {
                 ultimoResultado = await Context.ResultadosQuiz
                     .Where(r => r.UsuarioId == usuarioId &&
-                                r.IdentificadorQuiz == "credito-e-juros")
+                        r.IdentificadorQuiz == "credito-e-juros" &&
+                        r.Status == "Concluída")
                     .OrderByDescending(r => r.DataConclusao)
                     .FirstOrDefaultAsync();
             }

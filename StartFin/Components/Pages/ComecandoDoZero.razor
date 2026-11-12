@@ -330,7 +330,7 @@
             {
                 Pontos = r.Pontos,
                 TotalPerguntas = r.TotalPerguntas,
-                DataConclusao = r.DataConclusao
+                DataConclusao = r.DataConclusao ?? DateTime.MinValue
             })
             .FirstOrDefaultAsync();
 

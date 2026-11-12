@@ -376,15 +376,28 @@ namespace StartFin.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DataConclusao")
+                    b.Property<DateTime?>("DataConclusao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DataInicio")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("IdentificadorQuiz")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("IndicePerguntaAtual")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Pontos")
                         .HasColumnType("integer");
+
+                    b.Property<string>("RespostasJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("TotalPerguntas")
                         .HasColumnType("integer");

@@ -268,7 +268,7 @@
                     </p>
                     <p>
                         Concluído em:
-                        @UltimoResultado.DataConclusao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        @UltimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                     </p>
                 }
                 else
@@ -524,7 +524,8 @@
 
             UltimoResultado = await Context.ResultadosQuiz
                 .Where(r => r.UsuarioId == usuarioId &&
-                            r.IdentificadorQuiz == "seguranca-financeira-digital")
+                            r.IdentificadorQuiz == "seguranca-financeira-digital" &&
+                            r.Status == "Concluída")
                 .OrderByDescending(r => r.DataConclusao)
                 .FirstOrDefaultAsync();
 

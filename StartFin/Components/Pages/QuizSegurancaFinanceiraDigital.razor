@@ -1,9 +1,12 @@
+
 @page "/educacao-financeira/quiz/seguranca-financeira-digital"
 
 @using Microsoft.AspNetCore.Components.Authorization
 @using StartFin.Dados
 @using StartFin.Modelos
 @using System.Security.Claims
+@using System.Text.Json
+@using Microsoft.EntityFrameworkCore
 
 @inject StartFinContext Context
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -26,7 +29,11 @@
         <span class="nivel">Nível intermediário • 10 questões</span>
     </div>
 
-    @if (!Finalizado)
+    @if (Carregando)
+    {
+        <p>Carregando seu progresso...</p>
+    }
+    else if (!Finalizado)
     {
         <div class="progresso">
             <div class="progresso-texto">
@@ -51,7 +58,7 @@
                 @foreach (var opcao in Perguntas[Indice].Opcoes)
                 {
                     <button class="opcao @(Selecionada == opcao ? "selecionada" : "")"
-                            disabled="@Respondida"
+                            disabled="@(Respondida || Salvando)"
                             @onclick="() => Selecionar(opcao)">
                         @opcao
                     </button>
@@ -72,20 +79,29 @@
                 @if (!Respondida)
                 {
                     <button class="botao-principal"
-                            disabled="@string.IsNullOrEmpty(Selecionada)"
+                            disabled="@(string.IsNullOrEmpty(Selecionada) || Salvando)"
                             @onclick="ConfirmarResposta">
-                        Confirmar resposta
+                        @(Salvando ? "Salvando..." : "Confirmar resposta")
                     </button>
                 }
                 else
                 {
-                    <button class="botao-principal" @onclick="Proxima">
-                        @(Indice == Perguntas.Count - 1
-                            ? "Ver resultado"
-                            : "Próxima pergunta")
+                    <button class="botao-principal"
+                            disabled="@Salvando"
+                            @onclick="Proxima">
+                        @(Salvando
+                            ? "Salvando..."
+                            : Indice == Perguntas.Count - 1
+                                ? "Ver resultado"
+                                : "Próxima pergunta")
                     </button>
                 }
             </div>
+
+            @if (!string.IsNullOrEmpty(MensagemSalvamento))
+            {
+                <p class="aviso">@MensagemSalvamento</p>
+            }
 
         </section>
     }
@@ -113,9 +129,15 @@
             else
             {
                 <p class="aviso">@MensagemSalvamento</p>
+
+                <button class="botao-principal" @onclick="TentarSalvarNovamente">
+                    Tentar salvar novamente
+                </button>
             }
 
-            <button class="botao-principal" @onclick="Reiniciar">
+            <button class="botao-principal"
+                    disabled="@Salvando"
+                    @onclick="Reiniciar">
                 Refazer quiz
             </button>
 
@@ -362,150 +384,217 @@
     private string MensagemResultado = string.Empty;
     private string MensagemSalvamento = string.Empty;
 
+    private ResultadoQuiz? TentativaAtual;
+
+    private bool Carregando = true;
+    private bool Salvando = false;
+
+    private const string Identificador = "seguranca-financeira-digital";
+
     private List<Pergunta> Perguntas = new()
-{
-    new(
-        "Você recebe um e-mail aparentemente enviado pelo banco, informando que houve uma tentativa de acesso à sua conta. A mensagem apresenta um link para verificar a atividade. Qual atitude é mais segura?",
-        new()
-        {
-            "Responder ao e-mail solicitando mais informações sobre o acesso.",
-            "Abrir o link, desde que a mensagem tenha o logotipo do banco.",
-            "Acessar o aplicativo ou site oficial por conta própria e verificar se existe algum alerta.",
-            "Encaminhar o e-mail para conhecidos perguntando se parece verdadeiro."
-        },
-        "Logotipos e nomes conhecidos podem ser utilizados em mensagens falsas. O mais seguro é acessar diretamente os canais oficiais, sem utilizar links recebidos inesperadamente.",
-        "Acessar o aplicativo ou site oficial por conta própria e verificar se existe algum alerta."
-    ),
+    {
+        new(
+            "Você recebe um e-mail aparentemente enviado pelo banco, informando que houve uma tentativa de acesso à sua conta. A mensagem apresenta um link para verificar a atividade. Qual atitude é mais segura?",
+            new()
+            {
+                "Responder ao e-mail solicitando mais informações sobre o acesso.",
+                "Abrir o link, desde que a mensagem tenha o logotipo do banco.",
+                "Acessar o aplicativo ou site oficial por conta própria e verificar se existe algum alerta.",
+                "Encaminhar o e-mail para conhecidos perguntando se parece verdadeiro."
+            },
+            "Logotipos e nomes conhecidos podem ser utilizados em mensagens falsas. O mais seguro é acessar diretamente os canais oficiais, sem utilizar links recebidos inesperadamente.",
+            "Acessar o aplicativo ou site oficial por conta própria e verificar se existe algum alerta."
+        ),
 
-    new(
-        "Um colega informa que recebeu uma ligação de alguém que dizia trabalhar no banco e solicitava um código de confirmação para cancelar uma transferência suspeita. Por que essa situação exige cuidado?",
-        new()
-        {
-            "Porque códigos de confirmação são utilizados apenas para compras presenciais.",
-            "Porque o código pode permitir que outra pessoa confirme operações ou acesse uma conta.",
-            "Porque ligações telefônicas impedem que o banco identifique seus clientes.",
-            "Porque toda transferência suspeita é automaticamente cancelada após uma ligação."
-        },
-        "Códigos de confirmação são informações de segurança. Uma pessoa mal-intencionada pode tentar utilizá-los para autorizar operações ou acessar contas. Nunca compartilhe esses códigos.",
-        "Porque o código pode permitir que outra pessoa confirme operações ou acesse uma conta."
-    ),
+        new(
+            "Um colega informa que recebeu uma ligação de alguém que dizia trabalhar no banco e solicitava um código de confirmação para cancelar uma transferência suspeita. Por que essa situação exige cuidado?",
+            new()
+            {
+                "Porque códigos de confirmação são utilizados apenas para compras presenciais.",
+                "Porque o código pode permitir que outra pessoa confirme operações ou acesse uma conta.",
+                "Porque ligações telefônicas impedem que o banco identifique seus clientes.",
+                "Porque toda transferência suspeita é automaticamente cancelada após uma ligação."
+            },
+            "Códigos de confirmação são informações de segurança. Uma pessoa mal-intencionada pode tentar utilizá-los para autorizar operações ou acessar contas. Nunca compartilhe esses códigos.",
+            "Porque o código pode permitir que outra pessoa confirme operações ou acesse uma conta."
+        ),
 
-    new(
-        "Uma pessoa utiliza a mesma senha em seu e-mail e em seu aplicativo financeiro. Caso essa senha seja descoberta em outro serviço, qual pode ser a consequência?",
-        new()
-        {
-            "A senha será automaticamente alterada em todos os aplicativos.",
-            "Somente o serviço em que ocorreu o vazamento poderá ser afetado.",
-            "A autenticação em duas etapas será ativada automaticamente.",
+        new(
+            "Uma pessoa utiliza a mesma senha em seu e-mail e em seu aplicativo financeiro. Caso essa senha seja descoberta em outro serviço, qual pode ser a consequência?",
+            new()
+            {
+                "A senha será automaticamente alterada em todos os aplicativos.",
+                "Somente o serviço em que ocorreu o vazamento poderá ser afetado.",
+                "A autenticação em duas etapas será ativada automaticamente.",
+                "Outras contas que utilizam a mesma senha também poderão ficar vulneráveis."
+            },
+            "Reutilizar senhas aumenta os riscos porque uma senha descoberta em determinado serviço pode ser testada em outras contas. Senhas diferentes ajudam a limitar esse problema.",
             "Outras contas que utilizam a mesma senha também poderão ficar vulneráveis."
-        },
-        "Reutilizar senhas aumenta os riscos porque uma senha descoberta em determinado serviço pode ser testada em outras contas. Senhas diferentes ajudam a limitar esse problema.",
-        "Outras contas que utilizam a mesma senha também poderão ficar vulneráveis."
-    ),
+        ),
 
-    new(
-        "Antes de confirmar um Pix, Mariana percebe que o nome apresentado na tela não corresponde à pessoa para quem pretendia enviar o dinheiro. O que ela deve fazer?",
-        new()
-        {
-            "Cancelar a operação e verificar novamente os dados do destinatário.",
-            "Confirmar a transferência, pois a chave Pix é suficiente para garantir a identidade.",
-            "Realizar outro Pix com um valor menor para testar.",
-            "Enviar o dinheiro e solicitar a devolução caso esteja incorreto."
-        },
-        "A conferência dos dados do destinatário é essencial. Se houver divergência, Mariana deve interromper a operação e verificar as informações antes de tentar novamente.",
-        "Cancelar a operação e verificar novamente os dados do destinatário."
-    ),
+        new(
+            "Antes de confirmar um Pix, Mariana percebe que o nome apresentado na tela não corresponde à pessoa para quem pretendia enviar o dinheiro. O que ela deve fazer?",
+            new()
+            {
+                "Cancelar a operação e verificar novamente os dados do destinatário.",
+                "Confirmar a transferência, pois a chave Pix é suficiente para garantir a identidade.",
+                "Realizar outro Pix com um valor menor para testar.",
+                "Enviar o dinheiro e solicitar a devolução caso esteja incorreto."
+            },
+            "A conferência dos dados do destinatário é essencial. Se houver divergência, Mariana deve interromper a operação e verificar as informações antes de tentar novamente.",
+            "Cancelar a operação e verificar novamente os dados do destinatário."
+        ),
 
-    new(
-        "Pedro precisa acessar sua conta financeira, mas está conectado a uma rede Wi-Fi pública. Qual comportamento demonstra maior cuidado com a segurança?",
-        new()
-        {
-            "Salvar a senha no navegador para facilitar o próximo acesso.",
-            "Compartilhar a conexão com outras pessoas para confirmar que ela funciona.",
-            "Evitar acessar serviços financeiros nessa rede e utilizar uma conexão confiável.",
-            "Desativar as proteções do celular para melhorar a conexão."
-        },
-        "Redes públicas podem apresentar riscos de segurança. Para acessar serviços financeiros, é preferível utilizar uma conexão confiável e manter as proteções do dispositivo ativadas.",
-        "Evitar acessar serviços financeiros nessa rede e utilizar uma conexão confiável."
-    ),
+        new(
+            "Pedro precisa acessar sua conta financeira, mas está conectado a uma rede Wi-Fi pública. Qual comportamento demonstra maior cuidado com a segurança?",
+            new()
+            {
+                "Salvar a senha no navegador para facilitar o próximo acesso.",
+                "Compartilhar a conexão com outras pessoas para confirmar que ela funciona.",
+                "Evitar acessar serviços financeiros nessa rede e utilizar uma conexão confiável.",
+                "Desativar as proteções do celular para melhorar a conexão."
+            },
+            "Redes públicas podem apresentar riscos de segurança. Para acessar serviços financeiros, é preferível utilizar uma conexão confiável e manter as proteções do dispositivo ativadas.",
+            "Evitar acessar serviços financeiros nessa rede e utilizar uma conexão confiável."
+        ),
 
-    new(
-        "Uma loja virtual solicita dados pessoais e informações de pagamento, mas não apresenta identificação clara da empresa nem informações confiáveis sobre sua reputação. Qual análise é mais adequada?",
-        new()
-        {
-            "O preço baixo é suficiente para demonstrar que a loja é confiável.",
-            "É necessário verificar a identidade da loja, sua reputação e as condições da compra antes de fornecer informações.",
-            "A presença de imagens profissionais garante a segurança do site.",
-            "Qualquer loja que aceite Pix pode ser considerada confiável."
-        },
-        "A aparência de um site e as formas de pagamento não comprovam sua legitimidade. Verificar a empresa, sua reputação e as condições da compra ajuda a reduzir riscos.",
-        "É necessário verificar a identidade da loja, sua reputação e as condições da compra antes de fornecer informações."
-    ),
+        new(
+            "Uma loja virtual solicita dados pessoais e informações de pagamento, mas não apresenta identificação clara da empresa nem informações confiáveis sobre sua reputação. Qual análise é mais adequada?",
+            new()
+            {
+                "O preço baixo é suficiente para demonstrar que a loja é confiável.",
+                "É necessário verificar a identidade da loja, sua reputação e as condições da compra antes de fornecer informações.",
+                "A presença de imagens profissionais garante a segurança do site.",
+                "Qualquer loja que aceite Pix pode ser considerada confiável."
+            },
+            "A aparência de um site e as formas de pagamento não comprovam sua legitimidade. Verificar a empresa, sua reputação e as condições da compra ajuda a reduzir riscos.",
+            "É necessário verificar a identidade da loja, sua reputação e as condições da compra antes de fornecer informações."
+        ),
 
-    new(
-        "Uma pessoa perde o celular que utilizava para acessar seus serviços financeiros. Qual conjunto de medidas é mais adequado?",
-        new()
-        {
-            "Esperar alguns dias para verificar se alguém encontra o aparelho.",
-            "Publicar as senhas nas redes sociais para pedir ajuda.",
-            "Utilizar a mesma senha em outro aparelho para recuperar o acesso.",
+        new(
+            "Uma pessoa perde o celular que utilizava para acessar seus serviços financeiros. Qual conjunto de medidas é mais adequado?",
+            new()
+            {
+                "Esperar alguns dias para verificar se alguém encontra o aparelho.",
+                "Publicar as senhas nas redes sociais para pedir ajuda.",
+                "Utilizar a mesma senha em outro aparelho para recuperar o acesso.",
+                "Bloquear o aparelho, comunicar o banco pelos canais oficiais e proteger os acessos às contas."
+            },
+            "Em caso de perda do aparelho, é importante agir rapidamente para reduzir riscos: bloquear o dispositivo, comunicar as instituições financeiras e proteger as contas vinculadas.",
             "Bloquear o aparelho, comunicar o banco pelos canais oficiais e proteger os acessos às contas."
-        },
-        "Em caso de perda do aparelho, é importante agir rapidamente para reduzir riscos: bloquear o dispositivo, comunicar as instituições financeiras e proteger as contas vinculadas.",
-        "Bloquear o aparelho, comunicar o banco pelos canais oficiais e proteger os acessos às contas."
-    ),
+        ),
 
-    new(
-        "Uma pessoa recebe uma mensagem informando que ganhou um prêmio, mas precisa pagar uma taxa antecipada para liberá-lo. Qual característica pode indicar uma tentativa de fraude?",
-        new()
-        {
-            "A mensagem apresenta o nome completo do destinatário.",
-            "O prêmio é anunciado em uma página que utiliza imagens coloridas.",
-            "A cobrança antecipada é apresentada como condição para receber um benefício inesperado.",
-            "A mensagem informa uma data para divulgação dos resultados."
-        },
-        "Promessas de prêmios inesperados acompanhadas de cobranças antecipadas são um sinal de alerta. É importante verificar a promoção diretamente nos canais oficiais da organização.",
-        "A cobrança antecipada é apresentada como condição para receber um benefício inesperado."
-    ),
+        new(
+            "Uma pessoa recebe uma mensagem informando que ganhou um prêmio, mas precisa pagar uma taxa antecipada para liberá-lo. Qual característica pode indicar uma tentativa de fraude?",
+            new()
+            {
+                "A mensagem apresenta o nome completo do destinatário.",
+                "O prêmio é anunciado em uma página que utiliza imagens coloridas.",
+                "A cobrança antecipada é apresentada como condição para receber um benefício inesperado.",
+                "A mensagem informa uma data para divulgação dos resultados."
+            },
+            "Promessas de prêmios inesperados acompanhadas de cobranças antecipadas são um sinal de alerta. É importante verificar a promoção diretamente nos canais oficiais da organização.",
+            "A cobrança antecipada é apresentada como condição para receber um benefício inesperado."
+        ),
 
-    new(
-        "Uma pessoa ativa a autenticação em duas etapas em sua conta, mas recebe uma solicitação inesperada para aprovar um acesso que não reconhece. Qual deve ser sua atitude?",
-        new()
-        {
-            "Aprovar a solicitação para evitar o bloqueio da conta.",
-            "Ignorar o aviso e continuar utilizando a conta normalmente.",
-            "Compartilhar a notificação com outra pessoa para que ela aprove.",
+        new(
+            "Uma pessoa ativa a autenticação em duas etapas em sua conta, mas recebe uma solicitação inesperada para aprovar um acesso que não reconhece. Qual deve ser sua atitude?",
+            new()
+            {
+                "Aprovar a solicitação para evitar o bloqueio da conta.",
+                "Ignorar o aviso e continuar utilizando a conta normalmente.",
+                "Compartilhar a notificação com outra pessoa para que ela aprove.",
+                "Recusar a solicitação e verificar a segurança da conta pelos canais oficiais."
+            },
+            "A autenticação em duas etapas oferece uma camada adicional de proteção, mas depende da atenção do usuário. Solicitações de acesso desconhecidas devem ser recusadas e investigadas.",
             "Recusar a solicitação e verificar a segurança da conta pelos canais oficiais."
-        },
-        "A autenticação em duas etapas oferece uma camada adicional de proteção, mas depende da atenção do usuário. Solicitações de acesso desconhecidas devem ser recusadas e investigadas.",
-        "Recusar a solicitação e verificar a segurança da conta pelos canais oficiais."
-    ),
+        ),
 
-    new(
-        "Após perceber uma transferência que não reconhece, uma pessoa decide entrar em contato com o banco. Qual procedimento demonstra maior cuidado durante esse atendimento?",
-        new()
+        new(
+            "Após perceber uma transferência que não reconhece, uma pessoa decide entrar em contato com o banco. Qual procedimento demonstra maior cuidado durante esse atendimento?",
+            new()
+            {
+                "Utilizar os canais oficiais, relatar a movimentação e seguir as orientações de segurança da instituição.",
+                "Enviar a senha completa para o primeiro contato que oferecer ajuda.",
+                "Conversar com perfis desconhecidos que prometem recuperar o dinheiro rapidamente.",
+                "Compartilhar códigos de confirmação para agilizar a análise."
+            },
+            "O contato deve ocorrer pelos canais oficiais da instituição. Senhas e códigos de confirmação não devem ser compartilhados, mesmo durante um atendimento.",
+            "Utilizar os canais oficiais, relatar a movimentação e seguir as orientações de segurança da instituição."
+        )
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
         {
-            "Utilizar os canais oficiais, relatar a movimentação e seguir as orientações de segurança da instituição.",
-            "Enviar a senha completa para o primeiro contato que oferecer ajuda.",
-            "Conversar com perfis desconhecidos que prometem recuperar o dinheiro rapidamente.",
-            "Compartilhar códigos de confirmação para agilizar a análise."
-        },
-        "O contato deve ocorrer pelos canais oficiais da instituição. Senhas e códigos de confirmação não devem ser compartilhados, mesmo durante um atendimento.",
-        "Utilizar os canais oficiais, relatar a movimentação e seguir as orientações de segurança da instituição."
-    )
-};
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+                return;
+
+            TentativaAtual = await Context.ResultadosQuiz
+                .Where(r =>
+                    r.UsuarioId == usuarioId &&
+                    r.IdentificadorQuiz == Identificador &&
+                    r.Status == "Em andamento")
+                .OrderByDescending(r => r.DataInicio)
+                .FirstOrDefaultAsync();
+
+            if (TentativaAtual != null)
+            {
+                if (!string.IsNullOrEmpty(TentativaAtual.RespostasJson))
+                {
+                    var progresso = JsonSerializer.Deserialize<ProgressoQuiz>(
+                        TentativaAtual.RespostasJson);
+
+                    if (progresso != null)
+                    {
+                        Indice = Math.Clamp(progresso.Indice, 0, Perguntas.Count - 1);
+                        Pontos = Math.Clamp(progresso.Pontos, 0, Perguntas.Count);
+                        Respondida = progresso.Respondida;
+                        Acertou = progresso.Acertou;
+                        Selecionada = progresso.Selecionada ?? string.Empty;
+                    }
+                }
+                else
+                {
+                    Indice = Math.Clamp(
+                        TentativaAtual.IndicePerguntaAtual,
+                        0,
+                        Perguntas.Count - 1);
+
+                    Pontos = Math.Clamp(
+                        TentativaAtual.Pontos,
+                        0,
+                        Perguntas.Count);
+                }
+            }
+        }
+        catch
+        {
+            MensagemSalvamento = "Não foi possível carregar seu progresso salvo.";
+        }
+        finally
+        {
+            Carregando = false;
+        }
+    }
 
     private void Selecionar(string opcao)
     {
-        if (!Respondida)
+        if (!Respondida && !Salvando)
         {
             Selecionada = opcao;
         }
     }
 
-    private void ConfirmarResposta()
+    private async Task ConfirmarResposta()
     {
-        if (string.IsNullOrEmpty(Selecionada) || Respondida)
+        if (string.IsNullOrEmpty(Selecionada) || Respondida || Salvando)
             return;
 
         Acertou = Selecionada == Perguntas[Indice].RespostaCorreta;
@@ -514,16 +603,23 @@
             Pontos++;
 
         Respondida = true;
+
+        await SalvarProgressoAsync();
     }
 
     private async Task Proxima()
     {
+        if (Salvando || !Respondida)
+            return;
+
         if (Indice < Perguntas.Count - 1)
         {
             Indice++;
             Selecionada = string.Empty;
             Respondida = false;
             Acertou = false;
+
+            await SalvarProgressoAsync();
         }
         else
         {
@@ -537,14 +633,17 @@
                 _ => "Continue praticando! Revise a aula e tente novamente para fortalecer seus conhecimentos."
             };
 
-            await SalvarResultadoAsync();
+            await SalvarProgressoAsync(concluir: true);
         }
     }
 
-    private async Task SalvarResultadoAsync()
+    private async Task SalvarProgressoAsync(bool concluir = false)
     {
         try
         {
+            Salvando = true;
+            MensagemSalvamento = string.Empty;
+
             var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
             var usuarioId = estado.User.FindFirst(
@@ -552,28 +651,61 @@
 
             if (string.IsNullOrEmpty(usuarioId))
             {
-                MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
+                MensagemSalvamento = "Entre na sua conta para salvar seu progresso.";
                 return;
             }
 
-            var resultado = new ResultadoQuiz
-            {
-                UsuarioId = usuarioId,
-                IdentificadorQuiz = "seguranca-financeira-digital",
-                Pontos = Pontos,
-                TotalPerguntas = Perguntas.Count,
-                DataConclusao = DateTime.UtcNow
-            };
+            var tentativa = TentativaAtual;
 
-            Context.ResultadosQuiz.Add(resultado);
+            if (tentativa == null)
+            {
+                tentativa = new ResultadoQuiz
+                {
+                    UsuarioId = usuarioId,
+                    IdentificadorQuiz = Identificador,
+                    DataInicio = DateTime.UtcNow
+                };
+
+                Context.ResultadosQuiz.Add(tentativa);
+                TentativaAtual = tentativa;
+            }
+
+            tentativa.Pontos = Pontos;
+            tentativa.TotalPerguntas = Perguntas.Count;
+            tentativa.Status = concluir ? "Concluída" : "Em andamento";
+            tentativa.IndicePerguntaAtual = Indice;
+
+            tentativa.RespostasJson = JsonSerializer.Serialize(new ProgressoQuiz
+            {
+                Indice = Indice,
+                Pontos = Pontos,
+                Respondida = Respondida,
+                Acertou = Acertou,
+                Selecionada = Selecionada
+            });
+
+            tentativa.DataConclusao = concluir ? DateTime.UtcNow : null;
+
             await Context.SaveChangesAsync();
 
-            ResultadoSalvo = true;
+            if (concluir)
+            {
+                ResultadoSalvo = true;
+            }
         }
         catch
         {
-            MensagemSalvamento = "Não foi possível salvar o resultado. Tente novamente mais tarde.";
+            MensagemSalvamento = "Não foi possível salvar seu progresso. Tente novamente mais tarde.";
         }
+        finally
+        {
+            Salvando = false;
+        }
+    }
+
+    private async Task TentarSalvarNovamente()
+    {
+        await SalvarProgressoAsync(concluir: true);
     }
 
     private void Reiniciar()
@@ -588,6 +720,8 @@
         Selecionada = string.Empty;
         MensagemResultado = string.Empty;
         MensagemSalvamento = string.Empty;
+
+        TentativaAtual = null;
     }
 
     private class Pergunta
@@ -608,5 +742,14 @@
             Explicacao = explicacao;
             RespostaCorreta = respostaCorreta;
         }
+    }
+
+    private class ProgressoQuiz
+    {
+        public int Indice { get; set; }
+        public int Pontos { get; set; }
+        public bool Respondida { get; set; }
+        public bool Acertou { get; set; }
+        public string? Selecionada { get; set; }
     }
 }

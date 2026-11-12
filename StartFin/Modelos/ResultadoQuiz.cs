@@ -18,9 +18,23 @@ public class ResultadoQuiz
     [Required]
     public string IdentificadorQuiz { get; set; } = "geral";
 
+    // Pontuação alcançada na tentativa.
     public int Pontos { get; set; }
 
     public int TotalPerguntas { get; set; }
 
-    public DateTime DataConclusao { get; set; } = DateTime.UtcNow;
+    // Em andamento ou Concluída.
+    [Required]
+    public string Status { get; set; } = "Concluída";
+
+    // Índice da pergunta atual.
+    public int IndicePerguntaAtual { get; set; }
+
+    // Respostas salvas em formato JSON.
+    public string? RespostasJson { get; set; }
+
+    public DateTime DataInicio { get; set; } = DateTime.UtcNow;
+
+    // Só recebe uma data quando o quiz é concluído.
+    public DateTime? DataConclusao { get; set; }
 }
