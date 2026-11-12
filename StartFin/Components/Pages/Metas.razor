@@ -3,11 +3,15 @@
 @using Npgsql
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Authorization
-
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore.Storage
+@using StartFin.Dados
+@using StartFin.Modelos
 @using System.Security.Claims
 
 @inject IConfiguration Configuration
 @inject AuthenticationStateProvider AuthStateProvider
+@inject StartFinContext Context
 
 <PageTitle>Minhas metas | StartFin</PageTitle>
 
@@ -258,32 +262,108 @@ else
         }
     }
 
-    private async Task ExcluirMeta(int id)
+    
+private async Task ExcluirMeta(int id)
+{
+    await using var transacao = await Context.Database.BeginTransactionAsync();
+
+    try
     {
-        try
+        var conexao = (NpgsqlConnection)Context.Database.GetDbConnection();
+
+        string nomeMeta;
+        decimal valorGuardado;
+
+        // Busca a meta do usuário e bloqueia sua linha durante a operação.
+        await using (var consulta = new NpgsqlCommand(
+            @"SELECT nome, valor_guardado
+              FROM metas_economia
+              WHERE id = @id AND usuario_id = @usuarioId
+              FOR UPDATE;",
+            conexao,
+            (NpgsqlTransaction)transacao.GetDbTransaction()))
         {
-            await using var conexao = new NpgsqlConnection(ConnectionString);
-            await conexao.OpenAsync();
+            consulta.Parameters.AddWithValue("@id", id);
+            consulta.Parameters.AddWithValue("@usuarioId", usuarioId);
 
-            var comando = new NpgsqlCommand(
-                @"DELETE FROM metas_economia
-                  WHERE id = @id AND usuario_id = @usuarioId;",
-                conexao);
+            await using var leitor = await consulta.ExecuteReaderAsync();
 
+            if (!await leitor.ReadAsync())
+            {
+                mensagem = "Meta não encontrada.";
+                await transacao.RollbackAsync();
+                return;
+            }
+
+            nomeMeta = leitor.GetString(0);
+            valorGuardado = leitor.GetDecimal(1);
+        }
+
+        // Devolve o dinheiro guardado para a carteira.
+        if (valorGuardado > 0)
+        {
+            var carteira = await Context.Carteiras
+                .FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
+
+            if (carteira == null)
+                throw new Exception("Carteira não encontrada.");
+
+            carteira.Saldo += valorGuardado;
+
+            // Registra a devolução no histórico.
+            Context.Movimentacoes.Add(new Movimentacao
+            {
+                CarteiraId = carteira.Id,
+                Tipo = "Entrada",
+                Descricao = $"Devolução de valor da meta excluída: {nomeMeta}",
+                Valor = valorGuardado,
+                Data = DateTime.UtcNow
+            });
+        }
+
+        // Exclui a meta.
+        await using (var comando = new NpgsqlCommand(
+            @"DELETE FROM metas_economia
+              WHERE id = @id AND usuario_id = @usuarioId;",
+            conexao,
+            (NpgsqlTransaction)transacao.GetDbTransaction()))
+        {
             comando.Parameters.AddWithValue("@id", id);
             comando.Parameters.AddWithValue("@usuarioId", usuarioId);
 
-            await comando.ExecuteNonQueryAsync();
+            var linhasAfetadas = await comando.ExecuteNonQueryAsync();
 
-            await CarregarMetas(conexao);
+            if (linhasAfetadas == 0)
+                throw new Exception("Não foi possível excluir a meta.");
+        }
 
-            mensagem = "Meta excluída com sucesso!";
-        }
-        catch (Exception)
-        {
-            mensagem = "Erro ao excluir a meta.";
-        }
+        await Context.SaveChangesAsync();
+        await transacao.CommitAsync();
+
+        await CarregarMetas(conexao);
+
+        mensagem = valorGuardado > 0
+            ? $"Meta excluída! {valorGuardado.ToString("C2", cultura)} voltou para seu saldo."
+            : "Meta excluída com sucesso!";
     }
+    catch (Exception ex)
+{
+    try
+    {
+        if (transacao.GetDbTransaction().Connection != null)
+            await transacao.RollbackAsync();
+    }
+    catch
+    {
+        // A transação já pode ter sido encerrada.
+    }
+
+    Console.WriteLine($"ERRO AO EXCLUIR META: {ex}");
+
+    mensagem = "Erro ao excluir a meta. Verifique o terminal.";
+}
+}
+
 
     private class MetaEconomia
     {
