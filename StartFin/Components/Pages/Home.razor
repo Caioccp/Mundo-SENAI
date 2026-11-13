@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿
+@page "/"
 @attribute [Authorize]
 @using Npgsql
 @using Microsoft.AspNetCore.Authorization
@@ -11,30 +12,35 @@
 @inject AuthenticationStateProvider AuthProvider
 
 <PageTitle>StartFin | Início</PageTitle>
+
 <div class="inicio">
     <header class="cabecalho">
         <div class="logo">Start<span>Fin.</span></div>
         <a href="/minha-conta" class="perfil">Minha conta</a>
     </header>
+
     <section class="boas-vindas">
         <p class="subtitulo">SEU FUTURO COMEÇA AQUI</p>
         <h1>Cuide do seu dinheiro.<br />Realize seus planos.</h1>
         <p>Aprenda a organizar suas finanças de um jeito simples.</p>
     </section>
-    <section class="saldo">
-    <p>Seu saldo fictício</p>
-    <h2>@Saldo.ToString("C2", cultura)</h2>
-    <span>Saldo atualizado com suas movimentações</span>
 
-    <a href="/movimentacoes" class="link-movimentacoes">
-        Ver movimentações →
-    </a>
-</section>
+    <section class="saldo">
+        <p>Seu saldo fictício</p>
+        <h2>@Saldo.ToString("C2", cultura)</h2>
+        <span>Saldo atualizado com suas movimentações</span>
+
+        <a href="/movimentacoes" class="link-movimentacoes">
+            Ver movimentações →
+        </a>
+    </section>
+
     <section class="secao">
         <div class="titulo-secao">
             <h2>Suas metas</h2>
             <span>Comece a planejar</span>
         </div>
+
         @if (metas.Count == 0)
         {
             <p>Você ainda não tem metas cadastradas.</p>
@@ -48,20 +54,24 @@
                         ? (int)Math.Min(100, Math.Round(
                             meta.ValorGuardado / meta.ValorObjetivo * 100))
                         : 0;
+
                     <article class="cartao">
                         <div class="icone">🎯</div>
                         <h3>@meta.Nome</h3>
+
                         <p class="valor">
                             @meta.ValorGuardado.ToString("C2", cultura)
                             <span>
                                 / @meta.ValorObjetivo.ToString("C2", cultura)
                             </span>
                         </p>
+
                         <div class="barra">
                             <div class="progresso"
                                  style="width: @(percentual)%">
                             </div>
                         </div>
+
                         <p class="porcentagem">
                             @percentual% concluído
                         </p>
@@ -70,8 +80,10 @@
             </div>
         }
     </section>
+
     <section class="secao">
         <h2>Explore o StartFin</h2>
+
         <div class="atalhos">
             <a class="atalho" href="/metas">
                 <span>🎯</span>
@@ -80,62 +92,115 @@
                     <p>Organize seus objetivos.</p>
                 </div>
             </a>
-          <a class="atalho" href="/educacao-financeira">
-    <span>📚</span>
-    <div>
-        <h3>Educação financeira</h3>
-        <p>Aprenda a cuidar do seu dinheiro.</p>
-    </div>
-</a>
+
+            <a class="atalho" href="/educacao-financeira">
+                <span>📚</span>
+                <div>
+                    <h3>Educação financeira</h3>
+                    <p>Aprenda a cuidar do seu dinheiro.</p>
+                </div>
+            </a>
+
             <a class="atalho" href="/desafios">
-    <span>🏆</span>
-    <div>
-        <h3>Desafios</h3>
-        <p>Aprenda enquanto acumula pontos.</p>
-    </div>
-</a>
+                <span>🏆</span>
+                <div>
+                    <h3>Desafios</h3>
+                    <p>Aprenda enquanto acumula pontos.</p>
+                </div>
+            </a>
+
+            <a class="atalho" href="/guardar-dinheiro">
+                <span>🐷</span>
+                <div>
+                    <h3>Guardar dinheiro</h3>
+                    <p>Reserve dinheiro para suas metas.</p>
+                </div>
+            </a>
+
+            <a class="atalho" href="/conquistas">
+                <span>🏅</span>
+                <div>
+                    <h3>Conquistas</h3>
+                    <p>Acompanhe suas conquistas desbloqueadas.</p>
+                </div>
+            </a>
+
+            <a class="atalho" href="/nova-movimentacao">
+                <span>💸</span>
+                <div>
+                    <h3>Fazer movimentação</h3>
+                    <p>Registre uma entrada ou saída.</p>
+                </div>
+            </a>
+
+            <a class="atalho" href="/movimentacoes">
+                <span>📋</span>
+                <div>
+                    <h3>Ver movimentações</h3>
+                    <p>Consulte seu histórico financeiro.</p>
+                </div>
+            </a>
+
+            <a class="atalho" href="/minha-conta">
+                <span>👤</span>
+                <div>
+                    <h3>Minha conta</h3>
+                    <p>Consulte seus dados e configurações.</p>
+                </div>
+            </a>
         </div>
     </section>
+
     <footer>
         StartFin © 2026 · Educação financeira para jovens
         <p>Todos os valores são fictícios. Este projeto não realiza operações bancárias.</p>
     </footer>
 </div>
+
 @code {
     private decimal Saldo = 0;
+
     private readonly System.Globalization.CultureInfo cultura =
         System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+
     private List<MetaResumo> metas = new();
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var estado = await AuthProvider.GetAuthenticationStateAsync();
 
-var usuarioId = estado.User.FindFirst(
-    ClaimTypes.NameIdentifier)?.Value ?? "";
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value ?? "";
 
-if (!string.IsNullOrEmpty(usuarioId))
-{
-    var carteira = await CarteiraServico
-        .ObterOuCriarCarteiraAsync(usuarioId);
+            if (!string.IsNullOrEmpty(usuarioId))
+            {
+                var carteira = await CarteiraServico
+                    .ObterOuCriarCarteiraAsync(usuarioId);
 
-    Saldo = carteira.SaldoDisponivel;
-}
+                Saldo = carteira.SaldoDisponivel;
+            }
+
             var connectionString =
                 Configuration.GetConnectionString("DefaultConnection");
+
             await using var conexao =
                 new NpgsqlConnection(connectionString);
-            await conexao.OpenAsync();
-            await using var comando = new NpgsqlCommand(
-    @"SELECT nome, valor_objetivo, valor_guardado
-      FROM metas_economia
-      WHERE usuario_id = @usuarioId
-      ORDER BY id DESC;",
-    conexao);
 
-comando.Parameters.AddWithValue("@usuarioId", usuarioId);
+            await conexao.OpenAsync();
+
+            await using var comando = new NpgsqlCommand(
+                @"SELECT nome, valor_objetivo, valor_guardado
+                  FROM metas_economia
+                  WHERE usuario_id = @usuarioId
+                  ORDER BY id DESC;",
+                conexao);
+
+            comando.Parameters.AddWithValue("@usuarioId", usuarioId);
+
             await using var leitor = await comando.ExecuteReaderAsync();
+
             while (await leitor.ReadAsync())
             {
                 metas.Add(new MetaResumo
@@ -152,6 +217,7 @@ comando.Parameters.AddWithValue("@usuarioId", usuarioId);
                 $"Erro ao carregar metas na Home: {ex.Message}");
         }
     }
+
     private class MetaResumo
     {
         public string Nome { get; set; } = "";
@@ -159,20 +225,20 @@ comando.Parameters.AddWithValue("@usuarioId", usuarioId);
         public decimal ValorGuardado { get; set; }
     }
 }
+
 <style>
-
     .link-movimentacoes {
-    display: inline-block;
-    margin-top: 14px;
-    color: #28c99a;
-    font-size: 13px;
-    font-weight: bold;
-    text-decoration: none;
-}
+        display: inline-block;
+        margin-top: 14px;
+        color: #28c99a;
+        font-size: 13px;
+        font-weight: bold;
+        text-decoration: none;
+    }
 
-.link-movimentacoes:hover {
-    text-decoration: underline;
-}
+    .link-movimentacoes:hover {
+        text-decoration: underline;
+    }
 
     .inicio {
         --azul: #142d70;
@@ -183,20 +249,24 @@ comando.Parameters.AddWithValue("@usuarioId", usuarioId);
         color: #17233f;
         font-family: Arial, sans-serif;
     }
+
     .cabecalho {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 45px;
     }
+
     .logo {
         font-size: 30px;
         font-weight: 800;
         color: var(--azul);
     }
+
     .logo span {
         color: var(--verde);
     }
+
     .perfil {
         background: #edf2ff;
         color: var(--azul);
@@ -211,25 +281,30 @@ comando.Parameters.AddWithValue("@usuarioId", usuarioId);
     .perfil:hover {
         background: #dce6ff;
     }
+
     .boas-vindas {
         margin-bottom: 28px;
     }
+
     .subtitulo {
         color: #105e49;
         font-size: 12px;
         font-weight: bold;
         letter-spacing: 2px;
     }
+
     .boas-vindas h1 {
         font-size: clamp(30px, 5vw, 43px);
         line-height: 1.15;
         margin: 12px 0;
         color: var(--azul);
     }
+
     .boas-vindas > p:last-child {
         color: #68748b;
         line-height: 1.6;
     }
+
     .saldo {
         background: linear-gradient(120deg, #010c2c, #002765);
         color: white;
@@ -238,25 +313,31 @@ comando.Parameters.AddWithValue("@usuarioId", usuarioId);
         margin-bottom: 38px;
         box-shadow: 0 12px 28px #142d7020;
     }
+
     .saldo p {
         margin: 0;
         opacity: 0.85;
     }
+
     .saldo h2 {
         font-size: clamp(30px, 5vw, 40px);
         margin: 12px 0;
     }
+
     .saldo span {
         font-size: 12px;
         opacity: 0.8;
     }
+
     .secao {
         margin-bottom: 38px;
     }
+
     .secao h2 {
         color: var(--azul);
         font-size: 22px;
     }
+
     .titulo-secao {
         display: flex;
         align-items: center;
@@ -264,42 +345,51 @@ comando.Parameters.AddWithValue("@usuarioId", usuarioId);
         gap: 12px;
         margin-bottom: 16px;
     }
+
     .titulo-secao h2 {
         margin: 0;
     }
+
     .titulo-secao > span {
         color: #7b8498;
         font-size: 13px;
     }
+
     .cartoes {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
     }
+
     .cartao {
         border: 1px solid #e5eaf3;
         border-radius: 18px;
         padding: 22px;
         box-shadow: 0 5px 18px #17233f08;
     }
+
     .icone {
         font-size: 28px;
         margin-bottom: 12px;
     }
+
     .cartao h3,
     .atalho h3 {
         margin: 0 0 12px;
         font-size: 16px;
     }
+
     .valor {
         font-weight: bold;
         font-size: 17px;
     }
+
     .valor span {
         font-weight: normal;
         color: #7b8498;
         font-size: 13px;
     }
+
     .barra {
         height: 8px;
         background: #e9eef7;
@@ -307,48 +397,85 @@ comando.Parameters.AddWithValue("@usuarioId", usuarioId);
         overflow: hidden;
         margin-top: 18px;
     }
+
     .progresso {
         height: 100%;
         background: var(--verde);
         border-radius: 10px;
     }
+
     .porcentagem {
         color: #159b77;
         font-size: 12px;
     }
+
     .atalhos {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 14px;
     }
+
     .atalho {
+        grid-column: span 2;
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        padding: 20px 15px;
-        border-radius: 16px;
+        padding: 25px 20px;
+        min-height: 120px;
+        border-radius: 18px;
         background: #f4f7fc;
+        border: 1px solid transparent;
+        transition: background 0.2s ease,
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease,
+                    border-color 0.2s ease;
     }
+
+    .atalho:nth-child(7) {
+        grid-column: 2 / 4;
+    }
+
+    .atalho:nth-child(8) {
+        grid-column: 4 / 6;
+    }
+
     a.atalho {
         color: inherit;
         text-decoration: none;
         cursor: pointer;
     }
+
     a.atalho:hover {
         background: #e9eef7;
+        border-color: #dce5f5;
+        transform: translateY(-4px);
+        box-shadow: 0 8px 18px #17233f12;
     }
+
+    a.atalho:active {
+        transform: scale(0.98);
+    }
+
+    a.atalho:focus-visible {
+        outline: 3px solid #28c99a;
+        outline-offset: 3px;
+    }
+
     .atalho > span {
-        font-size: 24px;
+        font-size: 27px;
     }
+
     .atalho h3 {
         line-height: 1.4;
     }
+
     .atalho p {
         color: #68748b;
         font-size: 13px;
         line-height: 1.5;
         margin-bottom: 0;
     }
+
     footer {
         text-align: center;
         border-top: 1px solid #e5eaf3;
@@ -357,24 +484,35 @@ comando.Parameters.AddWithValue("@usuarioId", usuarioId);
         font-size: 12px;
         line-height: 1.6;
     }
+
     @@media (max-width: 650px) {
         .inicio {
             padding: 18px;
         }
+
         .cabecalho {
             margin-bottom: 32px;
         }
-        .cartoes,
+
+        .cartoes {
+            grid-template-columns: 1fr;
+        }
+
         .atalhos {
             grid-template-columns: 1fr;
         }
+
+        .atalho {
+            grid-column: auto;
+        }
+
         .titulo-secao {
             align-items: flex-start;
             flex-direction: column;
         }
+
         .saldo {
             padding: 23px;
         }
     }
-}
 </style>
