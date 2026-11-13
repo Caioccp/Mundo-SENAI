@@ -45,7 +45,7 @@
             <div class="progress mb-2" style="height: 15px;">
                 <div class="progress-bar bg-success"
                      role="progressbar"
-                     style="width: @(percentual)%"
+                     style="width: @(percentual.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"
                      aria-valuenow="@percentual"
                      aria-valuemin="0"
                      aria-valuemax="100">
