@@ -2,9 +2,11 @@
 @page "/educacao-financeira/quiz/comecando-do-zero"
 
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @using StartFin.Dados
 @using StartFin.Modelos
 @using System.Security.Claims
+@using System.Text.Json
 
 @inject StartFinContext Context
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -74,13 +76,13 @@
                 {
                     <button class="botao-principal"
                             disabled="@string.IsNullOrEmpty(Selecionada)"
-                            @onclick="ConfirmarResposta">
+                            @onclick="ConfirmarRespostaAsync">
                         Confirmar resposta
                     </button>
                 }
                 else
                 {
-                    <button class="botao-principal" @onclick="Proxima">
+                    <button class="botao-principal" @onclick="ProximaAsync">
                         @(Indice == Perguntas.Count - 1
                             ? "Ver resultado"
                             : "Próxima pergunta")
@@ -116,7 +118,7 @@
                 <p class="aviso">@MensagemSalvamento</p>
             }
 
-            <button class="botao-principal" @onclick="Reiniciar">
+            <button class="botao-principal" @onclick="ReiniciarAsync">
                 Refazer quiz
             </button>
 
@@ -363,138 +365,274 @@
     private string MensagemResultado = string.Empty;
     private string MensagemSalvamento = string.Empty;
 
+    private string? UsuarioId;
+    private ResultadoQuiz? TentativaAtual;
+
+    private class ProgressoQuiz
+    {
+        public int Indice { get; set; }
+        public int Pontos { get; set; }
+        public bool Respondida { get; set; }
+        public bool Acertou { get; set; }
+        public string? Selecionada { get; set; }
+    }
+
     private List<Pergunta> Perguntas = new()
-{
-    new(
-        "Lucas recebe R$ 300,00 por mês. Seus gastos somam R$ 270,00, mas ele quer economizar R$ 60,00. Qual seria a melhor decisão?",
-        new()
-        {
-            "Usar o limite de crédito para completar a economia.",
-            "Reduzir ou reorganizar os gastos em R$ 30,00.",
-            "Ignorar o planejamento e manter os mesmos gastos.",
-            "Gastar menos apenas quando receber dinheiro extra."
-        },
-        "Lucas precisa economizar R$ 30,00 além do que atualmente sobra. Reorganizar os gastos permite alcançar a meta sem depender de dinheiro extra.",
-        "Reduzir ou reorganizar os gastos em R$ 30,00."
-    ),
+    {
+        new(
+            "Lucas recebe R$ 300,00 por mês. Seus gastos somam R$ 270,00, mas ele quer economizar R$ 60,00. Qual seria a melhor decisão?",
+            new()
+            {
+                "Usar o limite de crédito para completar a economia.",
+                "Reduzir ou reorganizar os gastos em R$ 30,00.",
+                "Ignorar o planejamento e manter os mesmos gastos.",
+                "Gastar menos apenas quando receber dinheiro extra."
+            },
+            "Lucas precisa economizar R$ 30,00 além do que atualmente sobra. Reorganizar os gastos permite alcançar a meta sem depender de dinheiro extra.",
+            "Reduzir ou reorganizar os gastos em R$ 30,00."
+        ),
 
-    new(
-        "Mariana encontrou um produto por R$ 240,00 à vista ou em 6 parcelas de R$ 44,00. Qual análise está correta?",
-        new()
-        {
-            "As parcelas são melhores porque dividem o pagamento.",
-            "As duas opções possuem exatamente o mesmo custo.",
-            "O parcelamento é vantajoso independentemente do orçamento.",
+        new(
+            "Mariana encontrou um produto por R$ 240,00 à vista ou em 6 parcelas de R$ 44,00. Qual análise está correta?",
+            new()
+            {
+                "As parcelas são melhores porque dividem o pagamento.",
+                "As duas opções possuem exatamente o mesmo custo.",
+                "O parcelamento é vantajoso independentemente do orçamento.",
+                "À vista custa R$ 240,00, enquanto parcelado custa R$ 264,00."
+            },
+            "Seis parcelas de R$ 44,00 totalizam R$ 264,00. Portanto, o parcelamento custa R$ 24,00 a mais.",
             "À vista custa R$ 240,00, enquanto parcelado custa R$ 264,00."
-        },
-        "Seis parcelas de R$ 44,00 totalizam R$ 264,00. Portanto, o parcelamento custa R$ 24,00 a mais.",
-        "À vista custa R$ 240,00, enquanto parcelado custa R$ 264,00."
-    ),
+        ),
 
-    new(
-        "Pedro guardou R$ 500,00 para comprar um computador. Surgiu uma promoção de outro produto que ele não precisava. Qual conceito ajuda a avaliar essa escolha?",
-        new()
-        {
-            "Custo de oportunidade, considerando o objetivo que seria adiado.",
-            "Renda fixa, considerando apenas o dinheiro recebido.",
-            "Inflação, considerando somente a variação dos preços.",
-            "Crédito pessoal, considerando o limite disponível."
-        },
-        "O custo de oportunidade representa aquilo de que abrimos mão ao escolher uma alternativa. Comprar outro produto pode atrasar a aquisição do computador.",
-        "Custo de oportunidade, considerando o objetivo que seria adiado."
-    ),
+        new(
+            "Pedro guardou R$ 500,00 para comprar um computador. Surgiu uma promoção de outro produto que ele não precisava. Qual conceito ajuda a avaliar essa escolha?",
+            new()
+            {
+                "Custo de oportunidade, considerando o objetivo que seria adiado.",
+                "Renda fixa, considerando apenas o dinheiro recebido.",
+                "Inflação, considerando somente a variação dos preços.",
+                "Crédito pessoal, considerando o limite disponível."
+            },
+            "O custo de oportunidade representa aquilo de que abrimos mão ao escolher uma alternativa. Comprar outro produto pode atrasar a aquisição do computador.",
+            "Custo de oportunidade, considerando o objetivo que seria adiado."
+        ),
 
-    new(
-        "Ana recebe R$ 400,00 e decide separar R$ 40,00 assim que recebe. Qual é a principal vantagem dessa estratégia?",
-        new()
-        {
-            "Ela elimina a necessidade de controlar despesas.",
-            "Ela garante que todos os preços permaneçam iguais.",
-            "Ela transforma a economia em uma prioridade do orçamento.",
-            "Ela permite gastar sem considerar o saldo disponível."
-        },
-        "Separar uma quantia logo no recebimento ajuda a priorizar a economia, em vez de depender apenas do dinheiro que sobra.",
-        "Ela transforma a economia em uma prioridade do orçamento."
-    ),
+        new(
+            "Ana recebe R$ 400,00 e decide separar R$ 40,00 assim que recebe. Qual é a principal vantagem dessa estratégia?",
+            new()
+            {
+                "Ela elimina a necessidade de controlar despesas.",
+                "Ela garante que todos os preços permaneçam iguais.",
+                "Ela transforma a economia em uma prioridade do orçamento.",
+                "Ela permite gastar sem considerar o saldo disponível."
+            },
+            "Separar uma quantia logo no recebimento ajuda a priorizar a economia, em vez de depender apenas do dinheiro que sobra.",
+            "Ela transforma a economia em uma prioridade do orçamento."
+        ),
 
-    new(
-        "Rafael percebeu que pequenas compras frequentes representam R$ 90,00 de seus gastos mensais. O que essa informação permite concluir?",
-        new()
-        {
-            "Pequenos gastos não precisam entrar no orçamento.",
-            "Despesas frequentes também podem comprometer o planejamento.",
-            "Somente compras parceladas afetam o saldo mensal.",
-            "O valor de cada compra é mais importante que a frequência."
-        },
-        "Mesmo quando cada compra parece barata, a repetição pode gerar um gasto mensal significativo.",
-        "Despesas frequentes também podem comprometer o planejamento."
-    ),
+        new(
+            "Rafael percebeu que pequenas compras frequentes representam R$ 90,00 de seus gastos mensais. O que essa informação permite concluir?",
+            new()
+            {
+                "Pequenos gastos não precisam entrar no orçamento.",
+                "Despesas frequentes também podem comprometer o planejamento.",
+                "Somente compras parceladas afetam o saldo mensal.",
+                "O valor de cada compra é mais importante que a frequência."
+            },
+            "Mesmo quando cada compra parece barata, a repetição pode gerar um gasto mensal significativo.",
+            "Despesas frequentes também podem comprometer o planejamento."
+        ),
 
-    new(
-        "Beatriz quer montar uma reserva para despesas inesperadas. Qual característica é mais importante para esse dinheiro?",
-        new()
-        {
-            "Ficar disponível somente depois de vários anos.",
-            "Ser utilizado para compras planejadas de lazer.",
-            "Ter seu valor comprometido com parcelas futuras.",
+        new(
+            "Beatriz quer montar uma reserva para despesas inesperadas. Qual característica é mais importante para esse dinheiro?",
+            new()
+            {
+                "Ficar disponível somente depois de vários anos.",
+                "Ser utilizado para compras planejadas de lazer.",
+                "Ter seu valor comprometido com parcelas futuras.",
+                "Permitir acesso quando surgir uma necessidade imprevista."
+            },
+            "Uma reserva financeira serve para lidar com situações inesperadas. Por isso, a possibilidade de acesso ao dinheiro é importante.",
             "Permitir acesso quando surgir uma necessidade imprevista."
-        },
-        "Uma reserva financeira serve para lidar com situações inesperadas. Por isso, a possibilidade de acesso ao dinheiro é importante.",
-        "Permitir acesso quando surgir uma necessidade imprevista."
-    ),
+        ),
 
-    new(
-        "João tem uma meta de R$ 800,00 e já guardou R$ 320,00. Qual percentual da meta ele alcançou?",
-        new()
-        {
-            "40% da quantia estabelecida como objetivo.",
-            "32% da quantia estabelecida como objetivo.",
-            "48% da quantia estabelecida como objetivo.",
-            "60% da quantia estabelecida como objetivo."
-        },
-        "Dividindo 320 por 800 e multiplicando por 100, temos 40%. João já alcançou essa parte da meta.",
-        "40% da quantia estabelecida como objetivo."
-    ),
+        new(
+            "João tem uma meta de R$ 800,00 e já guardou R$ 320,00. Qual percentual da meta ele alcançou?",
+            new()
+            {
+                "40% da quantia estabelecida como objetivo.",
+                "32% da quantia estabelecida como objetivo.",
+                "48% da quantia estabelecida como objetivo.",
+                "60% da quantia estabelecida como objetivo."
+            },
+            "Dividindo 320 por 800 e multiplicando por 100, temos 40%. João já alcançou essa parte da meta.",
+            "40% da quantia estabelecida como objetivo."
+        ),
 
-    new(
-        "Camila recebe R$ 600,00 e gasta R$ 250,00 com necessidades, R$ 150,00 com lazer e R$ 100,00 com outros gastos. Quanto ainda pode destinar a uma meta?",
-        new()
-        {
-            "R$ 50,00, considerando apenas os gastos necessários.",
-            "R$ 150,00, considerando todos os valores recebidos.",
-            "R$ 100,00, considerando o saldo após as despesas.",
-            "R$ 200,00, considerando somente os gastos de lazer."
-        },
-        "Somando os gastos, temos R$ 500,00. Subtraindo esse valor dos R$ 600,00 recebidos, sobram R$ 100,00.",
-        "R$ 100,00, considerando o saldo após as despesas."
-    ),
+        new(
+            "Camila recebe R$ 600,00 e gasta R$ 250,00 com necessidades, R$ 150,00 com lazer e R$ 100,00 com outros gastos. Quanto ainda pode destinar a uma meta?",
+            new()
+            {
+                "R$ 50,00, considerando apenas os gastos necessários.",
+                "R$ 150,00, considerando todos os valores recebidos.",
+                "R$ 100,00, considerando o saldo após as despesas.",
+                "R$ 200,00, considerando somente os gastos de lazer."
+            },
+            "Somando os gastos, temos R$ 500,00. Subtraindo esse valor dos R$ 600,00 recebidos, sobram R$ 100,00.",
+            "R$ 100,00, considerando o saldo após as despesas."
+        ),
 
-    new(
-        "Eduardo percebeu que seus gastos aumentaram, embora continue recebendo a mesma quantia. Qual atitude ajuda a identificar o problema?",
-        new()
-        {
-            "Aumentar as compras para aproveitar o dinheiro recebido.",
-            "Deixar de registrar despesas de pequeno valor.",
-            "Considerar somente os gastos realizados no cartão.",
+        new(
+            "Eduardo percebeu que seus gastos aumentaram, embora continue recebendo a mesma quantia. Qual atitude ajuda a identificar o problema?",
+            new()
+            {
+                "Aumentar as compras para aproveitar o dinheiro recebido.",
+                "Deixar de registrar despesas de pequeno valor.",
+                "Considerar somente os gastos realizados no cartão.",
+                "Comparar os registros atuais com os meses anteriores."
+            },
+            "Comparar os registros permite identificar quais despesas aumentaram e quais mudanças podem ser feitas no orçamento.",
             "Comparar os registros atuais com os meses anteriores."
-        },
-        "Comparar os registros permite identificar quais despesas aumentaram e quais mudanças podem ser feitas no orçamento.",
-        "Comparar os registros atuais com os meses anteriores."
-    ),
+        ),
 
-    new(
-        "Sofia deseja comprar um fone de R$ 360,00. Ela consegue guardar R$ 60,00 por mês. Se não retirar dinheiro da economia, em quanto tempo alcançará a meta?",
-        new()
+        new(
+            "Sofia deseja comprar um fone de R$ 360,00. Ela consegue guardar R$ 60,00 por mês. Se não retirar dinheiro da economia, em quanto tempo alcançará a meta?",
+            new()
+            {
+                "Em quatro meses de economia contínua.",
+                "Em seis meses de economia contínua.",
+                "Em cinco meses de economia contínua.",
+                "Em oito meses de economia contínua."
+            },
+            "Dividindo R$ 360,00 por R$ 60,00, descobrimos que Sofia precisará de seis meses para alcançar o objetivo.",
+            "Em seis meses de economia contínua."
+        )
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        UsuarioId = estado.User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(UsuarioId))
         {
-            "Em quatro meses de economia contínua.",
-            "Em seis meses de economia contínua.",
-            "Em cinco meses de economia contínua.",
-            "Em oito meses de economia contínua."
-        },
-        "Dividindo R$ 360,00 por R$ 60,00, descobrimos que Sofia precisará de seis meses para alcançar o objetivo.",
-        "Em seis meses de economia contínua."
-    )
-};
+            MensagemSalvamento = "Entre na sua conta para salvar seu progresso.";
+            return;
+        }
+
+        TentativaAtual = await Context.ResultadosQuiz
+            .Where(r => r.UsuarioId == UsuarioId &&
+                        r.IdentificadorQuiz == "comecando-do-zero" &&
+                        r.Status == "Em andamento")
+            .OrderByDescending(r => r.DataInicio)
+            .FirstOrDefaultAsync();
+
+        if (TentativaAtual == null)
+        {
+            await CriarNovaTentativaAsync();
+            return;
+        }
+
+        CarregarProgresso();
+    }
+
+    private async Task CriarNovaTentativaAsync()
+    {
+        if (string.IsNullOrEmpty(UsuarioId))
+            return;
+
+        Indice = 0;
+        Pontos = 0;
+        Respondida = false;
+        Acertou = false;
+        Finalizado = false;
+        ResultadoSalvo = false;
+        Selecionada = string.Empty;
+
+        MensagemResultado = string.Empty;
+        MensagemSalvamento = string.Empty;
+
+        TentativaAtual = new ResultadoQuiz
+        {
+            UsuarioId = UsuarioId,
+            IdentificadorQuiz = "comecando-do-zero",
+            Pontos = 0,
+            TotalPerguntas = Perguntas.Count,
+            Status = "Em andamento",
+            IndicePerguntaAtual = 0,
+            DataInicio = DateTime.UtcNow,
+            DataConclusao = null,
+            RespostasJson = JsonSerializer.Serialize(CriarProgresso())
+        };
+
+        Context.ResultadosQuiz.Add(TentativaAtual);
+        await Context.SaveChangesAsync();
+    }
+
+    private ProgressoQuiz CriarProgresso()
+    {
+        return new ProgressoQuiz
+        {
+            Indice = Indice,
+            Pontos = Pontos,
+            Respondida = Respondida,
+            Acertou = Acertou,
+            Selecionada = Selecionada
+        };
+    }
+
+    private void CarregarProgresso()
+    {
+        if (TentativaAtual == null)
+            return;
+
+        Indice = Math.Clamp(
+            TentativaAtual.IndicePerguntaAtual,
+            0,
+            Perguntas.Count - 1);
+
+        Pontos = TentativaAtual.Pontos;
+
+        if (string.IsNullOrEmpty(TentativaAtual.RespostasJson))
+            return;
+
+        try
+        {
+            var progresso = JsonSerializer.Deserialize<ProgressoQuiz>(
+                TentativaAtual.RespostasJson);
+
+            if (progresso == null)
+                return;
+
+            Indice = Math.Clamp(progresso.Indice, 0, Perguntas.Count - 1);
+            Pontos = progresso.Pontos;
+            Respondida = progresso.Respondida;
+            Acertou = progresso.Acertou;
+            Selecionada = progresso.Selecionada ?? string.Empty;
+        }
+        catch (JsonException)
+        {
+            Respondida = false;
+            Acertou = false;
+            Selecionada = string.Empty;
+        }
+    }
+
+    private async Task SalvarProgressoAsync()
+    {
+        if (TentativaAtual == null)
+            return;
+
+        TentativaAtual.Pontos = Pontos;
+        TentativaAtual.TotalPerguntas = Perguntas.Count;
+        TentativaAtual.IndicePerguntaAtual = Indice;
+        TentativaAtual.RespostasJson = JsonSerializer.Serialize(CriarProgresso());
+
+        await Context.SaveChangesAsync();
+    }
 
     private void Selecionar(string opcao)
     {
@@ -504,7 +642,7 @@
         }
     }
 
-    private void ConfirmarResposta()
+    private async Task ConfirmarRespostaAsync()
     {
         if (string.IsNullOrEmpty(Selecionada) || Respondida)
             return;
@@ -515,16 +653,23 @@
             Pontos++;
 
         Respondida = true;
+
+        await SalvarProgressoAsync();
     }
 
-    private async Task Proxima()
+    private async Task ProximaAsync()
     {
+        if (!Respondida)
+            return;
+
         if (Indice < Perguntas.Count - 1)
         {
             Indice++;
             Selecionada = string.Empty;
             Respondida = false;
             Acertou = false;
+
+            await SalvarProgressoAsync();
         }
         else
         {
@@ -546,27 +691,19 @@
     {
         try
         {
-            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-
-            var usuarioId = estado.User.FindFirst(
-                ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(usuarioId))
+            if (TentativaAtual == null)
             {
-                MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
+                MensagemSalvamento = "Não foi possível localizar sua tentativa para salvar o resultado.";
                 return;
             }
 
-            var resultado = new ResultadoQuiz
-            {
-                UsuarioId = usuarioId,
-                IdentificadorQuiz = "comecando-do-zero",
-                Pontos = Pontos,
-                TotalPerguntas = Perguntas.Count,
-                DataConclusao = DateTime.UtcNow
-            };
+            TentativaAtual.Pontos = Pontos;
+            TentativaAtual.TotalPerguntas = Perguntas.Count;
+            TentativaAtual.IndicePerguntaAtual = Indice;
+            TentativaAtual.Status = "Concluída";
+            TentativaAtual.DataConclusao = DateTime.UtcNow;
+            TentativaAtual.RespostasJson = JsonSerializer.Serialize(CriarProgresso());
 
-            Context.ResultadosQuiz.Add(resultado);
             await Context.SaveChangesAsync();
 
             ResultadoSalvo = true;
@@ -577,18 +714,15 @@
         }
     }
 
-    private void Reiniciar()
+    private async Task ReiniciarAsync()
     {
-        Indice = 0;
-        Pontos = 0;
-        Respondida = false;
-        Acertou = false;
-        Finalizado = false;
-        ResultadoSalvo = false;
+        if (TentativaAtual != null &&
+            TentativaAtual.Status == "Em andamento")
+        {
+            return;
+        }
 
-        Selecionada = string.Empty;
-        MensagemResultado = string.Empty;
-        MensagemSalvamento = string.Empty;
+        await CriarNovaTentativaAsync();
     }
 
     private class Pergunta

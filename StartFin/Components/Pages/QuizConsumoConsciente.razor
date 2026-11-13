@@ -1,9 +1,11 @@
 @page "/educacao-financeira/quiz/consumo-consciente"
 
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @using StartFin.Dados
 @using StartFin.Modelos
 @using System.Security.Claims
+@using System.Text.Json
 
 @inject StartFinContext Context
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -26,7 +28,13 @@
         <span class="nivel">Dificuldade progressiva • 10 questões</span>
     </div>
 
-    @if (!Finalizado)
+    @if (Carregando)
+    {
+        <div class="pergunta-card">
+            <p>Carregando seu progresso...</p>
+        </div>
+    }
+    else if (!Finalizado)
     {
         <div class="progresso">
             <div class="progresso-texto">
@@ -357,10 +365,14 @@
     private bool Acertou = false;
     private bool Finalizado = false;
     private bool ResultadoSalvo = false;
+    private bool Carregando = true;
 
     private string Selecionada = string.Empty;
     private string MensagemResultado = string.Empty;
     private string MensagemSalvamento = string.Empty;
+
+    private ResultadoQuiz? TentativaEmAndamento;
+    private string? UsuarioId;
 
     private List<Pergunta> Perguntas = new()
     {
@@ -503,6 +515,56 @@
         )
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarProgressoAsync();
+    }
+
+    private async Task CarregarProgressoAsync()
+    {
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            UsuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(UsuarioId))
+                return;
+
+            TentativaEmAndamento = await Context.ResultadosQuiz
+                .Where(r =>
+                    r.UsuarioId == UsuarioId &&
+                    r.IdentificadorQuiz == "consumo-consciente" &&
+                    r.Status == "Em andamento")
+                .OrderByDescending(r => r.DataInicio)
+                .FirstOrDefaultAsync();
+
+            if (TentativaEmAndamento == null)
+                return;
+
+            var progresso = JsonSerializer.Deserialize<ProgressoQuiz>(
+                TentativaEmAndamento.RespostasJson ?? "{}");
+
+            if (progresso == null)
+                return;
+
+            Indice = Math.Clamp(progresso.Indice, 0, Perguntas.Count - 1);
+            Pontos = progresso.Pontos;
+            Respondida = progresso.Respondida;
+            Acertou = progresso.Acertou;
+            Selecionada = progresso.Selecionada ?? string.Empty;
+        }
+        catch
+        {
+            TentativaEmAndamento = null;
+        }
+        finally
+        {
+            Carregando = false;
+        }
+    }
+
     private void Selecionar(string opcao)
     {
         if (!Respondida)
@@ -511,7 +573,7 @@
         }
     }
 
-    private void ConfirmarResposta()
+    private async Task ConfirmarResposta()
     {
         if (string.IsNullOrEmpty(Selecionada) || Respondida)
             return;
@@ -522,6 +584,8 @@
             Pontos++;
 
         Respondida = true;
+
+        await SalvarProgressoAsync();
     }
 
     private async Task Proxima()
@@ -532,6 +596,8 @@
             Selecionada = string.Empty;
             Respondida = false;
             Acertou = false;
+
+            await SalvarProgressoAsync();
         }
         else
         {
@@ -549,31 +615,109 @@
         }
     }
 
+    private async Task SalvarProgressoAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(UsuarioId))
+            {
+                var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+                UsuarioId = estado.User.FindFirst(
+                    ClaimTypes.NameIdentifier)?.Value;
+            }
+
+            if (string.IsNullOrEmpty(UsuarioId))
+                return;
+
+            var progresso = new ProgressoQuiz
+            {
+                Indice = Indice,
+                Pontos = Pontos,
+                Respondida = Respondida,
+                Acertou = Acertou,
+                Selecionada = Selecionada
+            };
+
+            var json = JsonSerializer.Serialize(progresso);
+
+            if (TentativaEmAndamento == null)
+            {
+                TentativaEmAndamento = new ResultadoQuiz
+                {
+                    UsuarioId = UsuarioId,
+                    IdentificadorQuiz = "consumo-consciente",
+                    DataInicio = DateTime.UtcNow,
+                    Pontos = Pontos,
+                    TotalPerguntas = Perguntas.Count,
+                    Status = "Em andamento",
+                    IndicePerguntaAtual = Indice,
+                    RespostasJson = json
+                };
+
+                Context.ResultadosQuiz.Add(TentativaEmAndamento);
+            }
+            else
+            {
+                TentativaEmAndamento.Pontos = Pontos;
+                TentativaEmAndamento.IndicePerguntaAtual = Indice;
+                TentativaEmAndamento.RespostasJson = json;
+            }
+
+            await Context.SaveChangesAsync();
+        }
+        catch
+        {
+            // O quiz continua funcionando mesmo se não for possível salvar o progresso.
+        }
+    }
+
     private async Task SalvarResultadoAsync()
     {
         try
         {
-            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (string.IsNullOrEmpty(UsuarioId))
+            {
+                var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
-            var usuarioId = estado.User.FindFirst(
-                ClaimTypes.NameIdentifier)?.Value;
+                UsuarioId = estado.User.FindFirst(
+                    ClaimTypes.NameIdentifier)?.Value;
+            }
 
-            if (string.IsNullOrEmpty(usuarioId))
+            if (string.IsNullOrEmpty(UsuarioId))
             {
                 MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
                 return;
             }
 
-            var resultado = new ResultadoQuiz
+            if (TentativaEmAndamento == null)
             {
-                UsuarioId = usuarioId,
-                IdentificadorQuiz = "consumo-consciente",
+                TentativaEmAndamento = new ResultadoQuiz
+                {
+                    UsuarioId = UsuarioId,
+                    IdentificadorQuiz = "consumo-consciente",
+                    DataInicio = DateTime.UtcNow
+                };
+
+                Context.ResultadosQuiz.Add(TentativaEmAndamento);
+            }
+
+            var progresso = new ProgressoQuiz
+            {
+                Indice = Indice,
                 Pontos = Pontos,
-                TotalPerguntas = Perguntas.Count,
-                DataConclusao = DateTime.UtcNow
+                Respondida = Respondida,
+                Acertou = Acertou,
+                Selecionada = Selecionada
             };
 
-            Context.ResultadosQuiz.Add(resultado);
+            TentativaEmAndamento.Pontos = Pontos;
+            TentativaEmAndamento.TotalPerguntas = Perguntas.Count;
+            TentativaEmAndamento.Status = "Concluída";
+            TentativaEmAndamento.IndicePerguntaAtual = Indice;
+            TentativaEmAndamento.RespostasJson = JsonSerializer.Serialize(progresso);
+            TentativaEmAndamento.DataConclusao = DateTime.UtcNow;
+
             await Context.SaveChangesAsync();
 
             ResultadoSalvo = true;
@@ -596,6 +740,17 @@
         Selecionada = string.Empty;
         MensagemResultado = string.Empty;
         MensagemSalvamento = string.Empty;
+
+        TentativaEmAndamento = null;
+    }
+
+    private class ProgressoQuiz
+    {
+        public int Indice { get; set; }
+        public int Pontos { get; set; }
+        public bool Respondida { get; set; }
+        public bool Acertou { get; set; }
+        public string Selecionada { get; set; } = string.Empty;
     }
 
     private class Pergunta

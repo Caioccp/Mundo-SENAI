@@ -1,9 +1,9 @@
-
 @page "/educacao-financeira/metas-e-economia"
 
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
+@using System.Text.Json
 @using StartFin.Dados
 @using StartFin.Modelos
 
@@ -232,11 +232,18 @@
 
             <a href="/educacao-financeira/quiz/metas-e-economia"
                class="botao-quiz">
-                Fazer o quiz →
+                @if (TentativaEmAndamento != null)
+                {
+                    <text>Continuar o quiz →</text>
+                }
+                else
+                {
+                    <text>Fazer o quiz →</text>
+                }
             </a>
 
             <button class="botao-resultado"
-                    @onclick="VerUltimoResultadoAsync">
+                    @onclick="ConsultarResultado">
                 📊 Ver último resultado
             </button>
 
@@ -245,23 +252,83 @@
                 <div class="resultado-anterior">
                     @if (Carregando)
                     {
-                        <p>Carregando resultado...</p>
-                    }
-                    else if (UltimoResultado != null)
-                    {
-                        <strong>Seu último resultado:</strong>
-                        <p>
-                            @UltimoResultado.Pontos de
-                            @UltimoResultado.TotalPerguntas pontos
-                        </p>
-                        <p>
-                            Concluído em:
-                            @UltimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                        </p>
+                        <p>Consultando seu progresso...</p>
                     }
                     else
                     {
-                        <p>@MensagemResultado</p>
+                        @if (TentativaEmAndamento != null)
+                        {
+                            <div class="progresso-pendente">
+                                <h3>🚀 Você ainda não terminou!</h3>
+
+                                <p>
+                                    Você já começou seu quiz e seu progresso está salvo.
+                                    Não deixe seu aprendizado pela metade!
+                                </p>
+
+                                <div class="estatistica-progresso">
+                                    <div>
+                                        <strong>@PerguntasRespondidas/@TentativaEmAndamento.TotalPerguntas</strong>
+                                        <span>Perguntas respondidas</span>
+                                    </div>
+
+                                    <div>
+                                        <strong>@PerguntasRestantes</strong>
+                                        <span>Perguntas restantes</span>
+                                    </div>
+
+                                    <div>
+                                        <strong>@TentativaEmAndamento.Pontos</strong>
+                                        <span>Acertos até agora</span>
+                                    </div>
+                                </div>
+
+                                <div class="barra-progresso-quiz">
+                                    <div style="width: @(PercentualProgresso)%"></div>
+                                </div>
+
+                                <p class="mensagem-incentivo">
+                                    Você parou na pergunta @PerguntaAtual.
+                                    Seu progresso está esperando por você!
+                                    Volte quando puder e termine o desafio.
+                                </p>
+
+                                <a href="/educacao-financeira/quiz/metas-e-economia"
+                                   class="botao-continuar">
+                                    Continuar de onde parei →
+                                </a>
+                            </div>
+                        }
+
+                        @if (TentativaEmAndamento == null && UltimoResultado != null)
+                        {
+                            <div class="resultado-concluido">
+                                <h3>🏆 Seu último resultado concluído</h3>
+
+                                <p>
+                                    Pontuação:
+                                    <strong>
+                                        @UltimoResultado.Pontos /
+                                        @UltimoResultado.TotalPerguntas
+                                    </strong>
+                                </p>
+
+                                <p>
+                                    Concluído em:
+                                    @UltimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </p>
+
+                                <p>
+                                    Cada tentativa é uma oportunidade de aprender
+                                    ainda mais. Continue praticando!
+                                </p>
+                            </div>
+                        }
+
+                        @if (TentativaEmAndamento == null && UltimoResultado == null)
+                        {
+                            <p>@MensagemResultado</p>
+                        }
                     }
                 </div>
             }
@@ -407,42 +474,126 @@
 
     .botao-quiz,
     .botao-resultado {
-        display: inline-block;
-        margin: 10px 10px 0 0;
-        padding: 13px 20px;
+        display: block;
+        width: 100%;
+        margin-top: 16px;
+        padding: 15px;
         border: none;
-        border-radius: 10px;
-        background: #087f5b;
+        border-radius: 11px;
+        background: #218665;
         color: white;
+        font-size: 15px;
+        font-weight: 800;
         text-decoration: none;
-        font-weight: 700;
-        font-size: 14px;
         cursor: pointer;
+        text-align: center;
     }
 
     .botao-quiz:hover,
     .botao-resultado:hover {
-        background: #066849;
+        background: #176b4b;
     }
 
     .botao-resultado {
         background: #2455a4;
     }
 
-    .botao-resultado:hover {
-        background: #1c4380;
-    }
-
     .resultado-anterior {
         margin-top: 18px;
-        padding: 16px;
+        padding: 18px;
+        border-radius: 12px;
         background: white;
-        border-radius: 10px;
-        border: 1px solid #dce5ef;
+        border: 1px solid #dce5ee;
+        text-align: left;
     }
 
-    .resultado-anterior strong {
-        color: #087f5b;
+    .resultado-anterior h3 {
+        margin-top: 0;
+    }
+
+    .progresso-pendente {
+        padding: 18px;
+        border-radius: 12px;
+        background: #eff8f4;
+        border: 1px solid #d5eee2;
+    }
+
+    .progresso-pendente h3 {
+        color: #218665;
+    }
+
+    .estatistica-progresso {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .estatistica-progresso div {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 14px 8px;
+        border-radius: 10px;
+        background: white;
+        text-align: center;
+    }
+
+    .estatistica-progresso strong {
+        color: #218665;
+        font-size: 22px;
+    }
+
+    .estatistica-progresso span {
+        color: #718096;
+        font-size: 12px;
+    }
+
+    .barra-progresso-quiz {
+        height: 10px;
+        overflow: hidden;
+        border-radius: 20px;
+        background: #dce8e1;
+    }
+
+    .barra-progresso-quiz div {
+        height: 100%;
+        border-radius: 20px;
+        background: #218665;
+        transition: width 0.3s;
+    }
+
+    .mensagem-incentivo {
+        margin-top: 15px;
+        font-weight: 600;
+    }
+
+    .botao-continuar {
+        display: block;
+        margin-top: 16px;
+        padding: 14px;
+        border-radius: 10px;
+        background: #218665;
+        color: white;
+        font-weight: 800;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .botao-continuar:hover {
+        background: #176b4b;
+    }
+
+    .resultado-concluido {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 12px;
+        background: #f0f6fb;
+        border: 1px solid #dce5ee;
+    }
+
+    .resultado-concluido h3 {
+        color: #2455a4;
     }
 
     @@media (max-width: 650px) {
@@ -458,22 +609,60 @@
         .passos {
             grid-template-columns: 1fr;
         }
+
+        .estatistica-progresso {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
 @code {
+    private const string IdentificadorQuiz = "metas-e-economia";
+
     private bool MostrarResultado = false;
     private bool Carregando = false;
 
     private ResultadoQuiz? UltimoResultado;
-    private string MensagemResultado = string.Empty;
+    private ResultadoQuiz? TentativaEmAndamento;
 
-    private async Task VerUltimoResultadoAsync()
+    private string MensagemResultado = "";
+
+    private int PerguntasRespondidas;
+    private int PerguntasRestantes;
+    private int PerguntaAtual;
+
+    private int PercentualProgresso =>
+        TentativaEmAndamento == null ||
+        TentativaEmAndamento.TotalPerguntas <= 0
+            ? 0
+            : Math.Clamp(
+                PerguntasRespondidas * 100 /
+                TentativaEmAndamento.TotalPerguntas,
+                0,
+                100);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDadosQuizAsync();
+    }
+
+    private async Task ConsultarResultado()
     {
         MostrarResultado = true;
+        await CarregarDadosQuizAsync();
+    }
+
+    private async Task CarregarDadosQuizAsync()
+    {
         Carregando = true;
+
         UltimoResultado = null;
-        MensagemResultado = string.Empty;
+        TentativaEmAndamento = null;
+        MensagemResultado = "";
+
+        PerguntasRespondidas = 0;
+        PerguntasRestantes = 0;
+        PerguntaAtual = 0;
 
         try
         {
@@ -484,30 +673,87 @@
 
             if (string.IsNullOrEmpty(usuarioId))
             {
-                MensagemResultado = "Entre na sua conta para consultar seu resultado.";
+                MensagemResultado =
+                    "Entre na sua conta para consultar seu progresso.";
                 return;
             }
 
-           UltimoResultado = await Context.ResultadosQuiz
-                .Where(r =>
-                    r.UsuarioId == usuarioId &&
-                    r.IdentificadorQuiz == "metas-e-economia" &&
-                    r.Status == "Concluída")
+            TentativaEmAndamento = await Context.ResultadosQuiz
+                .AsNoTracking()
+                .Where(r => r.UsuarioId == usuarioId &&
+                            r.IdentificadorQuiz == IdentificadorQuiz &&
+                            r.Status == "Em andamento")
+                .OrderByDescending(r => r.DataInicio)
+                .FirstOrDefaultAsync();
+
+            UltimoResultado = await Context.ResultadosQuiz
+                .AsNoTracking()
+                .Where(r => r.UsuarioId == usuarioId &&
+                            r.IdentificadorQuiz == IdentificadorQuiz &&
+                            r.Status == "Concluída")
                 .OrderByDescending(r => r.DataConclusao)
                 .FirstOrDefaultAsync();
 
-            if (UltimoResultado == null)
+            if (TentativaEmAndamento != null)
             {
-                MensagemResultado = "Você ainda não concluiu este quiz.";
+                var total = Math.Max(
+                    1,
+                    TentativaEmAndamento.TotalPerguntas);
+
+                var indice = Math.Clamp(
+                    TentativaEmAndamento.IndicePerguntaAtual,
+                    0,
+                    total - 1);
+
+                var respondida = false;
+
+                if (!string.IsNullOrEmpty(TentativaEmAndamento.RespostasJson))
+                {
+                    var progresso = JsonSerializer.Deserialize<ProgressoSalvo>(
+                        TentativaEmAndamento.RespostasJson);
+
+                    if (progresso != null)
+                    {
+                        indice = Math.Clamp(
+                            progresso.Indice,
+                            0,
+                            total - 1);
+
+                        respondida = progresso.Respondida;
+                    }
+                }
+
+                PerguntasRespondidas = indice + (respondida ? 1 : 0);
+
+                PerguntasRestantes = Math.Max(
+                    0,
+                    total - PerguntasRespondidas);
+
+                PerguntaAtual = Math.Min(
+                    indice + 1,
+                    total);
+            }
+
+            if (TentativaEmAndamento == null && UltimoResultado == null)
+            {
+                MensagemResultado =
+                    "Você ainda não começou este quiz. Que tal testar seus conhecimentos?";
             }
         }
         catch
         {
-            MensagemResultado = "Não foi possível carregar seu resultado.";
+            MensagemResultado =
+                "Não foi possível consultar seu progresso.";
         }
         finally
         {
             Carregando = false;
         }
+    }
+
+    private class ProgressoSalvo
+    {
+        public int Indice { get; set; }
+        public bool Respondida { get; set; }
     }
 }

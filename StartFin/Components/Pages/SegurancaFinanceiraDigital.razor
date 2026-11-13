@@ -311,30 +311,30 @@
                         </div>
                     }
 
-                    @if (UltimoResultado != null)
-                    {
-                        <div class="resultado-concluido">
-                            <h3>🏆 Seu último resultado concluído</h3>
+                    @if (TentativaEmAndamento == null && UltimoResultado != null)
+{
+    <div class="resultado-concluido">
+        <h3>🏆 Seu último resultado concluído</h3>
 
-                            <p>
-                                Pontuação:
-                                <strong>
-                                    @UltimoResultado.Pontos /
-                                    @UltimoResultado.TotalPerguntas
-                                </strong>
-                            </p>
+        <p>
+            Pontuação:
+            <strong>
+                @UltimoResultado.Pontos /
+                @UltimoResultado.TotalPerguntas
+            </strong>
+        </p>
 
-                            <p>
-                                Concluído em:
-                                @UltimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                            </p>
+        <p>
+            Concluído em:
+            @UltimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+        </p>
 
-                            <p>
-                                Cada tentativa é uma oportunidade de aprender
-                                ainda mais. Continue praticando!
-                            </p>
-                        </div>
-                    }
+        <p>
+            Cada tentativa é uma oportunidade de aprender
+            ainda mais. Continue praticando!
+        </p>
+    </div>
+}
 
                     @if (TentativaEmAndamento == null && UltimoResultado == null)
                     {

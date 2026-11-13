@@ -1,9 +1,12 @@
+
 @page "/educacao-financeira/quiz/metas-e-economia"
 
 @using Microsoft.AspNetCore.Components.Authorization
 @using StartFin.Dados
 @using StartFin.Modelos
 @using System.Security.Claims
+@using System.Text.Json
+@using Microsoft.EntityFrameworkCore
 
 @inject StartFinContext Context
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -26,7 +29,11 @@
         <span class="nivel">Nível intermediário • 10 questões</span>
     </div>
 
-    @if (!Finalizado)
+    @if (Carregando)
+    {
+        <p>Carregando seu progresso...</p>
+    }
+    else if (!Finalizado)
     {
         <div class="progresso">
             <div class="progresso-texto">
@@ -51,7 +58,7 @@
                 @foreach (var opcao in Perguntas[Indice].Opcoes)
                 {
                     <button class="opcao @(Selecionada == opcao ? "selecionada" : "")"
-                            disabled="@Respondida"
+                            disabled="@(Respondida || Salvando)"
                             @onclick="() => Selecionar(opcao)">
                         @opcao
                     </button>
@@ -72,20 +79,29 @@
                 @if (!Respondida)
                 {
                     <button class="botao-principal"
-                            disabled="@string.IsNullOrEmpty(Selecionada)"
+                            disabled="@(string.IsNullOrEmpty(Selecionada) || Salvando)"
                             @onclick="ConfirmarResposta">
-                        Confirmar resposta
+                        @(Salvando ? "Salvando..." : "Confirmar resposta")
                     </button>
                 }
                 else
                 {
-                    <button class="botao-principal" @onclick="Proxima">
-                        @(Indice == Perguntas.Count - 1
-                            ? "Ver resultado"
-                            : "Próxima pergunta")
+                    <button class="botao-principal"
+                            disabled="@Salvando"
+                            @onclick="Proxima">
+                        @(Salvando
+                            ? "Salvando..."
+                            : Indice == Perguntas.Count - 1
+                                ? "Ver resultado"
+                                : "Próxima pergunta")
                     </button>
                 }
             </div>
+
+            @if (!string.IsNullOrEmpty(MensagemSalvamento))
+            {
+                <p class="aviso">@MensagemSalvamento</p>
+            }
 
         </section>
     }
@@ -113,9 +129,15 @@
             else
             {
                 <p class="aviso">@MensagemSalvamento</p>
+
+                <button class="botao-principal" @onclick="TentarSalvarNovamente">
+                    Tentar salvar novamente
+                </button>
             }
 
-            <button class="botao-principal" @onclick="Reiniciar">
+            <button class="botao-principal"
+                    disabled="@Salvando"
+                    @onclick="Reiniciar">
                 Refazer quiz
             </button>
 
@@ -362,150 +384,217 @@
     private string MensagemResultado = string.Empty;
     private string MensagemSalvamento = string.Empty;
 
+    private ResultadoQuiz? TentativaAtual;
+
+    private bool Carregando = true;
+    private bool Salvando = false;
+
+    private const string Identificador = "metas-e-economia";
+
     private List<Pergunta> Perguntas = new()
-{
-    new(
-        "Marina quer comprar uma bicicleta de R$ 900,00 em 6 meses. Ela já possui R$ 180,00 guardados. Quanto precisa economizar por mês para alcançar a meta?",
-        new()
-        {
-            "R$ 100,00 por mês, considerando o valor que ainda falta.",
-            "R$ 120,00 por mês, considerando o preço total.",
-            "R$ 150,00 por mês, considerando o prazo disponível.",
-            "R$ 180,00 por mês, considerando sua economia atual."
-        },
-        "Marina ainda precisa juntar R$ 720,00. Dividindo esse valor pelos 6 meses disponíveis, ela precisa economizar R$ 120,00 por mês.",
-        "R$ 120,00 por mês, considerando o preço total."
-    ),
+    {
+        new(
+            "Marina quer comprar uma bicicleta de R$ 900,00 em 6 meses. Ela já possui R$ 180,00 guardados. Quanto precisa economizar por mês para alcançar a meta?",
+            new()
+            {
+                "R$ 100,00 por mês, considerando o valor que ainda falta.",
+                "R$ 120,00 por mês, considerando o preço total.",
+                "R$ 150,00 por mês, considerando o prazo disponível.",
+                "R$ 180,00 por mês, considerando sua economia atual."
+            },
+            "Marina ainda precisa juntar R$ 720,00. Dividindo esse valor pelos 6 meses disponíveis, ela precisa economizar R$ 120,00 por mês.",
+            "R$ 120,00 por mês, considerando o preço total."
+        ),
 
-    new(
-        "Pedro estabeleceu uma meta de economizar R$ 1.200,00 em um ano. Após quatro meses, percebeu que guardou apenas R$ 250,00. Qual atitude seria mais adequada?",
-        new()
-        {
-            "Desistir da meta porque o planejamento inicial não foi cumprido.",
-            "Avaliar suas economias e reorganizar os valores que consegue guardar.",
-            "Utilizar crédito para completar imediatamente o valor planejado.",
-            "Ignorar o progresso e manter o mesmo planejamento."
-        },
-        "Quando uma meta não está avançando como esperado, é importante analisar a situação e ajustar o planejamento à realidade financeira.",
-        "Avaliar suas economias e reorganizar os valores que consegue guardar."
-    ),
+        new(
+            "Pedro estabeleceu uma meta de economizar R$ 1.200,00 em um ano. Após quatro meses, percebeu que guardou apenas R$ 250,00. Qual atitude seria mais adequada?",
+            new()
+            {
+                "Desistir da meta porque o planejamento inicial não foi cumprido.",
+                "Avaliar suas economias e reorganizar os valores que consegue guardar.",
+                "Utilizar crédito para completar imediatamente o valor planejado.",
+                "Ignorar o progresso e manter o mesmo planejamento."
+            },
+            "Quando uma meta não está avançando como esperado, é importante analisar a situação e ajustar o planejamento à realidade financeira.",
+            "Avaliar suas economias e reorganizar os valores que consegue guardar."
+        ),
 
-    new(
-        "Uma pessoa possui R$ 500,00 disponíveis e pretende dividir esse valor entre uma meta de curto prazo e uma reserva para imprevistos. Qual decisão demonstra melhor organização?",
-        new()
-        {
-            "Destinar todo o dinheiro à compra desejada, sem considerar imprevistos.",
-            "Gastar uma parte e deixar o restante sem finalidade definida.",
-            "Escolher a compra mais cara e adiar qualquer economia.",
+        new(
+            "Uma pessoa possui R$ 500,00 disponíveis e pretende dividir esse valor entre uma meta de curto prazo e uma reserva para imprevistos. Qual decisão demonstra melhor organização?",
+            new()
+            {
+                "Destinar todo o dinheiro à compra desejada, sem considerar imprevistos.",
+                "Gastar uma parte e deixar o restante sem finalidade definida.",
+                "Escolher a compra mais cara e adiar qualquer economia.",
+                "Definir quanto será destinado a cada objetivo, considerando suas prioridades."
+            },
+            "Dividir o dinheiro de acordo com prioridades permite avançar em diferentes objetivos sem deixar de considerar possíveis necessidades futuras.",
             "Definir quanto será destinado a cada objetivo, considerando suas prioridades."
-        },
-        "Dividir o dinheiro de acordo com prioridades permite avançar em diferentes objetivos sem deixar de considerar possíveis necessidades futuras.",
-        "Definir quanto será destinado a cada objetivo, considerando suas prioridades."
-    ),
+        ),
 
-    new(
-        "Carlos pretende comprar um notebook de R$ 2.400,00. Ele consegue guardar R$ 200,00 por mês. Qual prazo representa o tempo necessário para atingir a meta, sem considerar rendimentos?",
-        new()
-        {
-            "Em 10 meses, mantendo a economia planejada.",
-            "Em 11 meses, considerando o valor mensal disponível.",
-            "Em 12 meses, mantendo depósitos mensais constantes.",
-            "Em 14 meses, considerando o preço total do produto."
-        },
-        "Dividindo R$ 2.400,00 por R$ 200,00, o resultado é 12 meses de economia.",
-        "Em 12 meses, mantendo depósitos mensais constantes."
-    ),
+        new(
+            "Carlos pretende comprar um notebook de R$ 2.400,00. Ele consegue guardar R$ 200,00 por mês. Qual prazo representa o tempo necessário para atingir a meta, sem considerar rendimentos?",
+            new()
+            {
+                "Em 10 meses, mantendo a economia planejada.",
+                "Em 11 meses, considerando o valor mensal disponível.",
+                "Em 12 meses, mantendo depósitos mensais constantes.",
+                "Em 14 meses, considerando o preço total do produto."
+            },
+            "Dividindo R$ 2.400,00 por R$ 200,00, o resultado é 12 meses de economia.",
+            "Em 12 meses, mantendo depósitos mensais constantes."
+        ),
 
-    new(
-        "Juliana guardou R$ 400,00 para uma viagem, mas precisou utilizar R$ 100,00 em uma despesa inesperada. Como deve avaliar essa situação?",
-        new()
-        {
-            "Como uma falha definitiva que invalida todo o planejamento.",
-            "Como um motivo para abandonar todas as metas financeiras.",
-            "Como um imprevisto que exige revisar o prazo e continuar economizando.",
-            "Como uma oportunidade para aumentar os gastos planejados."
-        },
-        "Imprevistos podem acontecer. O mais importante é reorganizar o planejamento e retomar a economia quando possível.",
-        "Como um imprevisto que exige revisar o prazo e continuar economizando."
-    ),
+        new(
+            "Juliana guardou R$ 400,00 para uma viagem, mas precisou utilizar R$ 100,00 em uma despesa inesperada. Como deve avaliar essa situação?",
+            new()
+            {
+                "Como uma falha definitiva que invalida todo o planejamento.",
+                "Como um motivo para abandonar todas as metas financeiras.",
+                "Como um imprevisto que exige revisar o prazo e continuar economizando.",
+                "Como uma oportunidade para aumentar os gastos planejados."
+            },
+            "Imprevistos podem acontecer. O mais importante é reorganizar o planejamento e retomar a economia quando possível.",
+            "Como um imprevisto que exige revisar o prazo e continuar economizando."
+        ),
 
-    new(
-        "Uma meta exige R$ 750,00. Até agora, foram economizados R$ 525,00. Qual percentual do objetivo já foi alcançado?",
-        new()
-        {
-            "65%, considerando a parte já economizada.",
-            "70%, considerando o valor guardado em relação à meta.",
-            "75%, considerando o valor que ainda falta.",
-            "80%, considerando o total estabelecido como objetivo."
-        },
-        "Dividindo R$ 525,00 por R$ 750,00 e multiplicando por 100, chegamos a 70% da meta.",
-        "70%, considerando o valor guardado em relação à meta."
-    ),
+        new(
+            "Uma meta exige R$ 750,00. Até agora, foram economizados R$ 525,00. Qual percentual do objetivo já foi alcançado?",
+            new()
+            {
+                "65%, considerando a parte já economizada.",
+                "70%, considerando o valor guardado em relação à meta.",
+                "75%, considerando o valor que ainda falta.",
+                "80%, considerando o total estabelecido como objetivo."
+            },
+            "Dividindo R$ 525,00 por R$ 750,00 e multiplicando por 100, chegamos a 70% da meta.",
+            "70%, considerando o valor guardado em relação à meta."
+        ),
 
-    new(
-        "Fernanda possui duas metas: comprar um livro em dois meses e juntar dinheiro para um computador em dois anos. Como esses objetivos podem ser classificados?",
-        new()
-        {
-            "Ambos são objetivos de curto prazo, pois envolvem compras.",
-            "O livro é de longo prazo e o computador é de médio prazo.",
-            "Ambos são objetivos de longo prazo, pois exigem economia.",
+        new(
+            "Fernanda possui duas metas: comprar um livro em dois meses e juntar dinheiro para um computador em dois anos. Como esses objetivos podem ser classificados?",
+            new()
+            {
+                "Ambos são objetivos de curto prazo, pois envolvem compras.",
+                "O livro é de longo prazo e o computador é de médio prazo.",
+                "Ambos são objetivos de longo prazo, pois exigem economia.",
+                "O livro é de curto prazo e o computador é de longo prazo."
+            },
+            "O prazo de dois meses caracteriza uma meta de curto prazo, enquanto dois anos representam uma meta de longo prazo.",
             "O livro é de curto prazo e o computador é de longo prazo."
-        },
-        "O prazo de dois meses caracteriza uma meta de curto prazo, enquanto dois anos representam uma meta de longo prazo.",
-        "O livro é de curto prazo e o computador é de longo prazo."
-    ),
+        ),
 
-    new(
-        "André consegue economizar R$ 80,00 por mês, mas deseja atingir uma meta de R$ 600,00 em apenas seis meses. Qual análise está correta?",
-        new()
-        {
-            "Ele alcançará a meta, pois economizará R$ 600,00 no período.",
-            "Ele ultrapassará a meta, pois juntará R$ 680,00.",
-            "Ele juntará R$ 480,00 e precisará ajustar o valor mensal ou o prazo.",
-            "Ele precisará economizar apenas R$ 20,00 por mês."
-        },
-        "Economizando R$ 80,00 durante seis meses, André acumulará R$ 480,00. Faltarão R$ 120,00 para alcançar a meta.",
-        "Ele juntará R$ 480,00 e precisará ajustar o valor mensal ou o prazo."
-    ),
+        new(
+            "André consegue economizar R$ 80,00 por mês, mas deseja atingir uma meta de R$ 600,00 em apenas seis meses. Qual análise está correta?",
+            new()
+            {
+                "Ele alcançará a meta, pois economizará R$ 600,00 no período.",
+                "Ele ultrapassará a meta, pois juntará R$ 680,00.",
+                "Ele juntará R$ 480,00 e precisará ajustar o valor mensal ou o prazo.",
+                "Ele precisará economizar apenas R$ 20,00 por mês."
+            },
+            "Economizando R$ 80,00 durante seis meses, André acumulará R$ 480,00. Faltarão R$ 120,00 para alcançar a meta.",
+            "Ele juntará R$ 480,00 e precisará ajustar o valor mensal ou o prazo."
+        ),
 
-    new(
-        "Uma pessoa acompanha suas metas mensalmente e percebe que está economizando mais do que havia planejado. Qual pode ser uma boa decisão?",
-        new()
-        {
-            "Aumentar todas as metas imediatamente, sem avaliar suas prioridades.",
-            "Reavaliar o planejamento e verificar se é possível antecipar algum objetivo.",
-            "Interromper os registros porque a economia está funcionando.",
-            "Gastar o valor excedente sem considerar outros objetivos."
-        },
-        "Acompanhar o progresso permite identificar oportunidades de ajuste. Se houver condições, antecipar uma meta pode ser uma boa decisão.",
-        "Reavaliar o planejamento e verificar se é possível antecipar algum objetivo."
-    ),
+        new(
+            "Uma pessoa acompanha suas metas mensalmente e percebe que está economizando mais do que havia planejado. Qual pode ser uma boa decisão?",
+            new()
+            {
+                "Aumentar todas as metas imediatamente, sem avaliar suas prioridades.",
+                "Reavaliar o planejamento e verificar se é possível antecipar algum objetivo.",
+                "Interromper os registros porque a economia está funcionando.",
+                "Gastar o valor excedente sem considerar outros objetivos."
+            },
+            "Acompanhar o progresso permite identificar oportunidades de ajuste. Se houver condições, antecipar uma meta pode ser uma boa decisão.",
+            "Reavaliar o planejamento e verificar se é possível antecipar algum objetivo."
+        ),
 
-    new(
-        "Sofia deseja economizar para três objetivos diferentes, mas possui uma quantia limitada disponível por mês. Qual estratégia pode ajudá-la a manter um planejamento sustentável?",
-        new()
+        new(
+            "Sofia deseja economizar para três objetivos diferentes, mas possui uma quantia limitada disponível por mês. Qual estratégia pode ajudá-la a manter um planejamento sustentável?",
+            new()
+            {
+                "Dividir o dinheiro igualmente entre todas as metas, independentemente dos prazos.",
+                "Priorizar apenas a meta mais cara e ignorar as demais.",
+                "Definir prioridades, considerar os prazos e distribuir valores compatíveis com seu orçamento.",
+                "Guardar valores diferentes a cada mês sem acompanhar os resultados."
+            },
+            "Um planejamento sustentável considera os prazos, a importância de cada objetivo e o dinheiro realmente disponível para economizar.",
+            "Definir prioridades, considerar os prazos e distribuir valores compatíveis com seu orçamento."
+        )
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
         {
-            "Dividir o dinheiro igualmente entre todas as metas, independentemente dos prazos.",
-            "Priorizar apenas a meta mais cara e ignorar as demais.",
-            "Definir prioridades, considerar os prazos e distribuir valores compatíveis com seu orçamento.",
-            "Guardar valores diferentes a cada mês sem acompanhar os resultados."
-        },
-        "Um planejamento sustentável considera os prazos, a importância de cada objetivo e o dinheiro realmente disponível para economizar.",
-        "Definir prioridades, considerar os prazos e distribuir valores compatíveis com seu orçamento."
-    )
-};
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+                return;
+
+            TentativaAtual = await Context.ResultadosQuiz
+                .Where(r =>
+                    r.UsuarioId == usuarioId &&
+                    r.IdentificadorQuiz == Identificador &&
+                    r.Status == "Em andamento")
+                .OrderByDescending(r => r.DataInicio)
+                .FirstOrDefaultAsync();
+
+            if (TentativaAtual != null)
+            {
+                if (!string.IsNullOrEmpty(TentativaAtual.RespostasJson))
+                {
+                    var progresso = JsonSerializer.Deserialize<ProgressoQuiz>(
+                        TentativaAtual.RespostasJson);
+
+                    if (progresso != null)
+                    {
+                        Indice = Math.Clamp(progresso.Indice, 0, Perguntas.Count - 1);
+                        Pontos = Math.Clamp(progresso.Pontos, 0, Perguntas.Count);
+                        Respondida = progresso.Respondida;
+                        Acertou = progresso.Acertou;
+                        Selecionada = progresso.Selecionada ?? string.Empty;
+                    }
+                }
+                else
+                {
+                    Indice = Math.Clamp(
+                        TentativaAtual.IndicePerguntaAtual,
+                        0,
+                        Perguntas.Count - 1);
+
+                    Pontos = Math.Clamp(
+                        TentativaAtual.Pontos,
+                        0,
+                        Perguntas.Count);
+                }
+            }
+        }
+        catch
+        {
+            MensagemSalvamento = "Não foi possível carregar seu progresso salvo.";
+        }
+        finally
+        {
+            Carregando = false;
+        }
+    }
 
     private void Selecionar(string opcao)
     {
-        if (!Respondida)
+        if (!Respondida && !Salvando)
         {
             Selecionada = opcao;
         }
     }
 
-    private void ConfirmarResposta()
+    private async Task ConfirmarResposta()
     {
-        if (string.IsNullOrEmpty(Selecionada) || Respondida)
+        if (string.IsNullOrEmpty(Selecionada) || Respondida || Salvando)
             return;
 
         Acertou = Selecionada == Perguntas[Indice].RespostaCorreta;
@@ -514,16 +603,23 @@
             Pontos++;
 
         Respondida = true;
+
+        await SalvarProgressoAsync();
     }
 
     private async Task Proxima()
     {
+        if (Salvando || !Respondida)
+            return;
+
         if (Indice < Perguntas.Count - 1)
         {
             Indice++;
             Selecionada = string.Empty;
             Respondida = false;
             Acertou = false;
+
+            await SalvarProgressoAsync();
         }
         else
         {
@@ -537,14 +633,17 @@
                 _ => "Continue praticando! Revise a aula e tente novamente para fortalecer seus conhecimentos."
             };
 
-            await SalvarResultadoAsync();
+            await SalvarProgressoAsync(concluir: true);
         }
     }
 
-    private async Task SalvarResultadoAsync()
+    private async Task SalvarProgressoAsync(bool concluir = false)
     {
         try
         {
+            Salvando = true;
+            MensagemSalvamento = string.Empty;
+
             var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
             var usuarioId = estado.User.FindFirst(
@@ -552,28 +651,61 @@
 
             if (string.IsNullOrEmpty(usuarioId))
             {
-                MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
+                MensagemSalvamento = "Entre na sua conta para salvar seu progresso.";
                 return;
             }
 
-            var resultado = new ResultadoQuiz
-            {
-                UsuarioId = usuarioId,
-                IdentificadorQuiz = "metas-e-economia",
-                Pontos = Pontos,
-                TotalPerguntas = Perguntas.Count,
-                DataConclusao = DateTime.UtcNow
-            };
+            var tentativa = TentativaAtual;
 
-            Context.ResultadosQuiz.Add(resultado);
+            if (tentativa == null)
+            {
+                tentativa = new ResultadoQuiz
+                {
+                    UsuarioId = usuarioId,
+                    IdentificadorQuiz = Identificador,
+                    DataInicio = DateTime.UtcNow
+                };
+
+                Context.ResultadosQuiz.Add(tentativa);
+                TentativaAtual = tentativa;
+            }
+
+            tentativa.Pontos = Pontos;
+            tentativa.TotalPerguntas = Perguntas.Count;
+            tentativa.Status = concluir ? "Concluída" : "Em andamento";
+            tentativa.IndicePerguntaAtual = Indice;
+
+            tentativa.RespostasJson = JsonSerializer.Serialize(new ProgressoQuiz
+            {
+                Indice = Indice,
+                Pontos = Pontos,
+                Respondida = Respondida,
+                Acertou = Acertou,
+                Selecionada = Selecionada
+            });
+
+            tentativa.DataConclusao = concluir ? DateTime.UtcNow : null;
+
             await Context.SaveChangesAsync();
 
-            ResultadoSalvo = true;
+            if (concluir)
+            {
+                ResultadoSalvo = true;
+            }
         }
         catch
         {
-            MensagemSalvamento = "Não foi possível salvar o resultado. Tente novamente mais tarde.";
+            MensagemSalvamento = "Não foi possível salvar seu progresso. Tente novamente mais tarde.";
         }
+        finally
+        {
+            Salvando = false;
+        }
+    }
+
+    private async Task TentarSalvarNovamente()
+    {
+        await SalvarProgressoAsync(concluir: true);
     }
 
     private void Reiniciar()
@@ -588,6 +720,8 @@
         Selecionada = string.Empty;
         MensagemResultado = string.Empty;
         MensagemSalvamento = string.Empty;
+
+        TentativaAtual = null;
     }
 
     private class Pergunta
@@ -608,5 +742,14 @@
             Explicacao = explicacao;
             RespostaCorreta = respostaCorreta;
         }
+    }
+
+    private class ProgressoQuiz
+    {
+        public int Indice { get; set; }
+        public int Pontos { get; set; }
+        public bool Respondida { get; set; }
+        public bool Acertou { get; set; }
+        public string? Selecionada { get; set; }
     }
 }

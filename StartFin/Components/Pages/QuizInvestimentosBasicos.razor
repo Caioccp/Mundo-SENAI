@@ -2,9 +2,11 @@
 @page "/educacao-financeira/quiz/investimentos-basicos"
 
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @using StartFin.Dados
 @using StartFin.Modelos
 @using System.Security.Claims
+@using System.Text.Json
 
 @inject StartFinContext Context
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -48,8 +50,9 @@
                         @(AlternativaSelecionada == indice ? "selecionada" : "")
                         @(RespostaConfirmada && indice == Perguntas[IndiceAtual].RespostaCorreta ? "correta" : "")
                         @(RespostaConfirmada && AlternativaSelecionada == indice && indice != Perguntas[IndiceAtual].RespostaCorreta ? "incorreta" : "")"
-                        disabled="@RespostaConfirmada"
-                        @onclick="() => Selecionar(indice)">
+                            disabled="@RespostaConfirmada"
+                            @onclick="() => Selecionar(indice)">
+
                         <span class="letra-opcao">@((char)('A' + indice))</span>
                         @Perguntas[IndiceAtual].Opcoes[indice]
                     </button>
@@ -64,6 +67,7 @@
                             ? "Resposta correta!"
                             : "Não foi dessa vez!")
                     </strong>
+
                     <p>@Perguntas[IndiceAtual].Explicacao</p>
                 </div>
             }
@@ -73,13 +77,13 @@
                 {
                     <button class="botao-principal"
                             disabled="@(AlternativaSelecionada == null)"
-                            @onclick="ConfirmarResposta">
+                            @onclick="ConfirmarRespostaAsync">
                         Confirmar resposta
                     </button>
                 }
                 else
                 {
-                    <button class="botao-principal" @onclick="Proxima">
+                    <button class="botao-principal" @onclick="ProximaAsync">
                         @(IndiceAtual == Perguntas.Count - 1 ? "Ver resultado" : "Próxima pergunta")
                     </button>
                 }
@@ -119,13 +123,14 @@
                     Não foi possível salvar seu resultado.
                     Você pode tentar novamente.
                 </p>
+
                 <button class="botao-secundario" @onclick="SalvarResultadoAsync">
                     Tentar salvar novamente
                 </button>
             }
 
             <div class="acoes-resultado">
-                <button class="botao-principal" @onclick="Reiniciar">
+                <button class="botao-principal" @onclick="ReiniciarAsync">
                     Refazer quiz
                 </button>
 
@@ -150,6 +155,8 @@
     private bool ResultadoSalvo = false;
 
     private string MensagemResultado = "";
+
+    private ResultadoQuiz? TentativaAtual;
 
     private List<Pergunta> Perguntas = new()
     {
@@ -294,15 +301,106 @@
         }
     };
 
-    private void Selecionar(int indice)
+    protected override async Task OnInitializedAsync()
     {
-        if (!RespostaConfirmada)
+        var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(usuarioId))
+            return;
+
+        TentativaAtual = await Context.ResultadosQuiz
+            .Where(r =>
+                r.UsuarioId == usuarioId &&
+                r.IdentificadorQuiz == "investimentos-basicos" &&
+                r.Status == "Em andamento")
+            .OrderByDescending(r => r.DataInicio)
+            .FirstOrDefaultAsync();
+
+        if (TentativaAtual != null)
         {
-            AlternativaSelecionada = indice;
+            RestaurarProgresso();
+        }
+        else
+        {
+            await CriarNovaTentativaAsync(usuarioId);
         }
     }
 
-    private void ConfirmarResposta()
+    private void RestaurarProgresso()
+    {
+        if (TentativaAtual == null)
+            return;
+
+        IndiceAtual = Math.Clamp(
+            TentativaAtual.IndicePerguntaAtual,
+            0,
+            Perguntas.Count - 1);
+
+        Pontos = TentativaAtual.Pontos;
+
+        if (string.IsNullOrWhiteSpace(TentativaAtual.RespostasJson))
+            return;
+
+        try
+        {
+            var progresso = JsonSerializer.Deserialize<EstadoQuiz>(
+                TentativaAtual.RespostasJson);
+
+            if (progresso == null)
+                return;
+
+            IndiceAtual = Math.Clamp(
+                progresso.Indice,
+                0,
+                Perguntas.Count - 1);
+
+            Pontos = progresso.Pontos;
+            AlternativaSelecionada = progresso.Selecionada;
+            RespostaConfirmada = progresso.Respondida;
+        }
+        catch
+        {
+            AlternativaSelecionada = null;
+            RespostaConfirmada = false;
+        }
+    }
+
+    private async Task CriarNovaTentativaAsync(string usuarioId)
+    {
+        TentativaAtual = new ResultadoQuiz
+        {
+            UsuarioId = usuarioId,
+            IdentificadorQuiz = "investimentos-basicos",
+            Status = "Em andamento",
+            IndicePerguntaAtual = 0,
+            Pontos = 0,
+            TotalPerguntas = Perguntas.Count,
+            DataInicio = DateTime.UtcNow,
+            RespostasJson = JsonSerializer.Serialize(new EstadoQuiz
+            {
+                Indice = 0,
+                Pontos = 0,
+                Respondida = false,
+                Acertou = false,
+                Selecionada = null
+            })
+        };
+
+        Context.ResultadosQuiz.Add(TentativaAtual);
+        await Context.SaveChangesAsync();
+    }
+
+    private async Task Selecionar(int indice)
+    {
+        if (RespostaConfirmada)
+            return;
+
+        AlternativaSelecionada = indice;
+        await SalvarProgressoAsync();
+    }
+
+    private async Task ConfirmarRespostaAsync()
     {
         if (AlternativaSelecionada == null || RespostaConfirmada)
             return;
@@ -313,15 +411,22 @@
         {
             Pontos++;
         }
+
+        await SalvarProgressoAsync();
     }
 
-    private async Task Proxima()
+    private async Task ProximaAsync()
     {
+        if (!RespostaConfirmada)
+            return;
+
         if (IndiceAtual < Perguntas.Count - 1)
         {
             IndiceAtual++;
             AlternativaSelecionada = null;
             RespostaConfirmada = false;
+
+            await SalvarProgressoAsync();
         }
         else
         {
@@ -340,6 +445,27 @@
         }
     }
 
+    private async Task SalvarProgressoAsync()
+    {
+        if (TentativaAtual == null)
+            return;
+
+        TentativaAtual.IndicePerguntaAtual = IndiceAtual;
+        TentativaAtual.Pontos = Pontos;
+
+        TentativaAtual.RespostasJson = JsonSerializer.Serialize(new EstadoQuiz
+        {
+            Indice = IndiceAtual,
+            Pontos = Pontos,
+            Respondida = RespostaConfirmada,
+            Acertou = RespostaConfirmada &&
+                      AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta,
+            Selecionada = AlternativaSelecionada
+        });
+
+        await Context.SaveChangesAsync();
+    }
+
     private async Task SalvarResultadoAsync()
     {
         SalvandoResultado = true;
@@ -347,24 +473,35 @@
 
         try
         {
-            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var usuario = estado.User;
+            if (TentativaAtual == null)
+            {
+                var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var usuarioId = usuario.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioId))
+                    return;
 
-            if (string.IsNullOrEmpty(usuarioId))
+                await CriarNovaTentativaAsync(usuarioId);
+            }
+
+            if (TentativaAtual == null)
                 return;
 
-            var resultado = new ResultadoQuiz
-            {
-                UsuarioId = usuarioId,
-                IdentificadorQuiz = "investimentos-basicos",
-                Pontos = Pontos,
-                TotalPerguntas = Perguntas.Count,
-                DataConclusao = DateTime.UtcNow
-            };
+            TentativaAtual.Status = "Concluída";
+            TentativaAtual.Pontos = Pontos;
+            TentativaAtual.TotalPerguntas = Perguntas.Count;
+            TentativaAtual.IndicePerguntaAtual = Perguntas.Count - 1;
+            TentativaAtual.DataConclusao = DateTime.UtcNow;
 
-            Context.ResultadosQuiz.Add(resultado);
+            TentativaAtual.RespostasJson = JsonSerializer.Serialize(new EstadoQuiz
+            {
+                Indice = Perguntas.Count - 1,
+                Pontos = Pontos,
+                Respondida = true,
+                Acertou = AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta,
+                Selecionada = AlternativaSelecionada
+            });
+
             await Context.SaveChangesAsync();
 
             ResultadoSalvo = true;
@@ -379,7 +516,7 @@
         }
     }
 
-    private void Reiniciar()
+    private async Task ReiniciarAsync()
     {
         IndiceAtual = 0;
         AlternativaSelecionada = null;
@@ -391,6 +528,23 @@
         ResultadoSalvo = false;
 
         MensagemResultado = "";
+
+        var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(usuarioId))
+        {
+            await CriarNovaTentativaAsync(usuarioId);
+        }
+    }
+
+    private class EstadoQuiz
+    {
+        public int Indice { get; set; }
+        public int Pontos { get; set; }
+        public bool Respondida { get; set; }
+        public bool Acertou { get; set; }
+        public int? Selecionada { get; set; }
     }
 
     private class Pergunta

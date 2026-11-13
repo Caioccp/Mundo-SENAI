@@ -6,6 +6,7 @@
 @using StartFin.Dados
 @using StartFin.Modelos
 @using System.Security.Claims
+@using System.Text.Json
 
 @inject StartFinContext Context
 @inject AuthenticationStateProvider AuthProvider
@@ -14,9 +15,7 @@
 
 <div class="aula-container">
 
-    <a href="/educacao-financeira" class="voltar">
-        ← Voltar aos conteúdos
-    </a>
+    <a href="/educacao-financeira" class="voltar">← Voltar aos conteúdos</a>
 
     <header class="aula-cabecalho">
         <span class="etiqueta">EDUCAÇÃO FINANCEIRA • INVESTIMENTOS</span>
@@ -29,7 +28,6 @@
 
     <section class="conteudo-aula">
         <h2>1. O que são investimentos?</h2>
-
         <p>
             Investir significa aplicar dinheiro em alguma alternativa
             financeira com a expectativa de obter um retorno no futuro.
@@ -46,9 +44,7 @@
         </div>
 
         <h2>2. Por que as pessoas investem?</h2>
-
         <p>Existem vários motivos para investir, como:</p>
-
         <ul>
             <li>Planejar objetivos de longo prazo.</li>
             <li>Construir uma reserva para situações inesperadas.</li>
@@ -58,7 +54,6 @@
         </ul>
 
         <h2>3. Risco e retorno</h2>
-
         <p>
             Todo investimento possui características próprias. Duas das
             mais importantes são o risco e o retorno.
@@ -70,7 +65,6 @@
                 É a possibilidade de o resultado ser diferente do esperado,
                 incluindo a possibilidade de perder parte do dinheiro investido.
             </p>
-
             <h3>Retorno</h3>
             <p>
                 É o resultado obtido com o investimento, que pode representar
@@ -85,7 +79,6 @@
         </p>
 
         <h2>4. Liquidez: quando posso retirar meu dinheiro?</h2>
-
         <p>
             Liquidez é a facilidade e a velocidade com que um investimento
             pode ser transformado novamente em dinheiro disponível.
@@ -110,8 +103,7 @@
             <h3>Poupança</h3>
             <p>
                 É uma forma conhecida de guardar dinheiro em uma instituição
-                financeira. Possui regras próprias de rendimento e
-                funcionamento.
+                financeira. Possui regras próprias de rendimento e funcionamento.
             </p>
 
             <h3>CDB</h3>
@@ -142,7 +134,6 @@
         </div>
 
         <h2>6. O que é diversificação?</h2>
-
         <p>
             Diversificar significa distribuir os recursos entre diferentes
             tipos de investimentos, em vez de concentrar tudo em apenas um.
@@ -157,7 +148,6 @@
         </div>
 
         <h2>7. Inflação: por que ela importa?</h2>
-
         <p>
             Inflação é o aumento geral dos preços de produtos e serviços
             ao longo do tempo. Quando os preços sobem, o mesmo valor de
@@ -173,7 +163,6 @@
         </div>
 
         <h2>8. Cuidados antes de investir</h2>
-
         <ul>
             <li>Entenda como o investimento funciona.</li>
             <li>Pesquise os riscos envolvidos.</li>
@@ -190,7 +179,6 @@
         </p>
 
         <h2>9. Investir exige planejamento</h2>
-
         <p>
             Antes de pensar em investir, é importante conhecer sua situação
             financeira, organizar o orçamento e definir objetivos.
@@ -222,62 +210,158 @@
 
         <a href="/educacao-financeira/quiz/investimentos-basicos"
            class="botao-quiz">
-            Fazer quiz
+            @(tentativaEmAndamento != null ? "Continuar o quiz →" : "Fazer quiz →")
         </a>
 
-        <button class="botao-resultado" @onclick="ConsultarResultado">
-            Ver último resultado
-        </button>
+        <div class="ultimo-resultado">
+            <button class="botao-resultado" @onclick="ConsultarResultado">
+                Ver último resultado
+            </button>
 
-        @if (mostrarResultado)
-        {
-            <div class="resultado-ultimo">
+            @if (consultando)
+            {
+                <p>Consultando resultado...</p>
+            }
+            else if (consultado)
+            {
+                @if (tentativaEmAndamento != null)
+                {
+                    <div class="progresso-card">
+                        <h3>🚀 Você ainda não terminou!</h3>
+                        <p>Seu progresso está salvo. Continue de onde parou!</p>
+
+                        <div class="progresso-estatisticas">
+                            <div>
+                                <strong>@perguntasRespondidas/@totalPerguntas</strong>
+                                <span>Respondidas</span>
+                            </div>
+                            <div>
+                                <strong>@perguntasRestantes</strong>
+                                <span>Restantes</span>
+                            </div>
+                            <div>
+                                <strong>@tentativaEmAndamento.Pontos</strong>
+                                <span>Acertos</span>
+                            </div>
+                        </div>
+
+                        <div class="barra-progresso">
+                            <div class="barra-progresso-preenchida"
+                                 style="width: @(totalPerguntas > 0 ? (perguntasRespondidas * 100.0 / totalPerguntas) : 0)%">
+                            </div>
+                        </div>
+
+                        <p class="texto-progresso">
+                            Você parou na pergunta @perguntaAtual de @totalPerguntas.
+                        </p>
+
+                        <a href="/educacao-financeira/quiz/investimentos-basicos" class="botao-continuar">
+                            Continuar de onde parei →
+                        </a>
+                    </div>
+                }
+
                 @if (ultimoResultado != null)
                 {
-                    <h3>Seu último resultado</h3>
-                    <p>
-                        <strong>Pontuação:</strong> @ultimoResultado.Pontos de
-                        @ultimoResultado.TotalPerguntas
-                    </p>
-                    <p>
-                       <strong>Conclusão:</strong> @ultimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                    </p>
+                    <div class="resultado-card">
+                        <strong>🏆 Seu último resultado concluído</strong>
+                        <p>Pontuação: @ultimoResultado.Pontos de @ultimoResultado.TotalPerguntas</p>
+                        <p>Concluído em: @ultimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
                 }
-                else
+                else if (tentativaEmAndamento == null)
                 {
-                    <p>Você ainda não possui um resultado salvo neste quiz.</p>
+                    <p>Você ainda não concluiu este quiz.</p>
                 }
-            </div>
-        }
+            }
+        </div>
     </section>
 
 </div>
 
 @code {
     private ResultadoQuiz? ultimoResultado;
-    private bool mostrarResultado;
+    private ResultadoQuiz? tentativaEmAndamento;
+
+    private bool consultando;
+    private bool consultado;
+
+    private int totalPerguntas = 10;
+    private int perguntasRespondidas;
+    private int perguntasRestantes;
+    private int perguntaAtual = 1;
 
     private async Task ConsultarResultado()
     {
-        mostrarResultado = true;
+        consultando = true;
+        consultado = false;
 
-        var estado = await AuthProvider.GetAuthenticationStateAsync();
-        var usuario = estado.User;
+        ultimoResultado = null;
+        tentativaEmAndamento = null;
 
-        var usuarioId = usuario.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(usuarioId))
+        try
         {
-            ultimoResultado = null;
-            return;
-        }
+            var estado = await AuthProvider.GetAuthenticationStateAsync();
+            var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        ultimoResultado = await Context.ResultadosQuiz
-           .Where(r => r.UsuarioId == usuarioId &&
-                    r.IdentificadorQuiz == "investimentos-basicos" &&
-                    r.Status == "Concluída")
-            .OrderByDescending(r => r.DataConclusao)
-            .FirstOrDefaultAsync();
+            if (!string.IsNullOrEmpty(usuarioId))
+            {
+                tentativaEmAndamento = await Context.ResultadosQuiz
+                    .Where(r => r.UsuarioId == usuarioId &&
+                        r.IdentificadorQuiz == "investimentos-basicos" &&
+                        r.Status == "Em andamento")
+                    .OrderByDescending(r => r.DataInicio)
+                    .FirstOrDefaultAsync();
+
+                ultimoResultado = await Context.ResultadosQuiz
+                    .Where(r => r.UsuarioId == usuarioId &&
+                        r.IdentificadorQuiz == "investimentos-basicos" &&
+                        r.Status == "Concluída")
+                    .OrderByDescending(r => r.DataConclusao)
+                    .FirstOrDefaultAsync();
+
+                if (tentativaEmAndamento != null)
+                {
+                    totalPerguntas = tentativaEmAndamento.TotalPerguntas > 0
+                        ? tentativaEmAndamento.TotalPerguntas
+                        : 10;
+
+                    var indice = tentativaEmAndamento.IndicePerguntaAtual;
+                    var respondida = false;
+
+                    if (!string.IsNullOrWhiteSpace(tentativaEmAndamento.RespostasJson))
+                    {
+                        try
+                        {
+                            using var documento = JsonDocument.Parse(tentativaEmAndamento.RespostasJson);
+
+                            if (documento.RootElement.TryGetProperty("Indice", out var indiceJson))
+                                indice = indiceJson.GetInt32();
+
+                            if (documento.RootElement.TryGetProperty("Respondida", out var respondidaJson))
+                                respondida = respondidaJson.GetBoolean();
+                        }
+                        catch (JsonException)
+                        {
+                            // Mantém o índice salvo no registro caso o JSON não possa ser lido.
+                        }
+                    }
+
+                    perguntasRespondidas = Math.Clamp(
+                        indice + (respondida ? 1 : 0),
+                        0,
+                        totalPerguntas);
+
+                    perguntasRestantes = Math.Max(0, totalPerguntas - perguntasRespondidas);
+                    perguntaAtual = Math.Clamp(indice + 1, 1, totalPerguntas);
+                }
+            }
+        }
+        finally
+        {
+            consultando = false;
+            consultado = true;
+        }
     }
 }
 
@@ -390,7 +474,8 @@
     }
 
     .botao-quiz,
-    .botao-resultado {
+    .botao-resultado,
+    .botao-continuar {
         display: inline-block;
         margin: 12px 6px 0;
         padding: 13px 22px;
@@ -403,7 +488,8 @@
         cursor: pointer;
     }
 
-    .botao-quiz {
+    .botao-quiz,
+    .botao-continuar {
         background: #16865b;
     }
 
@@ -411,16 +497,76 @@
         background: #315caa;
     }
 
-    .resultado-ultimo {
-        margin-top: 22px;
-        padding: 18px;
+    .ultimo-resultado {
+        margin-top: 20px;
+    }
+
+    .resultado-card,
+    .progresso-card {
+        margin-top: 15px;
+        padding: 20px;
         border-radius: 10px;
-        background: white;
+        background: #eaf7f0;
+        color: #174b35;
         text-align: left;
     }
 
-    .resultado-ultimo h3 {
-        color: #173b32;
+    .progresso-card h3 {
+        margin-top: 0;
+        color: #16865b;
+    }
+
+    .progresso-estatisticas {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 20px 0;
+    }
+
+    .progresso-estatisticas div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 14px 8px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.75);
+    }
+
+    .progresso-estatisticas strong {
+        font-size: 23px;
+        color: #16865b;
+    }
+
+    .progresso-estatisticas span {
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .barra-progresso {
+        width: 100%;
+        height: 10px;
+        overflow: hidden;
+        border-radius: 20px;
+        background: #cfe6d8;
+    }
+
+    .barra-progresso-preenchida {
+        height: 100%;
+        border-radius: 20px;
+        background: #16865b;
+        transition: width 0.3s ease;
+    }
+
+    .texto-progresso {
+        margin-top: 12px;
+    }
+
+    .botao-continuar {
+        background: #16865b;
+    }
+
+    .resultado-card p {
+        color: #174b35;
     }
 
     @@media (max-width: 600px) {
@@ -440,10 +586,24 @@
             padding: 22px 15px;
         }
 
+        .progresso-estatisticas {
+            gap: 7px;
+        }
+
+        .progresso-estatisticas div {
+            padding: 12px 5px;
+        }
+
+        .progresso-estatisticas strong {
+            font-size: 20px;
+        }
+
         .botao-quiz,
-        .botao-resultado {
+        .botao-resultado,
+        .botao-continuar {
             width: 100%;
             margin: 8px 0;
+            text-align: center;
         }
     }
 </style>

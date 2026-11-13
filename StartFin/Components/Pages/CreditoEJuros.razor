@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 @using System.Security.Claims
+@using System.Text.Json
 @using StartFin.Dados
 @using StartFin.Modelos
 
@@ -162,7 +163,7 @@
         <p>Responda ao quiz e descubra quanto você aprendeu sobre crédito e juros!</p>
 
         <a href="/educacao-financeira/quiz/credito-e-juros" class="botao-quiz">
-            Fazer quiz
+            @(tentativaEmAndamento != null ? "Continuar o quiz →" : "Fazer quiz →")
         </a>
 
         <div class="ultimo-resultado">
@@ -174,17 +175,57 @@
             {
                 <p>Consultando resultado...</p>
             }
-            else if (ultimoResultado != null)
-            {
-                <div class="resultado-card">
-                    <strong>Seu último resultado</strong>
-                    <p>Pontuação: @ultimoResultado.Pontos de @ultimoResultado.TotalPerguntas</p>
-                    <p>Concluído em: @ultimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
-                </div>
-            }
             else if (consultado)
             {
-                <p>Você ainda não concluiu este quiz.</p>
+                @if (tentativaEmAndamento != null)
+                {
+                    <div class="progresso-card">
+                        <h3>🚀 Você ainda não terminou!</h3>
+                        <p>Seu progresso está salvo. Continue de onde parou!</p>
+
+                        <div class="progresso-estatisticas">
+                            <div>
+                                <strong>@perguntasRespondidas/@totalPerguntas</strong>
+                                <span>Respondidas</span>
+                            </div>
+                            <div>
+                                <strong>@perguntasRestantes</strong>
+                                <span>Restantes</span>
+                            </div>
+                            <div>
+                                <strong>@tentativaEmAndamento.Pontos</strong>
+                                <span>Acertos</span>
+                            </div>
+                        </div>
+
+                        <div class="barra-progresso">
+                            <div class="barra-progresso-preenchida"
+                                 style="width: @(totalPerguntas > 0 ? (perguntasRespondidas * 100.0 / totalPerguntas) : 0)%">
+                            </div>
+                        </div>
+
+                        <p class="texto-progresso">
+                            Você parou na pergunta @perguntaAtual de @totalPerguntas.
+                        </p>
+
+                        <a href="/educacao-financeira/quiz/credito-e-juros" class="botao-continuar">
+                            Continuar de onde parei →
+                        </a>
+                    </div>
+                }
+
+                @if (ultimoResultado != null)
+                {
+                    <div class="resultado-card">
+                        <strong>🏆 Seu último resultado concluído</strong>
+                        <p>Pontuação: @ultimoResultado.Pontos de @ultimoResultado.TotalPerguntas</p>
+                        <p>Concluído em: @ultimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                }
+                else if (tentativaEmAndamento == null)
+                {
+                    <p>Você ainda não concluiu este quiz.</p>
+                }
             }
         </div>
     </section>
@@ -193,14 +234,23 @@
 
 @code {
     private ResultadoQuiz? ultimoResultado;
+    private ResultadoQuiz? tentativaEmAndamento;
+
     private bool consultando;
     private bool consultado;
+
+    private int totalPerguntas = 10;
+    private int perguntasRespondidas;
+    private int perguntasRestantes;
+    private int perguntaAtual = 1;
 
     private async Task ConsultarResultado()
     {
         consultando = true;
         consultado = false;
+
         ultimoResultado = null;
+        tentativaEmAndamento = null;
 
         try
         {
@@ -209,12 +259,55 @@
 
             if (!string.IsNullOrEmpty(usuarioId))
             {
+                tentativaEmAndamento = await Context.ResultadosQuiz
+                    .Where(r => r.UsuarioId == usuarioId &&
+                        r.IdentificadorQuiz == "credito-e-juros" &&
+                        r.Status == "Em andamento")
+                    .OrderByDescending(r => r.DataInicio)
+                    .FirstOrDefaultAsync();
+
                 ultimoResultado = await Context.ResultadosQuiz
                     .Where(r => r.UsuarioId == usuarioId &&
                         r.IdentificadorQuiz == "credito-e-juros" &&
                         r.Status == "Concluída")
                     .OrderByDescending(r => r.DataConclusao)
                     .FirstOrDefaultAsync();
+
+                if (tentativaEmAndamento != null)
+                {
+                    totalPerguntas = tentativaEmAndamento.TotalPerguntas > 0
+                        ? tentativaEmAndamento.TotalPerguntas
+                        : 10;
+
+                    var indice = tentativaEmAndamento.IndicePerguntaAtual;
+                    var respondida = false;
+
+                    if (!string.IsNullOrWhiteSpace(tentativaEmAndamento.RespostasJson))
+                    {
+                        try
+                        {
+                            using var documento = JsonDocument.Parse(tentativaEmAndamento.RespostasJson);
+
+                            if (documento.RootElement.TryGetProperty("Indice", out var indiceJson))
+                                indice = indiceJson.GetInt32();
+
+                            if (documento.RootElement.TryGetProperty("Respondida", out var respondidaJson))
+                                respondida = respondidaJson.GetBoolean();
+                        }
+                        catch (JsonException)
+                        {
+                            // Mantém o índice salvo no registro caso o JSON não possa ser lido.
+                        }
+                    }
+
+                    perguntasRespondidas = Math.Clamp(
+                        indice + (respondida ? 1 : 0),
+                        0,
+                        totalPerguntas);
+
+                    perguntasRestantes = Math.Max(0, totalPerguntas - perguntasRespondidas);
+                    perguntaAtual = Math.Clamp(indice + 1, 1, totalPerguntas);
+                }
             }
         }
         finally
@@ -310,7 +403,8 @@
     }
 
     .botao-quiz,
-    .botao-resultado {
+    .botao-resultado,
+    .botao-continuar {
         display: inline-block;
         padding: 13px 24px;
         margin-top: 12px;
@@ -331,12 +425,68 @@
         margin-top: 20px;
     }
 
-    .resultado-card {
+    .resultado-card,
+    .progresso-card {
         margin-top: 15px;
-        padding: 18px;
+        padding: 20px;
         border-radius: 10px;
         background: #eaf7f0;
         color: #174b35;
+        text-align: left;
+    }
+
+    .progresso-card h3 {
+        margin-top: 0;
+        color: #16865b;
+    }
+
+    .progresso-estatisticas {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 20px 0;
+    }
+
+    .progresso-estatisticas div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 14px 8px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.75);
+    }
+
+    .progresso-estatisticas strong {
+        font-size: 23px;
+        color: #16865b;
+    }
+
+    .progresso-estatisticas span {
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .barra-progresso {
+        width: 100%;
+        height: 10px;
+        overflow: hidden;
+        border-radius: 20px;
+        background: #cfe6d8;
+    }
+
+    .barra-progresso-preenchida {
+        height: 100%;
+        border-radius: 20px;
+        background: #16865b;
+        transition: width 0.3s ease;
+    }
+
+    .texto-progresso {
+        margin-top: 12px;
+    }
+
+    .botao-continuar {
+        background: #16865b;
     }
 
     @@media (max-width: 600px) {
@@ -348,6 +498,18 @@
         .resumo-aula,
         .quiz-chamada {
             padding: 18px;
+        }
+
+        .progresso-estatisticas {
+            gap: 7px;
+        }
+
+        .progresso-estatisticas div {
+            padding: 12px 5px;
+        }
+
+        .progresso-estatisticas strong {
+            font-size: 20px;
         }
     }
 </style>

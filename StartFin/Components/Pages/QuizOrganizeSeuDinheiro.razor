@@ -5,6 +5,8 @@
 @using StartFin.Dados
 @using StartFin.Modelos
 @using System.Security.Claims
+@using System.Text.Json
+@using Microsoft.EntityFrameworkCore
 
 @inject StartFinContext Context
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -27,7 +29,11 @@
         <span class="nivel">Nível intermediário • 10 questões</span>
     </div>
 
-    @if (!Finalizado)
+    @if (Carregando)
+    {
+        <p>Carregando seu progresso...</p>
+    }
+    else if (!Finalizado)
     {
         <div class="progresso">
             <div class="progresso-texto">
@@ -52,7 +58,7 @@
                 @foreach (var opcao in Perguntas[Indice].Opcoes)
                 {
                     <button class="opcao @(Selecionada == opcao ? "selecionada" : "")"
-                            disabled="@Respondida"
+                            disabled="@(Respondida || Salvando)"
                             @onclick="() => Selecionar(opcao)">
                         @opcao
                     </button>
@@ -73,20 +79,29 @@
                 @if (!Respondida)
                 {
                     <button class="botao-principal"
-                            disabled="@string.IsNullOrEmpty(Selecionada)"
+                            disabled="@(string.IsNullOrEmpty(Selecionada) || Salvando)"
                             @onclick="ConfirmarResposta">
-                        Confirmar resposta
+                        @(Salvando ? "Salvando..." : "Confirmar resposta")
                     </button>
                 }
                 else
                 {
-                    <button class="botao-principal" @onclick="Proxima">
-                        @(Indice == Perguntas.Count - 1
-                            ? "Ver resultado"
-                            : "Próxima pergunta")
+                    <button class="botao-principal"
+                            disabled="@Salvando"
+                            @onclick="Proxima">
+                        @(Salvando
+                            ? "Salvando..."
+                            : Indice == Perguntas.Count - 1
+                                ? "Ver resultado"
+                                : "Próxima pergunta")
                     </button>
                 }
             </div>
+
+            @if (!string.IsNullOrEmpty(MensagemSalvamento))
+            {
+                <p class="aviso">@MensagemSalvamento</p>
+            }
 
         </section>
     }
@@ -114,9 +129,15 @@
             else
             {
                 <p class="aviso">@MensagemSalvamento</p>
+
+                <button class="botao-principal" @onclick="TentarSalvarNovamente">
+                    Tentar salvar novamente
+                </button>
             }
 
-            <button class="botao-principal" @onclick="Reiniciar">
+            <button class="botao-principal"
+                    disabled="@Salvando"
+                    @onclick="Reiniciar">
                 Refazer quiz
             </button>
 
@@ -363,150 +384,217 @@
     private string MensagemResultado = string.Empty;
     private string MensagemSalvamento = string.Empty;
 
+    private ResultadoQuiz? TentativaAtual;
+
+    private bool Carregando = true;
+    private bool Salvando = false;
+
+    private const string Identificador = "organize-seu-dinheiro";
+
     private List<Pergunta> Perguntas = new()
-{
-    new(
-        "Marcos recebe R$ 900,00 por mês. Suas despesas são: R$ 300,00 com transporte, R$ 250,00 com alimentação e R$ 180,00 com outras necessidades. Quanto sobra antes de considerar novos gastos?",
-        new()
-        {
-            "R$ 170,00.",
-            "R$ 180,00.",
-            "R$ 190,00.",
-            "R$ 200,00."
-        },
-        "Somando as despesas, temos R$ 730,00. Subtraindo esse valor dos R$ 900,00 recebidos, sobram R$ 170,00.",
-        "R$ 170,00."
-    ),
+    {
+        new(
+            "Marcos recebe R$ 900,00 por mês. Suas despesas são: R$ 300,00 com transporte, R$ 250,00 com alimentação e R$ 180,00 com outras necessidades. Quanto sobra antes de considerar novos gastos?",
+            new()
+            {
+                "R$ 170,00.",
+                "R$ 180,00.",
+                "R$ 190,00.",
+                "R$ 200,00."
+            },
+            "Somando as despesas, temos R$ 730,00. Subtraindo esse valor dos R$ 900,00 recebidos, sobram R$ 170,00.",
+            "R$ 170,00."
+        ),
 
-    new(
-        "Uma estudante recebe uma mesada de R$ 400,00. Ela paga R$ 100,00 de transporte, R$ 80,00 de alimentação e R$ 50,00 de uma assinatura mensal. Qual análise está correta?",
-        new()
-        {
-            "Todas as despesas são variáveis, pois podem ser canceladas.",
-            "Apenas a alimentação deve entrar no planejamento financeiro.",
-            "As despesas precisam ser registradas, e a assinatura representa um compromisso recorrente.",
-            "O valor restante deve ser considerado automaticamente como dinheiro disponível para gastar."
-        },
-        "Todas as despesas devem ser consideradas no orçamento. A assinatura é um compromisso recorrente, e o dinheiro restante ainda precisa ser organizado conforme as prioridades.",
-        "As despesas precisam ser registradas, e a assinatura representa um compromisso recorrente."
-    ),
+        new(
+            "Uma estudante recebe uma mesada de R$ 400,00. Ela paga R$ 100,00 de transporte, R$ 80,00 de alimentação e R$ 50,00 de uma assinatura mensal. Qual análise está correta?",
+            new()
+            {
+                "Todas as despesas são variáveis, pois podem ser canceladas.",
+                "Apenas a alimentação deve entrar no planejamento financeiro.",
+                "As despesas precisam ser registradas, e a assinatura representa um compromisso recorrente.",
+                "O valor restante deve ser considerado automaticamente como dinheiro disponível para gastar."
+            },
+            "Todas as despesas devem ser consideradas no orçamento. A assinatura é um compromisso recorrente, e o dinheiro restante ainda precisa ser organizado conforme as prioridades.",
+            "As despesas precisam ser registradas, e a assinatura representa um compromisso recorrente."
+        ),
 
-    new(
-        "Fernanda planejou gastar R$ 250,00 durante o mês com lazer, mas já utilizou R$ 190,00 e ainda tem dois passeios planejados. Qual decisão demonstra melhor controle financeiro?",
-        new()
-        {
-            "Manter os dois passeios mesmo que ultrapassem o limite.",
-            "Verificar quanto cada passeio custará e ajustar os planos para respeitar o limite restante.",
-            "Ignorar os gastos anteriores e considerar apenas os próximos passeios.",
-            "Utilizar dinheiro reservado para despesas essenciais."
-        },
-        "Restam R$ 60,00 do orçamento de lazer. Fernanda deve avaliar os custos dos passeios e decidir se consegue realizar ambos sem ultrapassar esse limite.",
-        "Verificar quanto cada passeio custará e ajustar os planos para respeitar o limite restante."
-    ),
+        new(
+            "Fernanda planejou gastar R$ 250,00 durante o mês com lazer, mas já utilizou R$ 190,00 e ainda tem dois passeios planejados. Qual decisão demonstra melhor controle financeiro?",
+            new()
+            {
+                "Manter os dois passeios mesmo que ultrapassem o limite.",
+                "Verificar quanto cada passeio custará e ajustar os planos para respeitar o limite restante.",
+                "Ignorar os gastos anteriores e considerar apenas os próximos passeios.",
+                "Utilizar dinheiro reservado para despesas essenciais."
+            },
+            "Restam R$ 60,00 do orçamento de lazer. Fernanda deve avaliar os custos dos passeios e decidir se consegue realizar ambos sem ultrapassar esse limite.",
+            "Verificar quanto cada passeio custará e ajustar os planos para respeitar o limite restante."
+        ),
 
-    new(
-        "Rafael recebe R$ 1.200,00. Seus gastos mensais somam R$ 950,00, mas ele deseja guardar R$ 300,00 todos os meses. Qual é o problema desse planejamento?",
-        new()
-        {
-            "O planejamento está correto, pois guardar dinheiro não depende das despesas.",
-            "Ele precisa aumentar seus gastos para equilibrar o orçamento.",
-            "O valor economizado deve ser retirado das despesas essenciais.",
+        new(
+            "Rafael recebe R$ 1.200,00. Seus gastos mensais somam R$ 950,00, mas ele deseja guardar R$ 300,00 todos os meses. Qual é o problema desse planejamento?",
+            new()
+            {
+                "O planejamento está correto, pois guardar dinheiro não depende das despesas.",
+                "Ele precisa aumentar seus gastos para equilibrar o orçamento.",
+                "O valor economizado deve ser retirado das despesas essenciais.",
+                "A economia planejada ultrapassa em R$ 50,00 o valor disponível."
+            },
+            "Depois das despesas, Rafael tem R$ 250,00 disponíveis. Portanto, guardar R$ 300,00 exigiria R$ 50,00 a mais do que seu orçamento permite.",
             "A economia planejada ultrapassa em R$ 50,00 o valor disponível."
-        },
-        "Depois das despesas, Rafael tem R$ 250,00 disponíveis. Portanto, guardar R$ 300,00 exigiria R$ 50,00 a mais do que seu orçamento permite.",
-        "A economia planejada ultrapassa em R$ 50,00 o valor disponível."
-    ),
+        ),
 
-    new(
-        "Beatriz percebeu que seu orçamento apresenta despesas que acontecem todos os meses e outras que mudam de acordo com seu consumo. Qual alternativa apresenta apenas exemplos de despesas variáveis?",
-        new()
-        {
-            "Compras de roupas e passeios.",
-            "Mensalidade de curso e aluguel.",
-            "Plano mensal de celular e assinatura.",
-            "Parcela fixa de um financiamento e aluguel."
-        },
-        "Compras de roupas e passeios podem variar em frequência e valor. As outras alternativas apresentam compromissos geralmente recorrentes e previsíveis.",
-        "Compras de roupas e passeios."
-    ),
+        new(
+            "Beatriz percebeu que seu orçamento apresenta despesas que acontecem todos os meses e outras que mudam de acordo com seu consumo. Qual alternativa apresenta apenas exemplos de despesas variáveis?",
+            new()
+            {
+                "Compras de roupas e passeios.",
+                "Mensalidade de curso e aluguel.",
+                "Plano mensal de celular e assinatura.",
+                "Parcela fixa de um financiamento e aluguel."
+            },
+            "Compras de roupas e passeios podem variar em frequência e valor. As outras alternativas apresentam compromissos geralmente recorrentes e previsíveis.",
+            "Compras de roupas e passeios."
+        ),
 
-    new(
-        "João costuma gastar R$ 12,00 por dia com lanches durante 20 dias do mês. Se decidir levar lanche de casa em metade desses dias, quanto poderá economizar?",
-        new()
-        {
-            "R$ 100,00.",
-            "R$ 110,00.",
-            "R$ 120,00.",
-            "R$ 140,00."
-        },
-        "Metade de 20 dias corresponde a 10 dias. Economizando R$ 12,00 em cada um deles, João poderá guardar R$ 120,00.",
-        "R$ 120,00."
-    ),
+        new(
+            "João costuma gastar R$ 12,00 por dia com lanches durante 20 dias do mês. Se decidir levar lanche de casa em metade desses dias, quanto poderá economizar?",
+            new()
+            {
+                "R$ 100,00.",
+                "R$ 110,00.",
+                "R$ 120,00.",
+                "R$ 140,00."
+            },
+            "Metade de 20 dias corresponde a 10 dias. Economizando R$ 12,00 em cada um deles, João poderá guardar R$ 120,00.",
+            "R$ 120,00."
+        ),
 
-    new(
-        "Camila registrou os seguintes resultados: em janeiro gastou R$ 500,00; em fevereiro, R$ 560,00; e em março, R$ 650,00. O que esses registros indicam?",
-        new()
-        {
-            "Que suas despesas diminuíram ao longo dos meses.",
-            "Que seu orçamento permaneceu estável.",
-            "Que os gastos aumentaram, mas não é necessário investigar o motivo.",
+        new(
+            "Camila registrou os seguintes resultados: em janeiro gastou R$ 500,00; em fevereiro, R$ 560,00; e em março, R$ 650,00. O que esses registros indicam?",
+            new()
+            {
+                "Que suas despesas diminuíram ao longo dos meses.",
+                "Que seu orçamento permaneceu estável.",
+                "Que os gastos aumentaram, mas não é necessário investigar o motivo.",
+                "Que existe uma tendência de aumento das despesas que merece ser analisada."
+            },
+            "Os gastos aumentaram R$ 60,00 de janeiro para fevereiro e R$ 90,00 de fevereiro para março. Comparar os registros ajuda a identificar essa mudança e investigar suas causas.",
             "Que existe uma tendência de aumento das despesas que merece ser analisada."
-        },
-        "Os gastos aumentaram R$ 60,00 de janeiro para fevereiro e R$ 90,00 de fevereiro para março. Comparar os registros ajuda a identificar essa mudança e investigar suas causas.",
-        "Que existe uma tendência de aumento das despesas que merece ser analisada."
-    ),
+        ),
 
-    new(
-        "Pedro recebe R$ 700,00 e precisa pagar R$ 280,00 de despesas essenciais. Ele também planeja guardar R$ 150,00 e gastar R$ 180,00 com lazer. Quanto restará após esses compromissos?",
-        new()
-        {
-            "R$ 80,00.",
-            "R$ 90,00.",
-            "R$ 100,00.",
-            "R$ 110,00."
-        },
-        "Somando as despesas essenciais, a economia e o lazer, temos R$ 610,00. Subtraindo de R$ 700,00, restam R$ 90,00.",
-        "R$ 90,00."
-    ),
+        new(
+            "Pedro recebe R$ 700,00 e precisa pagar R$ 280,00 de despesas essenciais. Ele também planeja guardar R$ 150,00 e gastar R$ 180,00 com lazer. Quanto restará após esses compromissos?",
+            new()
+            {
+                "R$ 80,00.",
+                "R$ 90,00.",
+                "R$ 100,00.",
+                "R$ 110,00."
+            },
+            "Somando as despesas essenciais, a economia e o lazer, temos R$ 610,00. Subtraindo de R$ 700,00, restam R$ 90,00.",
+            "R$ 90,00."
+        ),
 
-    new(
-        "Uma pessoa percebe que está gastando mais do que recebe durante vários meses. Qual medida deve ser tomada para recuperar o equilíbrio financeiro?",
-        new()
-        {
-            "Identificar os gastos que podem ser reduzidos e reorganizar o orçamento.",
-            "Continuar mantendo os mesmos gastos e esperar que a situação melhore.",
-            "Deixar de registrar as despesas para evitar perceber o problema.",
-            "Aumentar as compras parceladas para distribuir os pagamentos."
-        },
-        "Quando as despesas superam os ganhos, é necessário analisar o orçamento, identificar possibilidades de redução e ajustar os gastos à renda disponível.",
-        "Identificar os gastos que podem ser reduzidos e reorganizar o orçamento."
-    ),
+        new(
+            "Uma pessoa percebe que está gastando mais do que recebe durante vários meses. Qual medida deve ser tomada para recuperar o equilíbrio financeiro?",
+            new()
+            {
+                "Identificar os gastos que podem ser reduzidos e reorganizar o orçamento.",
+                "Continuar mantendo os mesmos gastos e esperar que a situação melhore.",
+                "Deixar de registrar as despesas para evitar perceber o problema.",
+                "Aumentar as compras parceladas para distribuir os pagamentos."
+            },
+            "Quando as despesas superam os ganhos, é necessário analisar o orçamento, identificar possibilidades de redução e ajustar os gastos à renda disponível.",
+            "Identificar os gastos que podem ser reduzidos e reorganizar o orçamento."
+        ),
 
-    new(
-        "Sofia possui R$ 500,00 disponíveis. Ela precisa reservar R$ 200,00 para despesas importantes, pretende guardar R$ 100,00 e deseja comprar um item de R$ 250,00. Qual seria a decisão financeiramente mais adequada?",
-        new()
+        new(
+            "Sofia possui R$ 500,00 disponíveis. Ela precisa reservar R$ 200,00 para despesas importantes, pretende guardar R$ 100,00 e deseja comprar um item de R$ 250,00. Qual seria a decisão financeiramente mais adequada?",
+            new()
+            {
+                "Comprar o item e utilizar parte do dinheiro reservado para despesas.",
+                "Comprar o item porque ainda possui dinheiro disponível na conta.",
+                "Reavaliar a compra, pois os compromissos e a economia planejada deixam apenas R$ 200,00 disponíveis.",
+                "Abandonar o planejamento e decidir apenas no momento da compra."
+            },
+            "Após reservar R$ 200,00 para despesas e R$ 100,00 para economias, Sofia terá R$ 200,00 disponíveis. Como o item custa R$ 250,00, precisará adiar a compra ou rever o planejamento.",
+            "Reavaliar a compra, pois os compromissos e a economia planejada deixam apenas R$ 200,00 disponíveis."
+        )
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
         {
-            "Comprar o item e utilizar parte do dinheiro reservado para despesas.",
-            "Comprar o item porque ainda possui dinheiro disponível na conta.",
-            "Reavaliar a compra, pois os compromissos e a economia planejada deixam apenas R$ 200,00 disponíveis.",
-            "Abandonar o planejamento e decidir apenas no momento da compra."
-        },
-        "Após reservar R$ 200,00 para despesas e R$ 100,00 para economias, Sofia terá R$ 200,00 disponíveis. Como o item custa R$ 250,00, precisará adiar a compra ou rever o planejamento.",
-        "Reavaliar a compra, pois os compromissos e a economia planejada deixam apenas R$ 200,00 disponíveis."
-    )
-};
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            var usuarioId = estado.User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usuarioId))
+                return;
+
+            TentativaAtual = await Context.ResultadosQuiz
+                .Where(r =>
+                    r.UsuarioId == usuarioId &&
+                    r.IdentificadorQuiz == Identificador &&
+                    r.Status == "Em andamento")
+                .OrderByDescending(r => r.DataInicio)
+                .FirstOrDefaultAsync();
+
+            if (TentativaAtual != null)
+            {
+                if (!string.IsNullOrEmpty(TentativaAtual.RespostasJson))
+                {
+                    var progresso = JsonSerializer.Deserialize<ProgressoQuiz>(
+                        TentativaAtual.RespostasJson);
+
+                    if (progresso != null)
+                    {
+                        Indice = Math.Clamp(progresso.Indice, 0, Perguntas.Count - 1);
+                        Pontos = Math.Clamp(progresso.Pontos, 0, Perguntas.Count);
+                        Respondida = progresso.Respondida;
+                        Acertou = progresso.Acertou;
+                        Selecionada = progresso.Selecionada ?? string.Empty;
+                    }
+                }
+                else
+                {
+                    Indice = Math.Clamp(
+                        TentativaAtual.IndicePerguntaAtual,
+                        0,
+                        Perguntas.Count - 1);
+
+                    Pontos = Math.Clamp(
+                        TentativaAtual.Pontos,
+                        0,
+                        Perguntas.Count);
+                }
+            }
+        }
+        catch
+        {
+            MensagemSalvamento = "Não foi possível carregar seu progresso salvo.";
+        }
+        finally
+        {
+            Carregando = false;
+        }
+    }
 
     private void Selecionar(string opcao)
     {
-        if (!Respondida)
+        if (!Respondida && !Salvando)
         {
             Selecionada = opcao;
         }
     }
 
-    private void ConfirmarResposta()
+    private async Task ConfirmarResposta()
     {
-        if (string.IsNullOrEmpty(Selecionada) || Respondida)
+        if (string.IsNullOrEmpty(Selecionada) || Respondida || Salvando)
             return;
 
         Acertou = Selecionada == Perguntas[Indice].RespostaCorreta;
@@ -515,16 +603,23 @@
             Pontos++;
 
         Respondida = true;
+
+        await SalvarProgressoAsync();
     }
 
     private async Task Proxima()
     {
+        if (Salvando || !Respondida)
+            return;
+
         if (Indice < Perguntas.Count - 1)
         {
             Indice++;
             Selecionada = string.Empty;
             Respondida = false;
             Acertou = false;
+
+            await SalvarProgressoAsync();
         }
         else
         {
@@ -538,14 +633,17 @@
                 _ => "Continue praticando! Revise a aula e tente novamente para fortalecer seus conhecimentos."
             };
 
-            await SalvarResultadoAsync();
+            await SalvarProgressoAsync(concluir: true);
         }
     }
 
-    private async Task SalvarResultadoAsync()
+    private async Task SalvarProgressoAsync(bool concluir = false)
     {
         try
         {
+            Salvando = true;
+            MensagemSalvamento = string.Empty;
+
             var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
             var usuarioId = estado.User.FindFirst(
@@ -553,28 +651,61 @@
 
             if (string.IsNullOrEmpty(usuarioId))
             {
-                MensagemSalvamento = "Entre na sua conta para salvar seu resultado.";
+                MensagemSalvamento = "Entre na sua conta para salvar seu progresso.";
                 return;
             }
 
-            var resultado = new ResultadoQuiz
-            {
-                UsuarioId = usuarioId,
-                IdentificadorQuiz = "organize-seu-dinheiro",
-                Pontos = Pontos,
-                TotalPerguntas = Perguntas.Count,
-                DataConclusao = DateTime.UtcNow
-            };
+            var tentativa = TentativaAtual;
 
-            Context.ResultadosQuiz.Add(resultado);
+            if (tentativa == null)
+            {
+                tentativa = new ResultadoQuiz
+                {
+                    UsuarioId = usuarioId,
+                    IdentificadorQuiz = Identificador,
+                    DataInicio = DateTime.UtcNow
+                };
+
+                Context.ResultadosQuiz.Add(tentativa);
+                TentativaAtual = tentativa;
+            }
+
+            tentativa.Pontos = Pontos;
+            tentativa.TotalPerguntas = Perguntas.Count;
+            tentativa.Status = concluir ? "Concluída" : "Em andamento";
+            tentativa.IndicePerguntaAtual = Indice;
+
+            tentativa.RespostasJson = JsonSerializer.Serialize(new ProgressoQuiz
+            {
+                Indice = Indice,
+                Pontos = Pontos,
+                Respondida = Respondida,
+                Acertou = Acertou,
+                Selecionada = Selecionada
+            });
+
+            tentativa.DataConclusao = concluir ? DateTime.UtcNow : null;
+
             await Context.SaveChangesAsync();
 
-            ResultadoSalvo = true;
+            if (concluir)
+            {
+                ResultadoSalvo = true;
+            }
         }
         catch
         {
-            MensagemSalvamento = "Não foi possível salvar o resultado. Tente novamente mais tarde.";
+            MensagemSalvamento = "Não foi possível salvar seu progresso. Tente novamente mais tarde.";
         }
+        finally
+        {
+            Salvando = false;
+        }
+    }
+
+    private async Task TentarSalvarNovamente()
+    {
+        await SalvarProgressoAsync(concluir: true);
     }
 
     private void Reiniciar()
@@ -589,6 +720,8 @@
         Selecionada = string.Empty;
         MensagemResultado = string.Empty;
         MensagemSalvamento = string.Empty;
+
+        TentativaAtual = null;
     }
 
     private class Pergunta
@@ -609,5 +742,14 @@
             Explicacao = explicacao;
             RespostaCorreta = respostaCorreta;
         }
+    }
+
+    private class ProgressoQuiz
+    {
+        public int Indice { get; set; }
+        public int Pontos { get; set; }
+        public bool Respondida { get; set; }
+        public bool Acertou { get; set; }
+        public string? Selecionada { get; set; }
     }
 }

@@ -2,9 +2,11 @@
 @page "/educacao-financeira/quiz/credito-e-juros"
 
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @using StartFin.Dados
 @using StartFin.Modelos
 @using System.Security.Claims
+@using System.Text.Json
 
 @inject StartFinContext Context
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -26,7 +28,13 @@
         </p>
     </header>
 
-    @if (!QuizFinalizado)
+    @if (Carregando)
+    {
+        <div class="pergunta-card">
+            <p>Carregando seu progresso...</p>
+        </div>
+    }
+    else if (!QuizFinalizado)
     {
         <div class="progresso-container">
             <div class="progresso-texto">
@@ -84,21 +92,31 @@
                 @if (!RespostaConfirmada)
                 {
                     <button class="botao-principal"
-                            disabled="@(AlternativaSelecionada == null)"
-                            @onclick="ConfirmarResposta">
-                        Confirmar resposta
+                            disabled="@(AlternativaSelecionada == null || SalvandoProgresso)"
+                            @onclick="ConfirmarRespostaAsync">
+                        @(SalvandoProgresso ? "Salvando..." : "Confirmar resposta")
                     </button>
                 }
                 else
                 {
                     <button class="botao-principal"
-                            @onclick="Proxima">
-                        @(IndiceAtual == Perguntas.Count - 1
-                            ? "Ver resultado"
-                            : "Próxima questão →")
+                            disabled="@SalvandoProgresso"
+                            @onclick="ProximaAsync">
+                        @(SalvandoProgresso
+                            ? "Salvando..."
+                            : IndiceAtual == Perguntas.Count - 1
+                                ? "Ver resultado"
+                                : "Próxima questão →")
                     </button>
                 }
             </div>
+
+            @if (ErroSalvarProgresso)
+            {
+                <p class="mensagem-aviso">
+                    Não foi possível salvar seu progresso. Verifique sua conexão e tente novamente.
+                </p>
+            }
         </section>
     }
     else
@@ -138,9 +156,13 @@
                     Não foi possível salvar o resultado.
                     Verifique se você está conectado à sua conta.
                 </p>
+
+                <button class="botao-principal" @onclick="SalvarResultadoAsync">
+                    Tentar salvar novamente
+                </button>
             }
 
-            <button class="botao-principal" @onclick="Reiniciar">
+            <button class="botao-principal" @onclick="ReiniciarAsync">
                 Refazer quiz
             </button>
 
@@ -162,10 +184,15 @@
     private bool QuizFinalizado = false;
     private bool SalvandoResultado = false;
     private bool ResultadoSalvo = false;
+    private bool SalvandoProgresso = false;
+    private bool ErroSalvarProgresso = false;
+    private bool Carregando = true;
 
     private string MensagemResultado = "";
+    private string? UsuarioId;
 
-    // Perguntas sobre crédito e juros, organizadas em dificuldade crescente.
+    private ResultadoQuiz? TentativaEmAndamento;
+
     private List<Pergunta> Perguntas = new()
     {
         new Pergunta
@@ -309,6 +336,76 @@
         }
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            UsuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(UsuarioId))
+            {
+                TentativaEmAndamento = await Context.ResultadosQuiz
+                    .Where(r => r.UsuarioId == UsuarioId &&
+                        r.IdentificadorQuiz == "credito-e-juros" &&
+                        r.Status == "Em andamento")
+                    .OrderByDescending(r => r.DataInicio)
+                    .FirstOrDefaultAsync();
+
+                if (TentativaEmAndamento != null)
+                {
+                    RestaurarProgresso();
+                }
+            }
+        }
+        finally
+        {
+            Carregando = false;
+        }
+    }
+
+    private void RestaurarProgresso()
+    {
+        if (TentativaEmAndamento == null)
+            return;
+
+        IndiceAtual = Math.Clamp(
+            TentativaEmAndamento.IndicePerguntaAtual,
+            0,
+            Perguntas.Count - 1);
+
+        Pontos = TentativaEmAndamento.Pontos;
+
+        if (string.IsNullOrWhiteSpace(TentativaEmAndamento.RespostasJson))
+            return;
+
+        try
+        {
+            using var documento = JsonDocument.Parse(TentativaEmAndamento.RespostasJson);
+            var raiz = documento.RootElement;
+
+            if (raiz.TryGetProperty("Indice", out var indice))
+                IndiceAtual = Math.Clamp(indice.GetInt32(), 0, Perguntas.Count - 1);
+
+            if (raiz.TryGetProperty("Pontos", out var pontos))
+                Pontos = pontos.GetInt32();
+
+            if (raiz.TryGetProperty("Respondida", out var respondida))
+                RespostaConfirmada = respondida.GetBoolean();
+
+            if (raiz.TryGetProperty("Selecionada", out var selecionada) &&
+                selecionada.ValueKind != JsonValueKind.Null)
+            {
+                AlternativaSelecionada = selecionada.GetInt32();
+            }
+        }
+        catch (JsonException)
+        {
+            RespostaConfirmada = false;
+            AlternativaSelecionada = null;
+        }
+    }
+
     private void Selecionar(int indice)
     {
         if (!RespostaConfirmada)
@@ -317,12 +414,10 @@
         }
     }
 
-    private void ConfirmarResposta()
+    private async Task ConfirmarRespostaAsync()
     {
         if (AlternativaSelecionada == null || RespostaConfirmada)
-        {
             return;
-        }
 
         if (AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta)
         {
@@ -330,15 +425,22 @@
         }
 
         RespostaConfirmada = true;
+
+        await SalvarProgressoAsync();
     }
 
-    private async Task Proxima()
+    private async Task ProximaAsync()
     {
+        if (!RespostaConfirmada)
+            return;
+
         if (IndiceAtual < Perguntas.Count - 1)
         {
             IndiceAtual++;
             AlternativaSelecionada = null;
             RespostaConfirmada = false;
+
+            await SalvarProgressoAsync();
         }
         else
         {
@@ -365,32 +467,112 @@
         }
     }
 
+    private async Task SalvarProgressoAsync()
+    {
+        if (string.IsNullOrEmpty(UsuarioId))
+            return;
+
+        SalvandoProgresso = true;
+        ErroSalvarProgresso = false;
+
+        try
+        {
+            if (TentativaEmAndamento == null)
+            {
+                TentativaEmAndamento = new ResultadoQuiz
+                {
+                    UsuarioId = UsuarioId,
+                    IdentificadorQuiz = "credito-e-juros",
+                    Pontos = Pontos,
+                    TotalPerguntas = Perguntas.Count,
+                    Status = "Em andamento",
+                    DataInicio = DateTime.UtcNow,
+                    IndicePerguntaAtual = IndiceAtual
+                };
+
+                Context.ResultadosQuiz.Add(TentativaEmAndamento);
+            }
+
+            TentativaEmAndamento.Pontos = Pontos;
+            TentativaEmAndamento.TotalPerguntas = Perguntas.Count;
+            TentativaEmAndamento.IndicePerguntaAtual = IndiceAtual;
+            TentativaEmAndamento.Status = "Em andamento";
+
+            TentativaEmAndamento.RespostasJson = JsonSerializer.Serialize(new
+            {
+                Indice = IndiceAtual,
+                Pontos,
+                Respondida = RespostaConfirmada,
+                Acertou = RespostaConfirmada &&
+                    AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta,
+                Selecionada = AlternativaSelecionada
+            });
+
+            await Context.SaveChangesAsync();
+        }
+        catch
+        {
+            ErroSalvarProgresso = true;
+        }
+        finally
+        {
+            SalvandoProgresso = false;
+        }
+    }
+
     private async Task SalvarResultadoAsync()
     {
+        if (SalvandoResultado)
+            return;
+
         SalvandoResultado = true;
+        ResultadoSalvo = false;
 
         try
         {
             var estado = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            UsuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(usuarioId))
-            {
-                ResultadoSalvo = false;
+            if (string.IsNullOrEmpty(UsuarioId))
                 return;
+
+            if (TentativaEmAndamento == null)
+            {
+                TentativaEmAndamento = await Context.ResultadosQuiz
+                    .Where(r => r.UsuarioId == UsuarioId &&
+                        r.IdentificadorQuiz == "credito-e-juros" &&
+                        r.Status == "Em andamento")
+                    .OrderByDescending(r => r.DataInicio)
+                    .FirstOrDefaultAsync();
             }
 
-            var resultado = new ResultadoQuiz
+            if (TentativaEmAndamento == null)
             {
-                UsuarioId = usuarioId,
-                IdentificadorQuiz = "credito-e-juros",
-                Pontos = Pontos,
-                TotalPerguntas = Perguntas.Count,
-                DataConclusao = DateTime.UtcNow
-            };
+                TentativaEmAndamento = new ResultadoQuiz
+                {
+                    UsuarioId = UsuarioId,
+                    IdentificadorQuiz = "credito-e-juros",
+                    DataInicio = DateTime.UtcNow
+                };
 
-            Context.ResultadosQuiz.Add(resultado);
+                Context.ResultadosQuiz.Add(TentativaEmAndamento);
+            }
+
+            TentativaEmAndamento.Pontos = Pontos;
+            TentativaEmAndamento.TotalPerguntas = Perguntas.Count;
+            TentativaEmAndamento.IndicePerguntaAtual = Perguntas.Count - 1;
+            TentativaEmAndamento.Status = "Concluída";
+            TentativaEmAndamento.DataConclusao = DateTime.UtcNow;
+
+            TentativaEmAndamento.RespostasJson = JsonSerializer.Serialize(new
+            {
+                Indice = IndiceAtual,
+                Pontos,
+                Respondida = true,
+                Acertou = AlternativaSelecionada == Perguntas[IndiceAtual].RespostaCorreta,
+                Selecionada = AlternativaSelecionada
+            });
+
             await Context.SaveChangesAsync();
 
             ResultadoSalvo = true;
@@ -405,7 +587,7 @@
         }
     }
 
-    private void Reiniciar()
+    private async Task ReiniciarAsync()
     {
         IndiceAtual = 0;
         AlternativaSelecionada = null;
@@ -415,8 +597,16 @@
         QuizFinalizado = false;
         SalvandoResultado = false;
         ResultadoSalvo = false;
+        ErroSalvarProgresso = false;
 
         MensagemResultado = "";
+
+        if (TentativaEmAndamento != null)
+        {
+            Context.ResultadosQuiz.Remove(TentativaEmAndamento);
+            await Context.SaveChangesAsync();
+            TentativaEmAndamento = null;
+        }
     }
 
     private class Pergunta

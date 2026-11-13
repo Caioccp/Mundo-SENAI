@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
 @using System.Security.Claims
+@using System.Text.Json
 @using StartFin.Dados
 @using StartFin.Modelos
 
@@ -183,35 +184,103 @@
         </p>
 
         <a href="/educacao-financeira/quiz/orcamento-pessoal" class="botao-quiz">
-            Fazer quiz →
+            @(TentativaEmAndamento != null ? "Continuar o quiz →" : "Fazer quiz →")
         </a>
 
-        <button type="button" class="botao-resultado" @onclick="MostrarUltimoResultado">
+        <button type="button" class="botao-resultado" @onclick="MostrarResultado">
             Ver último resultado
         </button>
 
-        @if (ExibindoUltimoResultado)
+        @if (MostrarResultados)
         {
-            <div class="resultado-ultimo">
-                @if (UltimoResultado != null)
+            <div class="area-resultados">
+
+                @if (Carregando)
                 {
-                    <h3>Seu último resultado</h3>
+                    <p>Carregando resultado...</p>
+                }
+                else if (TentativaEmAndamento != null)
+                {
+                    <div class="progresso-pendente">
+                        <h3>🚀 Você ainda não terminou!</h3>
 
-                    <p>
-                        Você acertou
-                        <strong>@UltimoResultado.Pontos de @UltimoResultado.TotalPerguntas</strong>
-                        questões.
-                    </p>
+                        <p>
+                            Você possui um quiz em andamento. Continue de onde parou
+                            para concluir suas questões.
+                        </p>
 
-                    <p>
-                        Concluído em:
-                        @UltimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                    </p>
+                        <div class="estatisticas-progresso">
+                            <div class="estatistica-progresso">
+                                <strong>@PerguntasRespondidas</strong>
+                                <span>Respondidas</span>
+                            </div>
+
+                            <div class="estatistica-progresso">
+                                <strong>@PerguntasRestantes</strong>
+                                <span>Restantes</span>
+                            </div>
+
+                            <div class="estatistica-progresso">
+                                <strong>@TentativaEmAndamento.Pontos</strong>
+                                <span>Acertos</span>
+                            </div>
+                        </div>
+
+                        <div class="barra-progresso-fundo">
+                            <div class="barra-progresso-preenchida"
+                                 style="width: @PercentualProgresso%">
+                            </div>
+                        </div>
+
+                        <p class="texto-progresso">
+                            Progresso: @PercentualProgresso%
+                        </p>
+
+                        <p class="mensagem-incentivo">
+                            Você parou na questão @PerguntaAtual de @TentativaEmAndamento.TotalPerguntas.
+                        </p>
+
+                        <a href="/educacao-financeira/quiz/orcamento-pessoal"
+                           class="botao-continuar">
+                            Continuar de onde parei →
+                        </a>
+                    </div>
+                }
+                else if (UltimoResultado != null)
+                {
+                    <div class="resultado-concluido">
+                        <h3>🏆 Seu último resultado concluído</h3>
+
+                        <p class="pontuacao-concluida">
+                            @UltimoResultado.Pontos de @UltimoResultado.TotalPerguntas
+                        </p>
+
+                        <p>
+                            Concluído em:
+                            @UltimoResultado.DataConclusao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </p>
+
+                        <p>
+                            @(
+                                UltimoResultado.Pontos >= 9
+                                    ? "Excelente! Você demonstrou muito domínio sobre orçamento pessoal."
+                                    : UltimoResultado.Pontos >= 7
+                                        ? "Muito bem! Você compreendeu os principais conceitos de planejamento financeiro."
+                                        : UltimoResultado.Pontos >= 5
+                                            ? "Bom trabalho! Continue praticando para melhorar ainda mais."
+                                            : "Continue estudando! Revise a aula e tente novamente."
+                            )
+                        </p>
+                    </div>
                 }
                 else
                 {
-                    <p>Você ainda não concluiu este quiz.</p>
+                    <p class="sem-resultado">
+                        Você ainda não possui resultados concluídos neste quiz.
+                        Faça o quiz para acompanhar seu desempenho!
+                    </p>
                 }
+
             </div>
         }
     </section>
@@ -219,29 +288,110 @@
 </div>
 
 @code {
-    private ResultadoQuiz? UltimoResultado;
-    private bool ExibindoUltimoResultado = false;
+    private const string IdentificadorQuiz = "orcamento-pessoal";
 
-    private async Task MostrarUltimoResultado()
+    private ResultadoQuiz? UltimoResultado;
+    private ResultadoQuiz? TentativaEmAndamento;
+
+    private bool MostrarResultados;
+    private bool Carregando;
+
+    private int PerguntasRespondidas;
+    private int PerguntasRestantes;
+    private int PerguntaAtual = 1;
+    private int PercentualProgresso;
+
+    private async Task MostrarResultado()
+    {
+        MostrarResultados = true;
+        Carregando = true;
+
+        try
+        {
+            await CarregarDadosQuizAsync();
+        }
+        finally
+        {
+            Carregando = false;
+        }
+    }
+
+    private async Task CarregarDadosQuizAsync()
     {
         var estado = await AuthProvider.GetAuthenticationStateAsync();
         var usuarioId = estado.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+        TentativaEmAndamento = null;
+        UltimoResultado = null;
+
+        PerguntasRespondidas = 0;
+        PerguntasRestantes = 0;
+        PerguntaAtual = 1;
+        PercentualProgresso = 0;
+
         if (string.IsNullOrEmpty(usuarioId))
         {
-            UltimoResultado = null;
-            ExibindoUltimoResultado = true;
             return;
         }
 
-        UltimoResultado = await Context.ResultadosQuiz
+        TentativaEmAndamento = await Context.ResultadosQuiz
+            .AsNoTracking()
             .Where(r => r.UsuarioId == usuarioId &&
-                        r.IdentificadorQuiz == "orcamento-pessoal" &&
+                        r.IdentificadorQuiz == IdentificadorQuiz &&
+                        r.Status == "Em andamento")
+            .OrderByDescending(r => r.DataInicio)
+            .FirstOrDefaultAsync();
+
+        UltimoResultado = await Context.ResultadosQuiz
+            .AsNoTracking()
+            .Where(r => r.UsuarioId == usuarioId &&
+                        r.IdentificadorQuiz == IdentificadorQuiz &&
                         r.Status == "Concluída")
             .OrderByDescending(r => r.DataConclusao)
             .FirstOrDefaultAsync();
 
-        ExibindoUltimoResultado = true;
+        if (TentativaEmAndamento != null)
+        {
+            var progresso = new ProgressoSalvo();
+
+            if (!string.IsNullOrWhiteSpace(TentativaEmAndamento.RespostasJson))
+            {
+                try
+                {
+                    progresso = JsonSerializer.Deserialize<ProgressoSalvo>(
+                        TentativaEmAndamento.RespostasJson
+                    ) ?? new ProgressoSalvo();
+                }
+                catch
+                {
+                    progresso = new ProgressoSalvo();
+                }
+            }
+
+            PerguntasRespondidas = progresso.Indice + (progresso.Respondida ? 1 : 0);
+
+            PerguntasRestantes = Math.Max(
+                0,
+                TentativaEmAndamento.TotalPerguntas - PerguntasRespondidas
+            );
+
+            PerguntaAtual = Math.Min(
+                progresso.Indice + 1,
+                TentativaEmAndamento.TotalPerguntas
+            );
+
+            PercentualProgresso = TentativaEmAndamento.TotalPerguntas > 0
+                ? (int)Math.Round(
+                    PerguntasRespondidas * 100.0 / TentativaEmAndamento.TotalPerguntas
+                )
+                : 0;
+        }
+    }
+
+    private class ProgressoSalvo
+    {
+        public int Indice { get; set; }
+        public bool Respondida { get; set; }
     }
 }
 
@@ -392,18 +542,116 @@
         background: #eff6ff;
     }
 
-    .resultado-ultimo {
+    .area-resultados {
         margin-top: 20px;
-        padding: 18px;
-        background: white;
-        border: 1px solid #bbf7d0;
-        border-radius: 12px;
-        color: #475569;
     }
 
-    .resultado-ultimo h3 {
+    .progresso-pendente {
+        padding: 22px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 12px;
+        text-align: left;
+    }
+
+    .progresso-pendente h3 {
         color: #087f5b;
         margin-bottom: 12px;
+    }
+
+    .estatisticas-progresso {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 20px 0;
+    }
+
+    .estatistica-progresso {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 13px 8px;
+        background: white;
+        border: 1px solid #d1fae5;
+        border-radius: 10px;
+    }
+
+    .estatistica-progresso strong {
+        color: #087f5b;
+        font-size: 23px;
+    }
+
+    .estatistica-progresso span {
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .barra-progresso-fundo {
+        width: 100%;
+        height: 10px;
+        background: #d1fae5;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .barra-progresso-preenchida {
+        height: 100%;
+        background: #10b981;
+        border-radius: 20px;
+        transition: width 0.3s;
+    }
+
+    .texto-progresso {
+        margin-top: 8px;
+        font-size: 13px;
+        color: #087f5b !important;
+        font-weight: 700;
+    }
+
+    .mensagem-incentivo {
+        margin-top: 15px;
+    }
+
+    .botao-continuar {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 12px 20px;
+        background: #087f5b;
+        color: white;
+        text-decoration: none;
+        border-radius: 9px;
+        font-weight: 700;
+    }
+
+    .botao-continuar:hover {
+        background: #066849;
+        color: white;
+    }
+
+    .resultado-concluido {
+        padding: 22px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        text-align: left;
+    }
+
+    .resultado-concluido h3 {
+        color: #2455a4;
+        margin-bottom: 12px;
+    }
+
+    .pontuacao-concluida {
+        color: #2455a4 !important;
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    .sem-resultado {
+        padding: 18px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
     }
 
     @@media (max-width: 600px) {
@@ -414,6 +662,18 @@
         .introducao, .conteudo-card,
         .resumo, .quiz-card {
             padding: 20px;
+        }
+
+        .estatisticas-progresso {
+            gap: 7px;
+        }
+
+        .estatistica-progresso {
+            padding: 10px 5px;
+        }
+
+        .estatistica-progresso strong {
+            font-size: 20px;
         }
     }
 </style>
